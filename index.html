@@ -692,6 +692,26 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:500;opacity:0;pointer-events:none;
   transition:opacity .25s,transform .45s var(--spring);white-space:nowrap}
 .draw-hint.on{opacity:1;transform:translateX(-50%)}
+/* ---------------- dashboard v12 ---------------- */
+.dhd{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.dper{display:flex;align-items:center;gap:8px}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text2);cursor:pointer;user-select:none}
+.chk input{accent-color:#0071e3;width:15px;height:15px}
+.chk+.chk{margin-left:12px}
+.fout{display:flex;flex-direction:column;gap:8px}
+.fo{display:grid;grid-template-columns:190px minmax(0,1fr) 130px;align-items:center;gap:14px;font-size:12.5px;cursor:pointer;padding:3px 6px;border-radius:10px;transition:background .2s}
+.fo:hover{background:rgba(0,113,227,.06)}
+.fo .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:550}
+.fo .bar{height:18px}
+.fo .bar>span{display:flex;height:100%;border-radius:9px;overflow:hidden;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.06);transform-origin:left;animation:growX .8s var(--spring) both;animation-delay:calc(var(--i,0) * 35ms)}
+.fo .bar i{display:block;height:100%;min-width:3px}
+.fo .bar i+i{box-shadow:inset 1px 0 0 rgba(255,255,255,.7)}
+@keyframes growX{from{transform:scaleX(0)}}
+.fo .cr{text-align:right;font-variant-numeric:tabular-nums;line-height:1.2}
+.fo .cr b{font-family:var(--fd);font-size:15px;font-weight:650}
+.fo .cr small{display:block;font-size:11px;color:var(--text3)}
+.tbl tfoot td{background:rgba(248,248,250,.95);font-weight:600;border-top:1px solid var(--border2)}
+@media (max-width:760px){.fo{grid-template-columns:110px minmax(0,1fr) 84px;gap:8px}}
 @media (max-width:1100px){
   .gsearch kbd{display:none}
   #vMap .mv-side{width:330px}
@@ -734,7 +754,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v11</span>
+    <span id="verBadge" title="Page version">v12</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -781,20 +801,26 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 
   <!-- ======================= DASHBOARD ======================= -->
   <section class="view" id="vDash"><div class="fbar sticky" id="fb_dash"></div><div class="wrap">
+    <div class="dhd">
+      <div><div class="nl-t">Market overview</div><div class="nl-s" id="dSub"></div></div>
+      <div class="ml-auto dper"><span class="fl">Period</span><div class="seg" id="dPer"><button data-v="30">30 days</button><button data-v="90">90 days</button><button data-v="182">6 months</button><button data-v="365" class="on">12 months</button><button data-v="730">24 months</button><button data-v="0">All</button></div></div>
+    </div>
     <div class="grid g-kpi" id="kpis"></div>
     <div class="grid g-2 mt">
       <div class="card"><div class="card-h"><div><div class="card-t">New listings by month</div><div class="card-s">Date on market, by state</div></div><div class="seg ml-auto" id="dMonths"><button data-v="12">12 mo</button><button data-v="24" class="on">24 mo</button><button data-v="34">All</button></div></div>
         <div class="card-b"><div class="legend" id="dLeg"></div><div class="chart mt" id="dChart"></div></div></div>
-      <div class="card"><div class="card-h"><div><div class="card-t">By state</div><div class="card-s">Listings matching the filters</div></div></div><div class="card-b" style="padding:0"><table class="tbl" id="dStates"></table></div></div>
+      <div class="card"><div class="card-h"><div><div class="card-t">By state</div><div class="card-s" id="dStatesS"></div></div></div><div class="card-b" style="padding:0"><table class="tbl" id="dStates"></table></div></div>
     </div>
-    <div class="grid g-2e mt">
-      <div class="card"><div class="card-h"><div><div class="card-t">Asked vs. closed</div><div class="card-s" id="dAvcS"></div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dAvc"></table></div></div>
-      <div class="card"><div class="card-h"><div><div class="card-t">Listing brokers</div><div class="card-s">Listings matching the filters</div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dFirms"></table></div></div>
-    </div>
+    <div class="card mt"><div class="card-h"><div><div class="card-t">Listing brokers</div><div class="card-s" id="dFirmS"></div></div><div class="legend ml-auto" id="dFirmLeg"></div></div>
+      <div class="card-b"><div class="fout" id="dFirmChart"></div></div>
+      <div class="tblwrap" style="max-height:560px"><table class="tbl" id="dFirms"></table></div></div>
+    <div class="card mt"><div class="card-h"><div><div class="card-t">Asked vs. closed</div><div class="card-s" id="dAvcS"></div></div>
+      <label class="chk ml-auto"><input type="checkbox" id="dCap"> With a cap rate</label><label class="chk"><input type="checkbox" id="dAsk"> With an asking price</label></div>
+      <div class="tblwrap" style="max-height:560px"><table class="tbl" id="dAvc"></table></div></div>
     <div class="card mt"><div class="card-h"><div><div class="card-t">Recent changes</div><div class="card-s">Edits, new listings and imports by the team</div></div><button class="btn sm ml-auto" id="actRefresh">Refresh</button></div><div class="card-b" id="activity"><span class="muted small">Loading…</span></div></div>
   </div></section>
 
-  <!-- ======================= NEW LISTINGS ======================= -->
+<!-- ======================= NEW LISTINGS ======================= -->
   <section class="view" id="vNew"><div class="fbar sticky" id="fb_new"></div><div class="wrap">
     <div class="nl-hd">
       <div><div class="nl-t">New Listings</div><div class="nl-s" id="nlSub"></div></div>
@@ -1022,7 +1048,8 @@ var S = {
   F: Object.assign(defaultF(), lsGet("miq_f", {})), st: lsGet("miq_st", JSON.parse(JSON.stringify(ST_DEFAULT))),
   shelf: lsGet("miq_shelf", 180), layers: lsGet("miq_layers", {listings: 1, sales: 0}),
   tsort: {k: "onMarket", d: -1}, ssort: {k: "date", d: -1}, tp: 0, sp: 0, showHidden: false,
-  nl: {per: 14}, dmonths: 24, geo: null
+  nl: {per: 14}, dmonths: 24, geo: null,
+  dper: lsGet("miq_dper", 365), fsort: {k: "n", d: -1}, asort: {k: "_sd", d: -1}, avcCap: false, avcAsk: false
 };
 var FILES = ["listings.json", "sales.json", "overlay.json", "imports.json"];
 
@@ -1284,7 +1311,7 @@ function pass(r, kind, view, skip) {
 }
 function applies(f, view) {
   var kind = FB_VIEWS[view];
-  if (f === "within") return view !== "new";
+  if (f === "within") return view !== "new" && view !== "dash";
   if (f === "type" || f === "src") return kind === "l";
   if (f === "link") return kind === "s";
   return true;
@@ -1314,7 +1341,7 @@ function buildBar(view) {
   h += '<input class="inp fq" data-f="q" placeholder="' + (kind === "s" ? "Search address, buyer, seller, broker" : "Search name, address, broker, client") + '">';
   h += '<span class="fg" data-states></span>';
   if (ST_DEFAULT[view]) h += '<div class="ms" data-ms><button class="inp msb"></button><div class="msp"></div></div>';
-  if (view !== "new") h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Sold" : "Listed") + ' within</span><input class="inp n" data-f="within" placeholder="any" inputmode="numeric"><span class="fl">days</span></span>';
+  if (view !== "new" && view !== "dash") h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Sold" : "Listed") + ' within</span><input class="inp n" data-f="within" placeholder="any" inputmode="numeric"><span class="fl">days</span></span>';
   h += '<span class="fg"><span class="fl">Units</span><input class="inp n" data-f="umin" placeholder="min" inputmode="numeric"><span class="fl">–</span><input class="inp n" data-f="umax" placeholder="max" inputmode="numeric"></span>';
   h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Price" : "Asking") + '</span><input class="inp n2" data-f="pmin" placeholder="min" title="e.g. 2m or 750k"><span class="fl">–</span><input class="inp n2" data-f="pmax" placeholder="max" title="e.g. 2m or 750k"></span>';
   h += '<span class="fg"><span class="fl">$/unit</span><input class="inp n2" data-f="ppumin" placeholder="min" title="e.g. 150k"><span class="fl">–</span><input class="inp n2" data-f="ppumax" placeholder="max" title="e.g. 300k"></span>';
@@ -1766,21 +1793,35 @@ function wireMap() {
 
 /* ================================================================ DASHBOARD */
 function kpi(l, v, d, unit) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num"><span class="k-n">' + v + "</span>" + (unit ? '<span class="k-u">' + unit + "</span>" : "") + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
+/* The dashboard reads one period (S.dper days; 0 = all): "listed" figures use the date on market, "closed" figures the
+   CoStar sale date. "On the market now" is always today. Close rate = closed / (closed + aged) among the period's listings. */
+function perLabel() { return {30: "last 30 days", 90: "last 90 days", 182: "last 6 months", 365: "last 12 months", 730: "last 24 months"}[S.dper] || "all time"; }
+function inPer(iso, back) {
+  if (!iso) return false;
+  var d = days(iso, today()); if (d == null || d < 0) return !back && S.dper === 0;
+  if (!S.dper) return !back;
+  return back ? d >= S.dper && d < 2 * S.dper : d < S.dper;
+}
+var DOUT = [["Closed", "#ff9f0a"], ["Under Contract", "#0a84ff"], ["Active", "#34c759"], ["Relisted", "#ff375f"], ["Aged", "#aeaeb2"], ["Off Market", "#636366"]];
+function thS(k, l, srt, cls, tip) { return '<th data-sk="' + k + '" class="' + (cls || "") + '"' + (tip ? ' title="' + esc(tip) + '"' : "") + ">" + l + (srt.k === k ? '<span class="ar">' + (srt.d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }
 function renderDash() {
   syncBar("dash");
-  var all = S.L.filter(function (o) { return pass(o, "l", "dash"); }), t = today();
+  document.querySelectorAll("#dPer button").forEach(function (b) { b.classList.toggle("on", +b.dataset.v === S.dper); });
+  var all = S.L.filter(function (o) { return pass(o, "l", "dash"); }), t = today(), P = perLabel();
+  var listed = all.filter(function (o) { return inPer(o.onMarket); }), prev = all.filter(function (o) { return inPer(o.onMarket, true); });
   var act = all.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; });
-  var n30 = all.filter(function (o) { return o._days != null && o._days >= 0 && o._days < 30; }), p30 = all.filter(function (o) { return o._days >= 30 && o._days < 60; });
-  var closed = all.filter(function (o) { return o._sale; });
+  var closed = all.filter(function (o) { return o._sale && inPer(o._sale.date); });
   var withSpr = closed.filter(function (o) { return o._spread != null; });
-  var dd = n30.length - p30.length;
+  var dd = listed.length - prev.length;
+  $("dSub").textContent = "Listings matching the filters · " + (S.dper ? "listed or closed in the " + P : "all time") + " · on the market = today";
   $("kpis").innerHTML =
-    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.land ? 0 : o.units; }))) + " units · " + S.shelf + "-day shelf life", "properties") +
-    kpi("New in the last 30 days", n30.length, '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the 30 days before", "listings") +
-    kpi("Closed (CoStar)", closed.length, "listings matched to a 5+ unit sale", "properties") +
-    kpi("Median closed vs. ask", withSpr.length ? spr(median(withSpr.map(function (o) { return o._spread; }))) : "–", withSpr.length + " closings with an asking price") +
-    kpi("Median days to close", n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "date on market to sale date", closed.length ? "days" : "");
+    kpi("On the market now", act.length.toLocaleString(), "as of today · " + n0(sum(act.map(function (o) { return o.land ? 0 : o.units; }))) + " units · " + S.shelf + "-day shelf life", "properties") +
+    kpi("Listed in the " + P, listed.length.toLocaleString(), S.dper ? '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the " + P.replace("last ", "previous ") : n0(sum(listed.map(function (o) { return o.land ? 0 : o.units; }))) + " units", "listings") +
+    kpi("Closed in the " + P, closed.length.toLocaleString(), "listings tied to a CoStar 5+ unit sale", "properties") +
+    kpi("Closed vs. ask · " + P, withSpr.length ? spr(median(withSpr.map(function (o) { return o._spread; }))) : "–", "median of " + withSpr.length + " closings with an asking price") +
+    kpi("Days to close · " + P, n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "median, date on market to sale date", closed.length ? "days" : "");
   countUp($("vDash"));
+  /* monthly chart (its own range) */
   var nM = S.dmonths, months = [], d0 = new Date(dnum(t));
   for (var i = nM - 1; i >= 0; i--) { var d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - i, 1)); months.push(d.toISOString().slice(0, 7)); }
   if (nM >= 34) months = months.filter(function (m) { return m >= "2024-02"; });
@@ -1788,21 +1829,71 @@ function renderDash() {
   var used = STATES.filter(function (s) { return all.some(function (o) { return o.state === s; }); });
   $("dLeg").innerHTML = used.map(function (s) { return '<span><i style="background:' + ST_COLOR[s] + '"></i>' + s + "</span>"; }).join("");
   stackChart($("dChart"), months.map(function (m) { return {label: m, parts: used.map(function (s) { return {k: s, v: (by[m] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (m) { var dt = new Date(m + "-01T00:00:00Z"); return dt.toLocaleDateString("en-US", {month: "short", timeZone: "UTC"}) + (m.slice(5) === "01" ? " '" + m.slice(2, 4) : ""); }, 240);
-  $("dStates").innerHTML = "<thead><tr><th>State</th><th class=r>Listings</th><th class=r>On market</th><th class=r>Med. units</th><th class=r>Med. ask $/unit</th><th class=r>Closed</th></tr></thead><tbody>" +
+  /* states */
+  $("dStatesS").textContent = "Listed and closed in the " + P + "; on the market = today";
+  $("dStates").innerHTML = "<thead><tr><th>State</th><th class=r>Listed</th><th class=r>On market now</th><th class=r>Closed</th><th class=r>Med. units</th><th class=r>Med. ask $/unit</th><th class=r>Med. sale $/unit</th></tr></thead><tbody>" +
     used.map(function (s) {
-      var r = all.filter(function (o) { return o.state === s; });
-      return '<tr data-st="' + s + '"><td><span class="dot" style="background:' + ST_COLOR[s] + '"></span>' + s + '</td><td class="r num">' + r.length + '</td><td class="r num">' + r.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; }).length +
-        '</td><td class="r num">' + n0(median(r.map(function (o) { return o.land ? null : o.units; }))) + '</td><td class="r num">' + money(median(r.map(function (o) { return o._ppu; }))) + '</td><td class="r num">' + r.filter(function (o) { return o._sale; }).length + "</td></tr>";
+      var r = listed.filter(function (o) { return o.state === s; }), cl = closed.filter(function (o) { return o.state === s; });
+      return '<tr data-st="' + s + '"><td><span class="dot" style="background:' + ST_COLOR[s] + '"></span>' + s + '</td><td class="r num">' + r.length + '</td><td class="r num">' + act.filter(function (o) { return o.state === s; }).length +
+        '</td><td class="r num">' + cl.length + '</td><td class="r num">' + n0(median(r.map(function (o) { return o.land ? null : o.units; }))) + '</td><td class="r num">' + money(median(r.map(function (o) { return o._ppu; }))) +
+        '</td><td class="r num">' + money(median(cl.map(function (o) { return o._sale.price && o._sale.units ? o._sale.price / o._sale.units : null; }))) + "</td></tr>";
     }).join("") + "</tbody>";
-  var avc = closed.slice().sort(function (a, b) { return a._sale.date < b._sale.date ? 1 : -1; });
-  $("dAvcS").textContent = avc.length + " listings matched to a CoStar sale" + (avc.length ? " · median " + n0(median(closed.map(function (o) { return o._dtc; }))) + " days on market to close" : "");
-  $("dAvc").innerHTML = "<thead><tr><th>Property</th><th class=r>Units</th><th class=r>Asking</th><th class=r>Closed</th><th class=r>vs. ask</th><th class='r cap' title='T-12 NOI / sale price'>Cap @ close</th><th class=r>Days</th></tr></thead><tbody>" +
-    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : '<span class="muted">–</span>')) + '</td><td class="r num cap">' + (o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "") + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
-  var fm = {};
-  all.forEach(function (o) { var k = o.firm || o.brokerCo || "(none)"; var r = fm[k] = fm[k] || {n: 0, u: 0, act: 0, cl: 0, st: {}}; r.n++; r.u += o.land ? 0 : o.units || 0; if (o._status === "Active" || o._status === "Under Contract") r.act++; if (o._sale) r.cl++; r.st[o.state] = 1; });
-  $("dFirms").innerHTML = "<thead><tr><th>Firm</th><th class=r>Listings</th><th class=r>Units</th><th class=r>On market</th><th class=r>Closed</th><th>States</th></tr></thead><tbody>" +
-    Object.keys(fm).sort(function (a, b) { return fm[b].n - fm[a].n; }).map(function (k) { var r = fm[k]; return '<tr data-firm="' + esc(k) + '"><td>' + esc(k) + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + r.act + '</td><td class="r num">' + r.cl + "</td><td>" + Object.keys(r.st).sort().join(", ") + "</td></tr>"; }).join("") + "</tbody>";
+  renderFirms(listed, P);
+  renderAvc(closed, P);
   loadActivity();
+}
+function renderFirms(listed, P) {
+  var fm = {};
+  listed.forEach(function (o) {
+    var k = o.firm || o.brokerCo || "(no firm)", r = fm[k] = fm[k] || {k: k, n: 0, u: 0, st: {}, out: {}, ask: [], sale: [], spr: [], dtc: []};
+    r.n++; r.u += o.land ? 0 : o.units || 0; r.st[o.state] = 1; r.out[o._status] = (r.out[o._status] || 0) + 1;
+    if (o._ppu) r.ask.push(o._ppu);
+    if (o._sale) { if (o._sale.price && o._sale.units) r.sale.push(o._sale.price / o._sale.units); if (o._spread != null) r.spr.push(o._spread); if (o._dtc != null) r.dtc.push(o._dtc); }
+  });
+  var rows = Object.keys(fm).map(function (k) {
+    var r = fm[k], c = r.out.Closed || 0, a = r.out.Aged || 0;
+    r.act = (r.out.Active || 0) + (r.out["Under Contract"] || 0); r.cl = c; r.ag = a; r.cr = c + a ? c / (c + a) : null;
+    r.mAsk = median(r.ask); r.mSale = median(r.sale); r.mSpr = median(r.spr); r.mDtc = median(r.dtc); r.sts = Object.keys(r.st).sort().join(", ");
+    return r;
+  });
+  sortRows(rows, S.fsort);
+  var tot = {n: sum(rows.map(function (r) { return r.n; })), u: sum(rows.map(function (r) { return r.u; })), act: sum(rows.map(function (r) { return r.act; })), cl: sum(rows.map(function (r) { return r.cl; })), ag: sum(rows.map(function (r) { return r.ag; }))};
+  $("dFirmS").textContent = rows.length + " firms · " + tot.n + " listings in the " + P + " · close rate = closed ÷ (closed + aged); a CoStar sale of 5+ units counts as closed";
+  $("dFirmLeg").innerHTML = DOUT.map(function (x) { return '<span><i style="background:' + x[1] + '"></i>' + x[0] + "</span>"; }).join("");
+  /* outcome bars, top 12 firms by listings */
+  var top = rows.slice().sort(function (a, b) { return b.n - a.n; }).slice(0, 12), mx = Math.max(1, Math.max.apply(null, top.map(function (r) { return r.n; })));
+  $("dFirmChart").innerHTML = top.map(function (r, i) {
+    return '<div class="fo" data-firm="' + esc(r.k) + '" style="--i:' + i + '"><div class="nm" title="' + esc(r.k) + '">' + esc(r.k) + (r.k === "Greysteel" ? ' <span class="pill gsb">us</span>' : "") + '</div><div class="bar"><span style="width:' + (r.n / mx * 100).toFixed(1) + '%">' +
+      DOUT.map(function (x) { var v = r.out[x[0]] || 0; return v ? '<i style="flex:' + v + ';background:' + x[1] + '" data-tip="' + esc("<b>" + r.k + "</b><br>" + x[0] + ": " + v + " of " + r.n) + '"></i>' : ""; }).join("") + "</span></div>" +
+      '<div class="cr">' + (r.cr == null ? '<span class="muted">–</span>' : "<b>" + Math.round(r.cr * 100) + "%</b>") + '<small>' + r.cl + " closed · " + r.ag + " aged</small></div></div>";
+  }).join("") || '<div class="muted small">No listings in this period.</div>';
+  var S_ = S.fsort;
+  $("dFirms").innerHTML = "<thead><tr>" + thS("k", "Firm", S_) + thS("n", "Listings", S_, "r") + thS("u", "Units", S_, "r") + thS("act", "On market now", S_, "r", "Still Active or Under Contract today") + thS("cl", "Closed", S_, "r") +
+    thS("ag", "Aged", S_, "r", "Past the shelf life with no closing found") + thS("cr", "Close rate", S_, "r", "Closed ÷ (closed + aged)") + thS("mAsk", "Med. ask $/unit", S_, "r") + thS("mSale", "Med. sale $/unit", S_, "r") +
+    thS("mSpr", "Med. vs. ask", S_, "r") + thS("mDtc", "Med. days to close", S_, "r") + thS("sts", "States", S_) + "</tr></thead><tbody>" +
+    rows.map(function (r) {
+      return '<tr data-firm="' + esc(r.k) + '"><td>' + esc(r.k) + (r.k === "Greysteel" ? ' <span class="pill gsb">us</span>' : "") + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + r.act + '</td><td class="r num">' + r.cl +
+        '</td><td class="r num">' + r.ag + '</td><td class="r num">' + (r.cr == null ? "" : "<b>" + Math.round(r.cr * 100) + "%</b>") + '</td><td class="r num">' + mshort(r.mAsk) + '</td><td class="r num">' + mshort(r.mSale) +
+        '</td><td class="r num">' + spr(r.mSpr) + '</td><td class="r num">' + n0(r.mDtc) + "</td><td>" + r.sts + "</td></tr>";
+    }).join("") + '</tbody><tfoot><tr><td>Total</td><td class="r num">' + tot.n + '</td><td class="r num">' + n0(tot.u) + '</td><td class="r num">' + tot.act + '</td><td class="r num">' + tot.cl + '</td><td class="r num">' + tot.ag +
+    '</td><td class="r num">' + (tot.cl + tot.ag ? Math.round(tot.cl / (tot.cl + tot.ag) * 100) + "%" : "") + "</td><td></td><td></td><td></td><td></td><td></td></tr></tfoot>";
+}
+function renderAvc(closed, P) {
+  var rows = closed.filter(function (o) { return (!S.avcCap || o._capClose != null) && (!S.avcAsk || o._ask); }).map(function (o) {
+    o._sd = o._sale.date; o._sp = o._sale.price; return o;
+  });
+  sortRows(rows, S.asort);
+  var A = S.asort;
+  $("dAvcS").textContent = rows.length + " closings in the " + P + (S.avcCap ? " with a cap rate" : "") + (S.avcAsk ? (S.avcCap ? " and" : "") + " with an asking price" : "") +
+    (rows.length ? " · median " + n0(median(rows.map(function (o) { return o._dtc; }))) + " days to close · median vs. ask " + (spr(median(rows.map(function (o) { return o._spread; }))) || "–").replace(/<[^>]+>/g, "") : "");
+  $("dAvc").innerHTML = "<thead><tr>" + thS("name", "Property", A) + thS("units", "Units", A, "r") + thS("onMarket", "Listed", A) + thS("_sd", "Sold", A) + thS("_dtc", "Days", A, "r") + thS("_ask", "Asking", A, "r") +
+    thS("_sp", "Closed", A, "r") + thS("_spread", "vs. ask", A, "r") + thS("_capAsk", "Cap @ ask", A, "r cap", "T-12 NOI ÷ asking") + thS("_capClose", "Cap @ close", A, "r cap", "T-12 NOI ÷ sale price") + thS("firm", "Firm", A) + "</tr></thead><tbody>" +
+    rows.map(function (o) {
+      return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + gsBadge(o) + '<div class="small muted">' + esc([o.city, o.state].filter(Boolean).join(", ")) + '</div></td><td class="r num">' + (o.land ? "Land" : n0(o.units)) +
+        "</td><td>" + fmtDs(o.onMarket) + "</td><td>" + fmtDs(o._sale.date) + '</td><td class="r num">' + n0(o._dtc) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? '<span class="cs">CS</span>' : "") : "") +
+        '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : "")) +
+        '</td><td class="r num cap">' + (o._capAsk ? pct(o._capAsk, 2) : "") + '</td><td class="r num cap">' + (o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "") + "</td><td>" + esc(o.firm || o.brokerCo || "") + "</td></tr>";
+    }).join("") + "</tbody>";
 }
 function stackChart(el, data, fmt, H) {
   var W = el.clientWidth || 700, pl = 30, pb = 22, pt = 8, iw = W - pl - 4, ih = H - pb - pt;
@@ -2196,7 +2287,8 @@ function openAdd() {
   };
 }
 var FIRM_MAP = [["berkadia", "Berkadia"], ["cbre", "CBRE"], ["colliers", "Colliers"], ["cushman", "Cushman & Wakefield"], ["keller williams", "Keller Williams"], ["matthews", "Matthews"],
-  ["newmark", "Newmark"], ["one south", "One South"], ["private investor", "Private Investor"], ["sperry van ness", "SVN"], ["northmarq", "Northmarq"], ["marcus & millichap", "Marcus & Millichap"]];
+  ["newmark", "Newmark"], ["one south", "One South"], ["private investor", "Private Investor"], ["sperry van ness", "SVN"], ["northmarq", "Northmarq"], ["marcus & millichap", "Marcus & Millichap"],
+  ["932-5055", "Feldman Ruel"], ["feldman ruel", "Feldman Ruel"]];   /* Salesforce has Feldman Ruel's phone number in the company field on some rows */
 function firmOf(co) { var lo = String(co || "").toLowerCase(); for (var i = 0; i < FIRM_MAP.length; i++) if (lo.indexOf(FIRM_MAP[i][0]) > -1) return FIRM_MAP[i][1]; return String(co || "").trim(); }
 /* id = sha1("name|address|city|state|onMarket|broker|brokerCo")[:10], as tools/build_listings.py makes it */
 async function listingId(v) { return (await sha1hex([v.name, v.address, v.city, v.state, v.onMarket, v.broker, v.brokerCo].map(function (x) { return x == null ? "" : String(x); }).join("|"))).slice(0, 10); }
@@ -2478,9 +2570,15 @@ function wire() {
   $("nlPer").onclick = function (e) { var b = e.target.closest("button"); if (b) { S.nl.per = +b.dataset.v; renderNew(); } };
   $("nlWeeks").onclick = function (e) { var c = e.target.closest(".nc"); if (c) openListing(c.dataset.id); };
   $("dMonths").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; S.dmonths = +b.dataset.v; document.querySelectorAll("#dMonths button").forEach(function (x) { x.classList.toggle("on", x === b); }); renderDash(); };
+  $("dPer").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; S.dper = +b.dataset.v; lsSet("miq_dper", S.dper); renderDash(); };
+  $("dCap").onchange = function () { S.avcCap = this.checked; renderDash(); };
+  $("dAsk").onchange = function () { S.avcAsk = this.checked; renderDash(); };
   $("vDash").addEventListener("click", function (e) {
+    var th = e.target.closest("#dFirms th[data-sk], #dAvc th[data-sk]");
+    if (th) { var key = th.closest("#dFirms") ? "fsort" : "asort", k = th.dataset.sk; S[key] = {k: k, d: S[key].k === k ? -S[key].d : (/^(k|name|sts|firm|onMarket)$/.test(k) ? 1 : -1)}; return renderDash(); }
+    var fo = e.target.closest(".fo[data-firm]"); if (fo) { S.F.firm = fo.dataset.firm === "(no firm)" ? "" : fo.dataset.firm; S.F.broker = ""; saveF(); S.tp = 0; setView("table"); return; }
     var tr = e.target.closest("#dAvc tr[data-id]"); if (tr) return openListing(tr.dataset.id);
-    tr = e.target.closest("#dFirms tr[data-firm]"); if (tr) { S.F.firm = tr.dataset.firm === "(none)" ? "" : tr.dataset.firm; S.F.broker = ""; saveF(); S.tp = 0; setView("table"); return; }
+    tr = e.target.closest("#dFirms tbody tr[data-firm]"); if (tr) { S.F.firm = tr.dataset.firm === "(no firm)" ? "" : tr.dataset.firm; S.F.broker = ""; saveF(); S.tp = 0; setView("table"); return; }
     tr = e.target.closest("#dStates tr[data-st]"); if (tr) { S.F.states = {}; S.F.states[tr.dataset.st] = 1; saveF(); S._fitted = 0; setView("map"); }
   });
   $("actRefresh").onclick = loadActivity;
