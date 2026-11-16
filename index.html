@@ -743,6 +743,88 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   #vDash>.fbar,#vNew>.fbar{margin:var(--top) 8px 0}
   #drawer{right:8px;left:8px;width:auto;bottom:8px}
 }
+/* ---------------- v18: property record (drawer section + full-screen record) ---------------- */
+.hls .btn{width:auto;height:28px;border-radius:14px;padding:0 13px;border:none;flex:none}
+.recbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:12px 14px;border:none;border-radius:16px;cursor:pointer;text-align:left;
+  background:linear-gradient(135deg,rgba(0,113,227,.12),rgba(88,86,214,.1));box-shadow:inset 0 0 0 .5px rgba(0,113,227,.25);color:var(--text);
+  transition:transform .35s var(--spring),box-shadow .25s,background .25s}
+.recbtn:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 .5px rgba(0,113,227,.4),0 8px 22px rgba(0,113,227,.14)}
+.recbtn:active{transform:scale(.985)}
+.recbtn .ri{width:34px;height:34px;border-radius:11px;background:#0071e3;color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 4px 12px rgba(0,113,227,.3)}
+.recbtn .rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.recbtn .rt b{font-size:13.5px;font-weight:650;letter-spacing:-.01em}
+.recbtn .rt small{font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recbtn .rc{font-size:22px;color:#0071e3;line-height:1;transition:transform .35s var(--spring)}
+.recbtn:hover .rc{transform:translateX(3px)}
+.dr-sec .h .hs{font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);margin-left:4px}
+.ptiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.ptiles>div{background:rgba(255,255,255,.6);border-radius:14px;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.06);padding:9px 10px;min-width:0}
+.ptiles .l{font-size:10.5px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.ptiles .v{font-family:var(--fd);font-size:18px;font-weight:650;letter-spacing:-.02em;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptiles .s{font-size:10.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptiles>div:first-child{background:rgba(52,199,89,.1);box-shadow:inset 0 0 0 .5px rgba(52,199,89,.25)}
+.pkv .v{line-height:1.45}
+.mixc{display:inline-block;margin:0 10px 2px 0;white-space:nowrap}
+.mixc i{font-style:normal;color:var(--text3);font-size:11.5px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#rec{position:fixed;inset:0;z-index:2000;overflow-y:auto;background:rgba(245,245,247,.72);-webkit-backdrop-filter:blur(28px) saturate(170%);backdrop-filter:blur(28px) saturate(170%);
+  opacity:0;transition:opacity .25s var(--ease)}
+#rec.open{opacity:1}
+#rec .rc-sheet{max-width:1240px;margin:0 auto;padding:0 28px 48px;transform:translateY(16px) scale(.985);transition:transform .55s var(--spring)}
+#rec.open .rc-sheet{transform:none}
+#rec .rc-sheet.soft{transition:none;transform:none}
+body.rec-open #drawer,body.rec-open header,body.rec-open .mv-side{visibility:hidden}
+.rc-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:16px;padding:18px 0 14px;background:linear-gradient(rgba(245,245,247,.96) 70%,rgba(245,245,247,0))}
+.rc-back{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 14px 0 10px;border:none;border-radius:17px;background:var(--fill);color:#0071e3;font-weight:600;font-size:13.5px;cursor:pointer;flex:none;transition:background .2s,transform .35s var(--spring)}
+.rc-back:hover{background:rgba(0,113,227,.12);transform:translateX(-2px)}
+.rc-tt{flex:1;min-width:0}
+.rc-n{font-family:var(--fd);font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-a{font-size:13.5px;color:var(--text2);margin-top:2px}
+.rc-links{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.rc-links a{height:30px;display:inline-flex;align-items:center;padding:0 12px;border-radius:15px;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.08);font-size:12.5px;font-weight:600;white-space:nowrap}
+.rc-links a:hover{background:#fff}
+.rc-pills{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 16px}
+.rc-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.rt-t{background:rgba(255,255,255,.72);border-radius:20px;padding:16px 16px 14px;box-shadow:var(--lift);min-width:0;animation:rise .55s var(--spring) both}
+.rc-tiles .rt-t:nth-child(2){animation-delay:.03s}.rc-tiles .rt-t:nth-child(3){animation-delay:.06s}.rc-tiles .rt-t:nth-child(4){animation-delay:.09s}.rc-tiles .rt-t:nth-child(5){animation-delay:.12s}.rc-tiles .rt-t:nth-child(6){animation-delay:.15s}
+.rt-t .l{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.rt-t .v{font-family:var(--fd);font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-t .s{font-size:11.5px;color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-t.hero{background:linear-gradient(140deg,rgba(52,199,89,.18),rgba(48,176,199,.12));box-shadow:inset 0 0 0 .5px rgba(52,199,89,.3),var(--lift)}
+.rc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.rc-card{background:rgba(255,255,255,.72);border-radius:24px;padding:20px 22px;box-shadow:var(--lift);min-width:0;animation:rise .6s var(--spring) both;animation-delay:.08s}
+.rc-card.rc-wide{grid-column:1/-1}
+.rc-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.rc-col>.rc-card{animation-delay:.05s}
+.rc-card h3{font-family:var(--fd);font-size:17px;font-weight:650;letter-spacing:-.02em;margin:0 0 12px}
+.rc-card h3 .hs{font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text3);margin-left:6px;letter-spacing:0}
+.rc-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rc-tbl th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:0 8px 7px;border-bottom:1px solid var(--border2)}
+.rc-tbl td{padding:7px 8px;border-bottom:1px solid rgba(0,0,0,.045)}
+.rc-tbl .r{text-align:right}
+.rc-tbl tbody tr:hover td{background:rgba(0,113,227,.04)}
+.rc-tbl tfoot td{font-weight:650;border-bottom:none;border-top:1px solid var(--border2)}
+.rc-barc{width:22%}
+.rc-barc i{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,#0071e3,#5ac8fa);transform-origin:left;animation:growX .8s var(--spring) both}
+.rc-note{font-size:12px;color:var(--text2);margin-top:10px;line-height:1.5}
+.rc-sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.45;font-weight:400}
+.rc-p{font-size:13.5px;line-height:1.6;margin:0}
+.rc-kv{grid-template-columns:130px minmax(0,1fr)}
+.rc-kv>div{padding:8px 0;line-height:1.45}
+.rc-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.rc-mini .rt-t{box-shadow:inset 0 0 0 .5px rgba(0,0,0,.06);background:rgba(255,255,255,.6);border-radius:16px;padding:12px 13px;animation:none}
+.rc-mini .rt-t .v{font-size:19px}
+.rc-grid>.rc-card:not(.rc-wide) .rc-mini{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rc-lines{margin-top:12px}
+.rc-lines summary{cursor:pointer;font-size:13px;font-weight:600;color:#0071e3;padding:6px 0;list-style:none}
+.rc-lines summary::before{content:"›";display:inline-block;margin-right:6px;transition:transform .25s var(--ease)}
+.rc-lines[open] summary::before{transform:rotate(90deg)}
+.rc-lines .rc-tbl{margin-top:6px}
+.rc-flags{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.55;color:var(--text2)}
+.rc-flags li{margin-bottom:5px}
+.rc-foot{font-size:12px;color:var(--text3);margin-top:18px;line-height:1.5}
+@media (max-width:1100px){.rc-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.rc-grid{grid-template-columns:minmax(0,1fr)}.rc-mini{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){#rec .rc-sheet{padding:0 16px 32px}.rc-top{flex-wrap:wrap}.rc-links{justify-content:flex-start;width:100%}.rc-n{font-size:22px}.rc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ptiles{grid-template-columns:repeat(2,minmax(0,1fr))}.rc-kv{grid-template-columns:100px minmax(0,1fr)}}
 /* cards over a static background need no live blur: translucent white reads the same and costs nothing */
 .card,.nc,.cmpbox>div,.mini{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 .card,.nc{background:rgba(255,255,255,.72)}
@@ -775,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v17</span>
+    <span id="verBadge" title="Page version">v18</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1117,6 +1199,7 @@ async function boot() {
   S.raw.imports = (got[3] && got[3].imports) || [];
   derive();
   $("boot").hidden = true;
+  loadDetails();
   var h = (location.hash || "").replace("#", "");
   setView(["map", "dash", "new", "table", "sales"].indexOf(h) > -1 ? h : "map");
   setInterval(poll, 20000);
@@ -1714,7 +1797,9 @@ function initMap() {
     _map.addSource("listings", {type: "geojson", data: EMPTY_FC});
     var R = ["interpolate", ["linear"], ["zoom"], 5, 3.4, 9, 5.2, 13, 7, 17, 10];
     _map.addLayer({id: "draw-fill", type: "fill", source: "draw", filter: ["==", ["geometry-type"], "Polygon"], paint: {"fill-color": "#0a84ff", "fill-opacity": ["match", ["get", "k"], "draft", 0.12, 0.07]}});
-    _map.addLayer({id: "draw-line", type: "line", source: "draw", paint: {"line-color": "#0a84ff", "line-width": 2.2, "line-opacity": 0.9, "line-dasharray": ["match", ["get", "k"], "draft", ["literal", [2, 1.5]], ["literal", [1, 0]]]}});
+    /* line-dasharray takes no data expressions: the draft outline is its own dashed layer */
+    _map.addLayer({id: "draw-line", type: "line", source: "draw", filter: ["!=", ["get", "k"], "draft"], paint: {"line-color": "#0a84ff", "line-width": 2.2, "line-opacity": 0.9}});
+    _map.addLayer({id: "draw-draft", type: "line", source: "draw", filter: ["==", ["get", "k"], "draft"], paint: {"line-color": "#0a84ff", "line-width": 2.2, "line-opacity": 0.9, "line-dasharray": [2, 1.5]}});
     _map.addLayer({id: "sales-dots", type: "circle", source: "sales", paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 2.8, 9, 4.4, 13, 6, 17, 8.5],
       "circle-color": SALE_C, "circle-opacity": 0.82, "circle-stroke-color": "#fff", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 12, 1.8]}});
     _map.addLayer({id: "listings-halo", type: "circle", source: "listings", filter: ["==", ["get", "id"], ""],
@@ -2193,6 +2278,284 @@ function fmtField(f, v) {
   if (f === "dd" || f === "pdf") return '<a href="' + esc(v) + '" target="_blank" rel="noopener">Open in Box</a>';
   return esc(v);
 }
+/* --------------------------------------------------- property records (v18) ----
+   Harrison Wallman's OpEx database (Cloudflare D1 gs-deals): an AI read of each external listing's OM and T-12
+   (unit mix, class, amenities, utilities, affordability, a normalized T-12) and Greysteel's own underwriting
+   models with their rent rolls. Copied 2026-11-16 into the Worker's OVERFLOW D1 (miq_deals, miq_manifest, miq_raw).
+   /marketiq/details = slim rows + the Salesforce manifest; /marketiq/details/<id> = one full record (T-12 lines).
+   Joins: external listing -> its OM's Box id (manifest om/folder box, or the record's OM / T-12 / folder box);
+   Greysteel listing -> the Salesforce property folder in locRef; else same name or address (+ units, place, date). */
+var OPX = [["pr", "Payroll"], ["rm", "Repairs & maintenance"], ["turn", "Turnover"], ["cs", "Contract services"], ["ls", "Landscaping & snow"], ["sec", "Security"],
+  ["adv", "Marketing"], ["lc", "Leasing commissions"], ["admin", "General & administrative"], ["mgt", "Management fee"], ["elec", "Electric"], ["gas", "Gas"], ["oil", "Fuel oil"],
+  ["wat", "Water & sewer"], ["outil", "Trash & other utilities"], ["ins", "Insurance"], ["ret", "Real estate taxes"], ["otax", "Other taxes"], ["oexp", "Other expenses"]];
+var OPX_L = {rd: "Replacement reserves", capx: "Capital expenditures", intex: "Debt service", entex: "Entity / asset management", dep: "Depreciation", grl: "Ground lease",
+  inc: "Income booked in expenses", bd: "Bad debt", other_excl: "Other, not operating"};
+OPX.forEach(function (x) { OPX_L[x[0]] = x[1]; });
+var DET_ST = {"Queued": "Its OM is in Box and queued to be read.", "No Box files yet": "No OM in Box yet.", "Link needs review": "The OM link needs review before it can be read.",
+  "Reviewed and skipped": "Reviewed and skipped (nothing usable in the OM).", "Superseded by a newer listing": "A newer listing of this building carries the record."};
+var BOXF = "https://greysteel.app.box.com/file/", BOXD = "https://greysteel.app.box.com/folder/";
+S.det = null; S.detFull = {};
+
+async function loadDetails() {
+  try {
+    var j = await apiGet("/marketiq/details");
+    S.det = indexDetails(j); attachDetails();
+  } catch (e) { S.det = {err: e.message}; }
+  if (S.drawer && S.drawer.kind === "l" && !$("drB").querySelector("input:focus,textarea:focus,select:focus")) openListing(S.drawer.id, true);
+}
+function indexDetails(j) {
+  var D = {loaded: j.loaded_at, byId: {}, byBox: {}, man: {}, gsFolder: {}, ext: {}, gs: {}};
+  (j.deals || []).forEach(function (d) {
+    D.byId[d.id] = d;
+    if (d.lat != null && d.lng != null) d.geo = [d.lat, d.lng];
+    if (d.kind === "ext") { (D.ext[d.state] = D.ext[d.state] || []).push(d); [d.om_box, d.t12_box, d.folder].forEach(function (b) { if (b && !D.byBox[b]) D.byBox[b] = d; }); }
+    else { (D.gs[d.state] = D.gs[d.state] || []).push(d); if (d.prop_folder) (D.gsFolder[d.prop_folder] = D.gsFolder[d.prop_folder] || []).push(d); }
+  });
+  (j.manifest || []).forEach(function (m) { [m.o, m.f].forEach(function (b) { if (b && (!D.man[b] || (m.d && !D.man[b].d))) D.man[b] = m; }); });
+  return D;
+}
+function boxIds(u) { return (String(u || "").match(/\/(?:file|folder)\/(\d+)/g) || []).map(function (x) { return x.replace(/\D/g, ""); }); }
+/* same building: name or address, units within 15% when both known, and close by (3 km, or the same city with no pin) */
+function detSame(o, d) {
+  var nk = nameKey(o.name);
+  var same = (nk && nk.length > 4 && nk === nameKey(d.name)) || (o.address && d.address && partsMatch(addrParts(o.address), addrParts(d.address)));
+  if (!same) return false;
+  if (o.units && d.units && !o.land && !unitsClose(o.units, d.units, 0.15)) return false;
+  var k = km(o.geo, d.geo);
+  return k != null ? k <= 3 : String(o.city || "").toLowerCase() === String(d.city || "").toLowerCase();
+}
+function attachDetails() {
+  var D = S.det; if (!D || !D.byId) return;
+  var gap = function (o, d) { var x = days(o.onMarket, d.dom || (d.modified || d.pend || "").slice(0, 10)); return x == null ? 9999 : Math.abs(x); };
+  var best = function (o, list, lim) {
+    var c = list.filter(function (d) { return detSame(o, d) && (lim == null || gap(o, d) <= lim); });
+    c.sort(function (a, b) { return gap(o, a) - gap(o, b); });
+    return c[0] || null;
+  };
+  S.L.forEach(function (o) {
+    o._det = null; o._detSt = null; o._detHow = null;
+    if (!o.gs) {
+      boxIds(o.om).some(function (b) {
+        var m = D.man[b];
+        if (m) { o._detSt = m.s; if (m.d && D.byId[m.d]) { o._det = D.byId[m.d]; o._detHow = "om"; return true; } }
+        if (D.byBox[b]) { o._det = D.byBox[b]; o._detHow = "om"; return true; }
+        return false;
+      });
+      if (!o._det) { o._det = best(o, D.ext[o.state] || [], 60); if (o._det) o._detHow = "match"; }
+    } else {
+      var f = (String(o.locRef || "").match(/\((\d{8,})\)/) || [])[1], c = f && D.gsFolder[f];
+      if (c) { o._det = c.slice().sort(function (a, b) { return gap(o, a) - gap(o, b); })[0]; o._detHow = "folder"; }
+      else { o._det = best(o, D.gs[o.state] || [], null); if (o._det) o._detHow = "match"; }
+    }
+  });
+}
+
+/* unit mix: the OM text ("107 1BR/1BA units (564 SF) and 149 2BR/1BA ...") as rows, kept only when the counts add up to the units */
+var MIX_N = {one: 1, two: 2, three: 3, four: 4, five: 5};
+var MIX_RE = /\b(studios?|efficienc(?:y|ies)|micro(?:-?units?)?|jr\.?\s*(?:1\s*|one[\s-]*)?(?:br|bd|bed(?:room)?s?)\b|(\d|one|two|three|four|five)[\s-]*(?:br|bd|bed(?:room)?s?)\b(?:\s*[\/,-]?\s*(\d(?:\.5)?|one|two|three)[\s-]*(?:ba|bath(?:room)?s?)\b)?)((?:\s*(?:\+|w\/|with)?\s*(?:a\s+)?(?:den|loft)\b))?/i;
+function splitTop(s) {
+  var out = [], cur = "", dep = 0;
+  for (var i = 0; i < s.length; i++) {
+    var ch = s[i];
+    if (ch === "(") dep++; else if (ch === ")") dep = Math.max(0, dep - 1);
+    if (dep === 0 && (ch === ";" || ch === "," || (s.substr(i, 5).toLowerCase() === " and " && (i += 4)))) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur); return out;
+}
+function parseMix(t, units) {
+  if (!t) return null;
+  var s = String(t).replace(/(\d),(\d{3})/g, "$1$2");
+  var rows = {}, order = [];
+  splitTop(s).forEach(function (g) {
+    var m = g.match(MIX_RE); if (!m) return;
+    var lbl;
+    if (/^(studio|efficien|micro)/i.test(m[1])) lbl = "Studio";
+    else if (/^jr/i.test(m[1])) lbl = "Jr 1BR";
+    else {
+      var bd = MIX_N[String(m[2]).toLowerCase()] || +m[2], ba = m[3] ? (MIX_N[String(m[3]).toLowerCase()] || +m[3]) : null;
+      lbl = bd + "BR" + (ba ? "/" + ba + "BA" : "");
+    }
+    if (m[4]) lbl += /loft/i.test(m[4]) ? " + loft" : " + den";
+    var gt = g.slice(m.index), avg = gt.match(/(?:avg\.?|average|averaging)\s*(\d{3,4})\s*(?:sf|sq)/i), sfm = avg || gt.match(/(\d{3,4})\s*(?:sf|sq\.?\s*f)/i);   /* SF after the type only */
+    var rest = g.replace(/\([^)]*\)/g, " ").replace(m[0], " ").replace(/\d+(?:\.\d+)?\s*(?:sf|sq\.?\s*f(?:ee)?t|%)/gi, " ").replace(/\b(?:p|pp)\.\s*[\d,-]+/gi, " ").replace(/\b[A-Z]\d\b/g, " ");
+    var n = rest.match(/\b(\d{1,4})\b/); if (!n) return;
+    var r = rows[lbl];
+    if (!r) { r = rows[lbl] = {t: lbl, n: 0, sfw: 0, sfn: 0}; order.push(lbl); }
+    r.n += +n[1]; if (sfm) { r.sfw += +sfm[1] * +n[1]; r.sfn += +n[1]; }
+  });
+  var out = order.map(function (k) { var r = rows[k]; return {t: r.t, n: r.n, sf: r.sfn ? Math.round(r.sfw / r.sfn) : null}; });
+  var tot = sum(out.map(function (r) { return r.n; }));
+  if (!out.length || (units && Math.abs(tot - units) > Math.max(2, units * 0.1))) return null;
+  return out;
+}
+function rrMix(d) {   /* Greysteel rent roll summary by bed / bath */
+  if (!d.rr || !d.rr.mix) return null;
+  return d.rr.mix.map(function (x) {
+    var t = x.bd == null ? "Unknown" : x.bd === 0 ? "Studio" : x.bd + "BR" + (x.ba ? "/" + (+x.ba) + "BA" : "");
+    return {t: t, n: x.n, occ: x.occ, sf: x.sf, mkt: x.mkt, ctr: x.ctr};
+  });
+}
+function utilSplit(u) {
+  var own = [], res = [];
+  Object.keys(u || {}).forEach(function (k) { var v = String(u[k] || "").toLowerCase(); if (/owner|landlord|property/.test(v)) own.push(k); else if (/resident|tenant/.test(v)) res.push(k); });
+  return {own: own, res: res};
+}
+function occTxt(d) { return d.occ == null ? "" : (d.occ % 1 ? d.occ.toFixed(1) : d.occ) + "%"; }
+function detSrcName(d) { return d.kind === "gs" ? "Greysteel underwriting" : "the OM"; }
+
+/* drawer: the button under the pills and the short property section under Details */
+function recBtnHtml(o) {
+  if (!o._det) return "";
+  return '<button class="recbtn" id="recBtn"><span class="ri"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9h8M8 12.5h8M8 16h5"/></svg></span>' +
+    '<span class="rt"><b>Open detailed property record</b><small>' + (o._det.kind === "gs" ? "Rent roll, unit mix, T-12 from Greysteel's underwriting" : "Unit mix, rents, amenities, T-12 and notes from the OM") + '</small></span><span class="rc">›</span></button>';
+}
+function propSecHtml(o) {
+  var hd = '<div class="dr-sec"><div class="h">Property';
+  if (!S.det) return hd + '</div><div class="small muted">Loading the property record…</div></div>';
+  if (S.det.err) return hd + '</div><div class="small muted">Property records could not load: ' + esc(S.det.err) + "</div></div>";
+  var d = o._det;
+  if (!d) return hd + '</div><div class="small muted">' + (o.gs ? "No Greysteel underwriting model found for this listing." : esc(DET_ST[o._detSt] || "This listing's OM hasn't been read yet.")) + "</div></div>";
+  var mix = d.kind === "gs" ? rrMix(d) : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var tile = function (l, v, s) { return '<div><div class="l">' + l + '</div><div class="v num">' + (v || "–") + '</div><div class="s">' + (s || "") + "</div></div>"; };
+  var h = hd + ' <span class="hs">from ' + detSrcName(d) + "</span></div>";
+  h += '<div class="ptiles">' + tile("Occupancy", occTxt(d), d.kind === "gs" && d.rr ? "rent roll " + fmtDs(d.rr.asof) : d.occ != null ? "per the OM" : "not stated") +
+    tile("Avg rent", d.rent ? money(d.rent) : "", d.rent ? "in place / month" : "") + tile("Class", d.cls ? esc(d.cls) : "", d.aff ? esc(d.aff_type || "Affordable") : "") +
+    tile("Built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") + "</div>";
+  h += '<div class="kv pkv">';
+  if (mix) h += '<div class="k">Unit mix</div><div class="v">' + mix.map(function (r) { return "<span class=mixc><b>" + n0(r.n) + "</b> " + esc(r.t) + (r.sf ? " <i>" + n0(r.sf) + " sf</i>" : "") + "</span>"; }).join("") + "</div>";
+  else if (d.unit_mix) h += '<div class="k">Unit mix</div><div class="v">' + esc(d.unit_mix) + "</div>";
+  if (d.amenities) h += '<div class="k">Amenities</div><div class="v clamp2">' + esc(d.amenities) + "</div>";
+  if (ut.own.length || ut.res.length) h += '<div class="k">Utilities</div><div class="v">' + (ut.own.length ? "Owner pays " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "Residents pay " + ut.res.join(", ") : "") + "</div>";
+  if (d.egi || d.noi || d.printed_noi) h += '<div class="k">' + esc(d.kind === "gs" ? "Underwritten T-12" : "T-12") + '</div><div class="v">' + [d.egi ? "EGI " + mshort(d.egi) : "", d.total_pu ? "OpEx " + money(d.total_pu) + "/unit" : "", (d.noi || d.printed_noi) ? "NOI " + mshort(d.noi || d.printed_noi) : ""].filter(Boolean).join(" · ") +
+    (d.period ? '<div class="small muted">' + esc(d.period) + "</div>" : "") + "</div>";
+  if (d.no_data) h += '<div class="k">T-12</div><div class="v small muted">' + esc(d.no_data) + "</div>";
+  return h + "</div></div>";
+}
+
+/* full-screen record */
+function openRec(id) {
+  var o = S.byId[id]; if (!o || !o._det) return;
+  var el = $("rec"); el.hidden = false; document.body.classList.add("rec-open");
+  requestAnimationFrame(function () { el.classList.add("open"); });
+  el.dataset.id = id; el.scrollTop = 0;
+  renderRec(o, S.detFull[o._det.id]);
+  if (!S.detFull[o._det.id]) apiGet("/marketiq/details/" + encodeURIComponent(o._det.id)).then(function (j) {
+    S.detFull[o._det.id] = j.deal; if ($("rec").dataset.id === id && !$("rec").hidden) renderRec(o, j.deal, true);
+  }).catch(function (e) { toast("Could not load the full record: " + e.message, true); });
+}
+function closeRec() {
+  var el = $("rec"); el.classList.remove("open"); document.body.classList.remove("rec-open");
+  setTimeout(function () { if (!el.classList.contains("open")) el.hidden = true; }, 260);
+}
+function recTile(l, v, s, cls) { return '<div class="rt-t' + (cls ? " " + cls : "") + '"><div class="l">' + l + '</div><div class="v num">' + (v == null || v === "" ? "–" : v) + '</div><div class="s">' + (s || "") + "</div></div>"; }
+function boxA(id, label, folder) { return id && /^\d+$/.test(String(id)) ? '<a href="' + (folder ? BOXD : BOXF) + id + '" target="_blank" rel="noopener">' + esc(label) + " ↗</a>" : ""; }
+function renderRec(o, full, soft) {
+  var d = full || o._det, ld = !full, isGs = d.kind === "gs";
+  var st = ST[o._status], noi = d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
+  var mix = isGs ? rrMix(d) : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var h = '<div class="rc-top"><button class="rc-back" onclick="closeRec()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back</button>' +
+    '<div class="rc-tt"><div class="rc-n">' + esc(o.name) + '</div><div class="rc-a">' + esc(locLine(o)) + (d.county ? " · " + esc(d.county) : "") + "</div></div>" +
+    '<div class="rc-links">' + [boxA(d.om_box, "OM"), boxA(d.t12_box, "T-12"), boxA(d.folder, "Broker folder", 1), boxA(d.model_box, "Model"), boxA(d.prop_folder, "Property folder", 1)].filter(Boolean).join("") + "</div></div>";
+  h += '<div class="rc-body">';
+  h += '<div class="rc-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : '<span class="pill gray">External listing</span>') + '<span class="pill ' + st.pill + '">' + o._status + "</span>" +
+    (d.cls ? '<span class="pill blue">Class ' + esc(d.cls) + "</span>" : "") + (d.aff ? '<span class="pill purple">' + esc(d.aff_type || "Affordable") + "</span>" : "") +
+    (d.lease_up ? '<span class="pill orange">Lease-up</span>' : "") + (d.student ? '<span class="pill orange">Student</span>' : "") + (d.senior ? '<span class="pill orange">Senior</span>' : "") +
+    (d.tax_abated ? '<span class="pill green">Tax abated</span>' : "") + (d.mixed_use ? '<span class="pill gray">Mixed use</span>' : "") +
+    (d.level_label ? '<span class="pill gray" title="' + esc(d.data_type || "") + '">' + esc(d.level_label) + "</span>" : "") + "</div>";
+  /* headline numbers */
+  h += '<div class="rc-tiles">' +
+    recTile("Occupancy", occTxt(d), isGs && d.rr ? "rent roll " + fmtDs(d.rr.asof) + " · " + d.rr.occ + " of " + (d.rr.n - (d.rr.nr || 0)) : d.occ != null ? "per the OM" : "not stated in the OM", "hero") +
+    recTile("Avg in-place rent", d.rent ? money(d.rent) : "", d.rent ? "per unit / month" : "") +
+    recTile("Units", units ? n0(units) : o.land ? "Land" : "", mix ? mix.length + " unit types" : "") +
+    recTile("Year built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") +
+    recTile("Asking", ask ? mshort(ask) : "", ask && units ? mshort(ask / units) + " / unit" : "no asking price") +
+    recTile("T-12 NOI", noi ? mshort(noi) : "", noi && ask ? pct(noi / ask, 2) + " cap at asking" : noi && units ? money(noi / units) + " / unit" : "") + "</div>";
+  h += '<div class="rc-grid">';
+  h += '<div class="rc-col">';
+  /* unit mix */
+  h += '<section class="rc-card"><h3>Unit mix</h3>';
+  if (mix && isGs) {
+    var T = {n: 0, occ: 0, sfw: 0, sfn: 0, mw: 0, mn: 0, cw: 0, cn: 0};
+    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Occupied</th><th class=r>Avg SF</th><th class=r>Market rent</th><th class=r>In-place rent</th></tr></thead><tbody>' +
+      mix.map(function (r) {
+        T.n += r.n; T.occ += r.occ; if (r.sf) { T.sfw += r.sf * r.n; T.sfn += r.n; } if (r.mkt) { T.mw += r.mkt * r.n; T.mn += r.n; } if (r.ctr) { T.cw += r.ctr * r.occ; T.cn += r.occ; }
+        return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + (r.n ? Math.round(r.occ / r.n * 100) + "%" : "") + '</td><td class="r num">' + n0(r.sf) + '</td><td class="r num">' + money(r.mkt) + '</td><td class="r num">' + money(r.ctr) + "</td></tr>";
+      }).join("") + '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(T.n) + '</td><td class="r num">' + (T.n ? Math.round(T.occ / T.n * 100) + "%" : "") + '</td><td class="r num">' + (T.sfn ? n0(T.sfw / T.sfn) : "") +
+      '</td><td class="r num">' + (T.mn ? money(T.mw / T.mn) : "") + '</td><td class="r num">' + (T.cn ? money(T.cw / T.cn) : "") + "</td></tr></tfoot></table>" +
+      '<div class="rc-note">From the rent roll in Greysteel\'s model (' + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units.</div>";
+  } else if (mix) {
+    var tn = sum(mix.map(function (r) { return r.n; })), mx = Math.max.apply(null, mix.map(function (r) { return r.n; }));
+    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Share</th><th class=r>Avg SF</th><th></th></tr></thead><tbody>' +
+      mix.map(function (r) { return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + Math.round(r.n / tn * 100) + '%</td><td class="r num">' + n0(r.sf) + '</td><td class="rc-barc"><i style="width:' + (r.n / mx * 100).toFixed(1) + '%"></i></td></tr>'; }).join("") +
+      '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(tn) + "</td><td></td><td></td><td></td></tr></tfoot></table>" + '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>";
+  } else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated.</p>';
+  if (full && full.rent_note) h += '<div class="rc-note">Average rent: ' + esc(full.rent_note) + "</div>";
+  if (full && full.occ_q && !isGs) h += '<div class="rc-note">Occupancy source: “…' + esc(full.occ_q) + '…”</div>';
+  h += "</section>";
+  /* pricing from MarketIQ */
+  h += '<section class="rc-card"><h3>Pricing</h3><div class="rc-mini">' +
+    recTile("Asking", ask ? mshort(ask) : "", ask && units ? mshort(ask / units) + " / unit" : "") +
+    recTile("Cap at asking", o._capAsk ? pct(o._capAsk, 2) : noi && ask ? pct(noi / ask, 2) : "", "T-12 NOI ÷ asking") +
+    recTile("Closed", o._sale ? mshort(o._sale.price) : "", o._sale ? fmtD(o._sale.date) : "no matched CoStar sale") +
+    recTile("vs. ask", spr(o._spread) || "", o._dtc != null ? o._dtc + " days to close" : "") + "</div>" +
+    (d.sf_noi ? '<div class="rc-note">Salesforce T-12 NOI ' + money(d.sf_noi) + (full && full.sf_noi_note ? ": " + esc(full.sf_noi_note) : "") + "</div>" : "") + "</section>";
+  h += "</div>";
+  /* property profile */
+  var kv = function (k, v) { return v ? '<div class="k">' + k + '</div><div class="v">' + v + "</div>" : ""; };
+  h += '<section class="rc-card"><h3>Property</h3><div class="kv rc-kv">' +
+    kv("Construction", full && full.construction ? esc(full.construction) : ld && !isGs ? '<span class="muted">Loading…</span>' : "") +
+    kv("Class", d.cls ? "<b>" + esc(d.cls) + "</b>" + (full && full.cls_basis ? '<div class="rc-sub">' + esc(full.cls_basis.replace(/^[A-C][+-]?:\s*/, "")) + "</div>" : "") : "") +
+    kv("Amenities", esc(d.amenities || "")) +
+    kv("Utilities", (ut.own.length ? "<b>Owner pays</b> " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "<b>Residents pay</b> " + ut.res.join(", ") : "") + (full && full.util_note ? '<div class="rc-sub">' + esc(full.util_note) + "</div>" : "")) +
+    kv("Affordability", d.aff ? "<b>" + esc(d.aff_type || "Affordable") + "</b>" + (full && full.aff_detail ? '<div class="rc-sub">' + esc(full.aff_detail) + "</div>" : "") : !isGs ? "None stated" : "") +
+    kv("Owner", esc((full && full.owner_full) || d.owner || "")) + kv("Management", esc(d.mgr || "") + (full && full.mgr_web ? ' · <a href="' + esc(/^https?:/.test(full.mgr_web) ? full.mgr_web : "https://" + full.mgr_web) + '" target="_blank" rel="noopener">site ↗</a>' : "")) +
+    kv("Listing broker", esc([d.broker || o.broker, d.firm || o.firm || o.brokerCo].filter(Boolean).join(" · "))) + kv("Date on market", fmtD(o.onMarket)) +
+    kv("Units", full && full.units_note ? n0(units) + '<div class="rc-sub">' + esc(full.units_note) + "</div>" : "") +
+    (full && full.portfolio && full.portfolio.length ? kv("Portfolio", full.portfolio.map(function (p) { return esc(typeof p === "string" ? p : [p.name, p.address, p.units ? p.units + " units" : ""].filter(Boolean).join(" · ")); }).join("<br>")) : "") +
+    "</div></section>";
+  /* operating statement */
+  h += '<section class="rc-card rc-wide"><h3>Operating statement <span class="hs">' + esc(d.period || "") + "</span></h3>";
+  if (d.egi || d.total || noi) {
+    h += '<div class="rc-mini">' + recTile("Effective gross income", d.egi ? money(d.egi) : d.printed_egi ? money(d.printed_egi) : "", units && (d.egi || d.printed_egi) ? money((d.egi || d.printed_egi) / units) + " / unit" : "") +
+      recTile("Operating expenses", d.total ? money(d.total) : "", d.total_pu ? money(d.total_pu) + " / unit" : "") + recTile("Net operating income", noi ? money(noi) : "", noi && units ? money(noi / units) + " / unit" : "") +
+      recTile("Expense ratio", d.opex_ratio != null ? pct(d.opex_ratio, 1) : "", "OpEx ÷ EGI") + "</div>";
+    if (full && full.cats) {
+      var egi = d.egi || d.printed_egi, cm = Math.max.apply(null, OPX.map(function (x) { return full.cats[x[0]] || 0; }).concat([1]));
+      h += '<table class="rc-tbl rc-opx"><thead><tr><th>Expense</th><th class=r>Annual</th><th class=r>Per unit</th><th class=r>% of EGI</th><th></th></tr></thead><tbody>' +
+        OPX.filter(function (x) { return full.cats[x[0]]; }).map(function (x) {
+          var v = full.cats[x[0]], pu = full.pu && full.pu[x[0]];
+          return "<tr><td>" + x[1] + '</td><td class="r num">' + money(v) + '</td><td class="r num">' + money(pu) + '</td><td class="r num">' + (egi ? pct(v / egi, 1) : "") + '</td><td class="rc-barc"><i style="width:' + (v / cm * 100).toFixed(1) + '%"></i></td></tr>';
+        }).join("") + '</tbody><tfoot><tr><td>Total operating expenses</td><td class="r num">' + money(d.total) + '</td><td class="r num">' + money(d.total_pu) + '</td><td class="r num">' + (egi && d.total ? pct(d.total / egi, 1) : "") + "</td><td></td></tr></tfoot></table>";
+      var ex = Object.keys(full.excl || {}).filter(function (k) { return full.excl[k]; });
+      if (ex.length) h += '<div class="rc-note">Left out of operating expenses: ' + ex.map(function (k) { return esc(OPX_L[k] || k) + " " + money(full.excl[k]); }).join(" · ") + "</div>";
+    } else if (ld) h += '<div class="rc-note">Loading the expense detail…</div>';
+    if (full && full.lines && full.lines.length) {
+      h += '<details class="rc-lines"><summary>All ' + full.lines.length + " line items from the statement</summary><table class=\"rc-tbl\"><thead><tr><th>Line</th><th>Category</th><th class=r>Amount</th></tr></thead><tbody>" +
+        full.lines.map(function (x) { return "<tr><td>" + esc(x.l) + '</td><td class="muted">' + esc(OPX_L[x.c] || x.c || "") + '</td><td class="r num">' + money(x.a) + "</td></tr>"; }).join("") + "</tbody></table></details>";
+    }
+    if (full && full.om_x) h += '<div class="rc-note">Checked against the OM: ' + esc(full.om_x) + "</div>";
+  } else h += '<p class="rc-p muted">' + esc(d.no_data || "No operating statement.") + "</p>";
+  h += "</section>";
+  /* notes */
+  if (full && (full.notes || (full.flags && full.flags.length))) {
+    h += '<section class="rc-card rc-wide"><h3>Analyst notes</h3>' + (full.notes ? '<p class="rc-p">' + esc(full.notes) + "</p>" : "") +
+      (full.flags && full.flags.length ? '<details class="rc-lines"' + (full.notes ? "" : " open") + "><summary>" + full.flags.length + " flags from the read</summary><ul class=\"rc-flags\">" + full.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></details>" : "") + "</section>";
+  }
+  h += "</div>";
+  h += '<div class="rc-foot">' + (isGs ? "Greysteel underwriting model and rent roll" : "AI read of the OM and T-12") + ", from Harrison Wallman's OpEx database (copied " + fmtDs(String(S.det.loaded || "").slice(0, 10)) + "). " +
+    (o._detHow === "match" ? "Matched to this listing by name / address. " : "") + "Check the source before relying on a figure." + (full && full.facts ? '<div class="rc-sub">OM pages used: ' + esc(full.facts) + "</div>" : "") + "</div>";
+  h += "</div>";
+  $("rec").innerHTML = '<div class="rc-sheet' + (soft ? " soft" : "") + '">' + h + "</div>";
+}
+/* derive() rebuilds S.L: re-attach the records each time */
+var _derive0 = derive;
+derive = function () { _derive0(); if (S.det && S.det.byId) attachDetails(); };
+document.addEventListener("keydown", function (e) {
+  if ($("rec").hidden) return;
+  if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); closeRec(); }
+  else if (!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || "")) e.stopPropagation();   /* no tab shortcuts behind the record */
+}, true);
 function openListing(id, keep) {
   var o = S.byId[id]; if (!o) return;
   S.drawer = {kind: "l", id: id};
@@ -2200,7 +2563,7 @@ function openListing(id, keep) {
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(locLine(o)) + "</div>" +
     '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
     (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
-  var h = "";
+  var h = recBtnHtml(o);
   /* pricing */
   h += '<div class="dr-sec"><div class="h">Pricing</div><div class="cmpbox">' +
     "<div><div class=l>Asking" + (o._askSrc ? " (CoStar)" : "") + '</div><div class="v num">' + (o._ask ? mshort(o._ask) : "–") + '</div><div class="s">' + (o._ppu || (o._ask && o.units) ? mshort(o._ask / o.units) + " / unit" : "") + (o._capAsk ? " · " + pct(o._capAsk, 2) + " cap" : "") + "</div></div>" +
@@ -2227,6 +2590,7 @@ function openListing(id, keep) {
       return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + fmtField(f[0], o[f[0]]) +
         (e ? '<span class="was">edited by ' + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + (e.was != null && e.was !== "" ? " · was " + esc(f[0] === "asking" || f[0] === "noi" ? money(e.was) : e.was) : "") + "</span>" : "") + "</div>";
     }).join("") + "</div></div>";
+  h += propSecHtml(o);
   /* listed before */
   if (o._prev.length) h += '<div class="dr-sec"><div class="h">Other listings of this building</div>' + o._prev.slice().sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }).map(function (x) {
     return '<div class="mini"><div class="g"><b>' + esc(x.name) + " · " + fmtD(x.onMarket) + "</b><div>" + esc([x.broker, x.firm || x.brokerCo].filter(Boolean).join(" · ")) + (x._ask ? " · ask " + mshort(x._ask) : "") + '</div></div><button class="btn sm" onclick="openListing(\'' + x.id + "')\">Open</button></div>";
@@ -2241,6 +2605,7 @@ function openListing(id, keep) {
   $("drawer").classList.add("open");
   if (!keep) { if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); }
   /* wire */
+  if ($("recBtn")) $("recBtn").onclick = function () { openRec(o.id); };
   $("drB").querySelectorAll(".v.ed").forEach(function (el) { el.onclick = function (e) { if (e.target.tagName === "A") return; startEdit(el, o); }; });
   $("drB").querySelectorAll("[data-hl]").forEach(function (b) { b.onclick = function () { saveOps([{t: "hl", k: "l/" + o.id, c: b.dataset.hl || null}], "highlight"); }; });
   $("pinGo").onclick = async function () {
@@ -2744,5 +3109,6 @@ function wire() {
   setTimeout(checkIn, 4000);
 })();
 </script>
+<div id="rec" hidden></div>
 </body>
 </html>
