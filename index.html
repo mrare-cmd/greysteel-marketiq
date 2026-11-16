@@ -7,10 +7,8 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235ac8fa'/%3E%3Cstop offset='.55' stop-color='%230a84ff'/%3E%3Cstop offset='1' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Crect x='8' y='17.5' width='4' height='7.5' rx='2' fill='%23fff' opacity='.7'/%3E%3Crect x='14' y='12.5' width='4' height='12.5' rx='2' fill='%23fff' opacity='.88'/%3E%3Crect x='20' y='7' width='4' height='18' rx='2' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css">
-<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -660,6 +658,31 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .view.active.enter{animation:viewIn .55s var(--spring) both}
 @keyframes viewIn{from{opacity:0;transform:translateY(10px) scale(.992);filter:blur(5px)}}
 
+/* ---------------- MapLibre: glass controls, popups ---------------- */
+#map{background:#f4f3ef}
+.maplibregl-map{font-family:var(--ft)}
+#vMap .maplibregl-ctrl-top-right{top:calc(var(--top) + var(--fbh) + 6px);right:8px}
+#vMap .maplibregl-ctrl-top-right .maplibregl-ctrl{margin:8px 8px 0 0}
+.maplibregl-ctrl-group{background:rgba(255,255,255,.8)!important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:14px!important;box-shadow:var(--lift)!important;overflow:hidden}
+.maplibregl-ctrl-group:not(:empty){box-shadow:var(--lift)!important}
+.maplibregl-ctrl-group button{width:36px!important;height:36px!important;transition:background .2s}
+.maplibregl-ctrl-group button+button{border-top:1px solid rgba(0,0,0,.06)!important}
+.maplibregl-ctrl-group button:hover{background-color:rgba(118,118,128,.12)!important}
+.drawctl button{display:flex!important;align-items:center;justify-content:center;color:#3a3a3c}
+.drawctl button svg{width:19px;height:19px}
+.drawctl button.on{background:#0071e3!important;color:#fff}
+.maplibregl-ctrl-attrib{background:rgba(255,255,255,.62)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:10px!important;font-size:10.5px}
+.maplibregl-ctrl-bottom-right{right:200px}
+.maplibregl-popup.gpop{z-index:5;animation:pop .28s var(--spring)}
+.gpop .maplibregl-popup-content{padding:0;background:rgba(255,255,255,.86);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:18px;box-shadow:var(--lift-hi)}
+.gpop .maplibregl-popup-tip{display:none}
+#vMap .geo-box{left:412px;transform:none;top:calc(var(--top) + var(--fbh) + 56px);animation:pop .35s var(--spring)}
+@media (max-width:1100px){#vMap .geo-box{left:362px}}
+@media (max-width:760px){#vMap .geo-box{left:8px}}
+.draw-hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);z-index:720;background:rgba(29,29,31,.82);color:#fff;
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:500;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .45s var(--spring);white-space:nowrap}
+.draw-hint.on{opacity:1;transform:translateX(-50%)}
 @media (max-width:1100px){
   .gsearch kbd{display:none}
   #vMap .mv-side{width:330px}
@@ -702,7 +725,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v7</span>
+    <span id="verBadge" title="Page version">v8</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -742,6 +765,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
         <div class="map-layers" id="mLayers"></div>
         <div class="geo-box" id="geoBox"><span id="geoKind"></span><span id="geoRadWrap"><input id="geoRad" inputmode="decimal" title="Radius in miles"> mi</span><span><b id="geoN">0</b> inside</span><button class="btn sm" id="geoClear">Clear area</button></div>
         <div class="map-legend" id="mLegend"></div>
+        <div class="draw-hint" id="drawHint"></div>
       </div>
     </div>
   </div></section>
@@ -1264,7 +1288,7 @@ function clearF(view) {
   Object.keys(S.F).forEach(function (k) { if (!applies(k, view)) keep[k] = S.F[k]; });   /* a tab's Clear leaves filters it doesn't show alone */
   S.F = Object.assign(defaultF(), keep);
   if (S.st[view]) S.st[view] = JSON.parse(JSON.stringify(ST_DEFAULT[view]));
-  if (view === "map" && _map) { _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = []; }
+  if (view === "map") { _shapes = []; drawData(); }
   $("gq").value = "";
   saveF(); S.tp = 0; S.sp = 0; render(true);
 }
@@ -1409,43 +1433,196 @@ function wireBars() {
 }
 
 /* ================================================================ MAP */
-var _map, _lyrL, _lyrS, _shapes = [], _mkById = {};
+/* MapLibre GL (WebGL vector map) on OpenFreeMap's Positron tiles (free, no key), recoloured to the glass theme with
+   3D buildings from zoom 15. Listings and CoStar sales are GeoJSON circle layers; hover shows a glass card, click
+   opens the details. Area filter: our own radius / rectangle / polygon tools.
+   _shapes: [{t: "circle", c: [lng, lat], r: metres} | {t: "poly", p: [[lng, lat], ...]}] */
+var MAP_STYLE = "https://tiles.openfreemap.org/styles/positron";
+var _map, _mapReady = false, _shapes = [], _pop = null, _popId = null, _hoverId = null, _draw = null;
+var EMPTY_FC = {type: "FeatureCollection", features: []};
 function chipsHtml(list, on, cls) {
   return list.map(function (x) { return '<button class="chip ' + cls + (on[x.k] ? " on" : "") + '" data-k="' + esc(x.k) + '">' + (x.c ? '<i style="background:' + x.c + '"></i>' : "") + esc(x.l || x.k) + (x.n != null ? ' <span class="muted">' + x.n + "</span>" : "") + "</button>"; }).join("");
 }
-function initMap() {
-  if (_map) return;
-  _map = L.map("map", {zoomControl: false, preferCanvas: true, maxZoom: 18}).setView([39.2, -77.3], 7);
-  L.control.zoom({position: "topright"}).addTo(_map);
-  ["World_Light_Gray_Base", "World_Light_Gray_Reference"].forEach(function (n) {
-    var t = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/" + n + "/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 16, maxZoom: 18, attribution: n.indexOf("Base") > -1 ? "Tiles &copy; Esri" : ""});
-    t.on("tileerror", function (e) { var el = e.tile, k = +(el.dataset.r || 0); if (k < 3) { el.dataset.r = k + 1; setTimeout(function () { el.src = el.src.replace(/[?&]_r=\d+$/, "") + (el.src.indexOf("?") < 0 ? "?" : "&") + "_r=" + (k + 1); }, 700 * (k + 1)); } });
-    t.addTo(_map);
-  });
-  _lyrS = L.layerGroup().addTo(_map); _lyrL = L.layerGroup().addTo(_map);
-  if (_map.pm) {
-    _map.pm.addControls({position: "topright", drawMarker: false, drawCircleMarker: false, drawPolyline: false, drawText: false, cutPolygon: false, rotateMode: false, editMode: false, dragMode: false, removalMode: false});
-    _map.pm.setGlobalOptions({pathOptions: {color: "#0a84ff", weight: 2, fillOpacity: .08}});
-    _map.on("pm:create", function (e) {
-      _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = [e.layer];
-      e.layer.on("pm:edit", function () { renderMap(true); });
-      renderMap(true);
-    });
-  }
-  $("geoClear").onclick = function () { _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = []; renderMap(true); };
-  $("geoRad").onchange = function () { var v = parseFloat(this.value); var c = _shapes[0]; if (c && c.setRadius && v > 0) { c.setRadius(v * 1609.34); renderMap(true); } };
+function metres(a, b) {   /* [lng,lat] */
+  var R = 6371008.8, r = Math.PI / 180, dLat = (b[1] - a[1]) * r, dLng = (b[0] - a[0]) * r;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
-function inShapes(g) {
-  var ll = L.latLng(g[0], g[1]);
+function circlePoly(c, rad, n) {
+  var pts = [], lat = c[1] * Math.PI / 180;
+  for (var i = 0; i <= (n || 72); i++) {
+    var a = i / (n || 72) * 2 * Math.PI;
+    pts.push([c[0] + rad * Math.cos(a) / (111320 * Math.cos(lat)), c[1] + rad * Math.sin(a) / 110574]);
+  }
+  return pts;
+}
+function shapeRing(s) { return s.t === "circle" ? circlePoly(s.c, s.r) : s.p.concat([s.p[0]]); }
+function inShapes(g) {   /* g = [lat, lng] */
+  var x = g[1], y = g[0];
   return _shapes.some(function (s) {
-    if (s.getRadius) return s.getLatLng().distanceTo(ll) <= s.getRadius();
-    var pts = s.getLatLngs()[0], inside = false;
+    if (s.t === "circle") return metres(s.c, [x, y]) <= s.r;
+    var pts = s.p, inside = false;
     for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      var xi = pts[i].lng, yi = pts[i].lat, xj = pts[j].lng, yj = pts[j].lat;
-      if (((yi > g[0]) !== (yj > g[0])) && (g[1] < (xj - xi) * (g[0] - yi) / (yj - yi) + xi)) inside = !inside;
+      var xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
     }
     return inside;
   });
+}
+/* room the floating panels take, so fly-to and fit keep listings in the open part of the map */
+function mapPad() {
+  var css = getComputedStyle(document.documentElement), top = parseFloat(css.getPropertyValue("--top")) || 84;
+  var fb = ($("fb_map") || {}).offsetHeight || 56, side = document.querySelector("#vMap .mv-side");
+  if (innerWidth < 760) return {top: top + fb + 20, bottom: innerHeight * 0.45, left: 30, right: 30};
+  return {top: top + fb + 30, bottom: 40, left: (side ? side.offsetWidth : 380) + 50, right: S.drawer ? 520 : 80};
+}
+/* Apple-Maps-like palette on the Positron style */
+function styleMap() {
+  var P = function (id, prop, v) { try { if (_map.getLayer(id)) _map.setPaintProperty(id, prop, v); } catch (e) {} };
+  P("background", "background-color", "#f4f3ef");
+  P("park", "fill-color", "#d7ecc9");
+  P("landcover_wood", "fill-color", "#cfe6c0");
+  P("landuse_residential", "fill-color", "#efede8");
+  P("water", "fill-color", "#a9d2f3");
+  P("waterway", "line-color", "#a9d2f3");
+  P("building", "fill-color", "#e7e4dd"); P("building", "fill-outline-color", "#dcd8cf");
+  ["highway_minor", "highway_path", "highway_major_inner", "tunnel_motorway_inner"].forEach(function (id) { P(id, "line-color", "#ffffff"); });
+  ["highway_major_casing", "tunnel_motorway_casing"].forEach(function (id) { P(id, "line-color", "#dedad1"); });
+  ["highway_motorway_inner", "highway_motorway_bridge_inner"].forEach(function (id) { P(id, "line-color", "#fde2a6"); });
+  ["highway_motorway_casing", "highway_motorway_bridge_casing"].forEach(function (id) { P(id, "line-color", "#efc673"); });
+  ["highway_motorway_subtle", "highway_major_subtle"].forEach(function (id) { P(id, "line-color", "rgba(222,218,209,.8)"); });
+  ["boundary_2", "boundary_3"].forEach(function (id) { P(id, "line-color", "#b9b4cc"); });
+  ["water_name_point_label", "water_name_line_label"].forEach(function (id) { P(id, "text-color", "#3d72a8"); });
+  ["label_city", "label_city_capital", "label_town", "label_village"].forEach(function (id) { P(id, "text-color", "#1d1d1f"); P(id, "text-halo-color", "rgba(255,255,255,.9)"); });
+  ["label_state", "label_other"].forEach(function (id) { P(id, "text-color", "#8e8e93"); });
+  ["highway-name-minor", "highway-name-major", "highway-name-path"].forEach(function (id) { P(id, "text-color", "#6e6e73"); });
+  try {   /* 3D buildings once zoomed in; they rise as you zoom */
+    var firstSym = (_map.getStyle().layers || []).find(function (l) { return l.type === "symbol"; });
+    _map.addLayer({id: "building-3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 14.5,
+      paint: {"fill-extrusion-color": "#ebe8e1", "fill-extrusion-opacity": 0.82,
+        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14.5, 0, 16, ["coalesce", ["get", "render_height"], 10]],
+        "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0]}}, firstSym && firstSym.id);
+  } catch (e) {}
+}
+/* fit bounds into the open part of the map, levelling any tilt on the way (MapLibre can't fit a tilted view with this padding) */
+function fitFlat(b, dur, maxZoom) {
+  var tr = _map.transform, p = tr.pitch, pad = _map.getPadding(), Z = {top: 0, bottom: 0, left: 0, right: 0}, cam;
+  try { tr.pitch = 0; _map.setPadding(Z); cam = _map.cameraForBounds(b, {padding: mapPad(), bearing: 0, maxZoom: maxZoom || 16}); }
+  finally { tr.pitch = p; }
+  if (!cam) { _map.setPadding(pad); return; }
+  _map.easeTo({center: cam.center, zoom: cam.zoom, bearing: 0, pitch: 0, padding: Z, duration: dur || 1000, easing: function (k) { return 1 - Math.pow(1 - k, 3); }, essential: true});
+}
+function DrawCtl() {}
+DrawCtl.prototype.onAdd = function () {
+  var d = document.createElement("div");
+  d.className = "maplibregl-ctrl maplibregl-ctrl-group drawctl";
+  d.innerHTML =
+    '<button type="button" data-t="circle" title="Draw a radius (drag from the center)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><path d="M12 12h8"/></svg></button>' +
+    '<button type="button" data-t="rect" title="Draw a rectangle (drag)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="6" width="15" height="12" rx="2.5"/></svg></button>' +
+    '<button type="button" data-t="poly" title="Draw an area (click points, double-click to finish)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 8l6-4 8 5-2 9-10 1z"/></svg></button>';
+  d.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) startDraw(b.dataset.t); });
+  this._el = d; return d;
+};
+DrawCtl.prototype.onRemove = function () { this._el.remove(); };
+function drawHint(txt) { var h = $("drawHint"); if (!h) return; h.textContent = txt || ""; h.classList.toggle("on", !!txt); }
+function startDraw(t) {
+  if (_draw && _draw.t === t) return endDraw();
+  _draw = {t: t, pts: [], start: null, cur: null};
+  if (_pop) _pop.remove();
+  _map.getCanvas().style.cursor = "crosshair";
+  if (t !== "poly") _map.dragPan.disable();
+  _map.doubleClickZoom.disable();
+  document.querySelectorAll(".drawctl button").forEach(function (b) { b.classList.toggle("on", b.dataset.t === t); });
+  drawHint(t === "circle" ? "Drag from the center to set the radius  ·  Esc to cancel" : t === "rect" ? "Drag to draw a rectangle  ·  Esc to cancel" : "Click to add points, double-click to finish  ·  Esc to cancel");
+}
+function endDraw(shape) {
+  _draw = null;
+  _map.getCanvas().style.cursor = "";
+  _map.dragPan.enable();
+  setTimeout(function () { _map.doubleClickZoom.enable(); }, 300);
+  document.querySelectorAll(".drawctl button").forEach(function (b) { b.classList.remove("on"); });
+  drawHint("");
+  if (shape) {
+    _shapes = [shape];
+    var ring = shapeRing(shape), b = ring.reduce(function (bb, p) { return [[Math.min(bb[0][0], p[0]), Math.min(bb[0][1], p[1])], [Math.max(bb[1][0], p[0]), Math.max(bb[1][1], p[1])]]; }, [[180, 90], [-180, -90]]);
+    fitFlat(b, 1000, 16);
+  }
+  drawData(); renderMap(true);
+}
+function drawData() {
+  if (!_mapReady) return;
+  var f = _shapes.map(function (s) { return {type: "Feature", properties: {k: "shape"}, geometry: {type: "Polygon", coordinates: [shapeRing(s)]}}; });
+  var d = _draw;
+  if (d) {
+    if (d.t === "circle" && d.start && d.cur) f.push({type: "Feature", properties: {k: "draft"}, geometry: {type: "Polygon", coordinates: [circlePoly(d.start, Math.max(1, metres(d.start, d.cur)))]}});
+    if (d.t === "rect" && d.start && d.cur) { var a = d.start, c = d.cur; f.push({type: "Feature", properties: {k: "draft"}, geometry: {type: "Polygon", coordinates: [[a, [c[0], a[1]], c, [a[0], c[1]], a]]}}); }
+    if (d.t === "poly" && d.pts.length) f.push({type: "Feature", properties: {k: "draft"}, geometry: {type: "LineString", coordinates: d.pts.concat(d.cur ? [d.cur] : [])}});
+  }
+  _map.getSource("draw").setData({type: "FeatureCollection", features: f});
+}
+function popShow(kind, id, lngLat) {
+  if (_draw) return;
+  var key = kind + id;
+  if (!_pop) _pop = new maplibregl.Popup({closeButton: false, closeOnClick: false, offset: 16, maxWidth: "330px", className: "gpop"});
+  if (_popId !== key) { var r = kind === "l" ? S.byId[id] : S.saleById[id]; if (!r) return; _pop.setHTML(kind === "l" ? lTip(r) : sTip(r)); _popId = key; }
+  _pop.setLngLat(lngLat).addTo(_map);
+}
+function popHide() { if (_pop) _pop.remove(); _popId = null; }
+function setHover(id) {
+  _hoverId = id || null;
+  if (_mapReady) _map.setFilter("listings-halo", ["==", ["get", "id"], _hoverId || ""]);
+}
+function initMap() {
+  if (_map || !window.maplibregl) return;
+  _map = new maplibregl.Map({container: "map", style: MAP_STYLE, center: [-77.2, 39.6], zoom: 5.6, minZoom: 4, maxZoom: 19, maxPitch: 65,
+    attributionControl: {compact: true}, fadeDuration: 200, dragRotate: true, cooperativeGestures: false});
+  _map.scrollZoom.setWheelZoomRate(1 / 300);
+  _map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "top-right");
+  _map.addControl(new DrawCtl(), "top-right");
+  _map.on("load", function () {
+    styleMap();
+    _map.addSource("draw", {type: "geojson", data: EMPTY_FC});
+    _map.addSource("sales", {type: "geojson", data: EMPTY_FC});
+    _map.addSource("listings", {type: "geojson", data: EMPTY_FC});
+    var R = ["interpolate", ["linear"], ["zoom"], 5, 3.4, 9, 5.2, 13, 7, 17, 10];
+    _map.addLayer({id: "draw-fill", type: "fill", source: "draw", filter: ["==", ["geometry-type"], "Polygon"], paint: {"fill-color": "#0a84ff", "fill-opacity": ["match", ["get", "k"], "draft", 0.12, 0.07]}});
+    _map.addLayer({id: "draw-line", type: "line", source: "draw", paint: {"line-color": "#0a84ff", "line-width": 2.2, "line-opacity": 0.9, "line-dasharray": ["match", ["get", "k"], "draft", ["literal", [2, 1.5]], ["literal", [1, 0]]]}});
+    _map.addLayer({id: "sales-dots", type: "circle", source: "sales", paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 2.8, 9, 4.4, 13, 6, 17, 8.5],
+      "circle-color": SALE_C, "circle-opacity": 0.82, "circle-stroke-color": "#fff", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 12, 1.8]}});
+    _map.addLayer({id: "listings-halo", type: "circle", source: "listings", filter: ["==", ["get", "id"], ""],
+      paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 11, 13, 18, 17, 24], "circle-color": ["get", "c"], "circle-opacity": 0.22, "circle-blur": 0.35}});
+    _map.addLayer({id: "listings-dots", type: "circle", source: "listings", paint: {"circle-radius": R, "circle-color": ["get", "c"],
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 1.1, 12, 2.2], "circle-pitch-alignment": "map"}});
+    _map.addLayer({id: "listings-sel", type: "circle", source: "listings", filter: ["==", ["get", "id"], ""],
+      paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 6, 13, 10, 17, 13], "circle-color": ["get", "c"], "circle-stroke-color": "#1d1d1f", "circle-stroke-width": 3}});
+    [["listings-dots", "l"], ["sales-dots", "s"]].forEach(function (x) {
+      _map.on("mousemove", x[0], function (e) { if (_draw) return; var f = e.features[0]; _map.getCanvas().style.cursor = "pointer"; popShow(x[1], f.properties.id, f.geometry.coordinates); if (x[1] === "l") setHover(f.properties.id); });
+      _map.on("mouseleave", x[0], function () { if (_draw) return; _map.getCanvas().style.cursor = ""; popHide(); setHover(null); });
+      _map.on("click", x[0], function (e) { if (_draw) return; var id = e.features[0].properties.id; popHide(); if (x[1] === "l") openListing(id); else openSale(id); });
+    });
+    /* drawing */
+    _map.on("mousedown", function (e) { if (_draw && _draw.t !== "poly") { e.preventDefault(); _draw.start = [e.lngLat.lng, e.lngLat.lat]; _draw.cur = _draw.start; } });
+    _map.on("mousemove", function (e) { if (!_draw) return; _draw.cur = [e.lngLat.lng, e.lngLat.lat]; if (_draw.start || _draw.t === "poly") drawData(); });
+    _map.on("mouseup", function (e) {
+      var d = _draw; if (!d || d.t === "poly" || !d.start) return;
+      var a = d.start, c = [e.lngLat.lng, e.lngLat.lat];
+      if (d.t === "circle") { var r = metres(a, c); return r > 30 ? endDraw({t: "circle", c: a, r: r}) : (d.start = null, drawData()); }
+      if (Math.abs(a[0] - c[0]) > 1e-4 && Math.abs(a[1] - c[1]) > 1e-4) return endDraw({t: "poly", p: [a, [c[0], a[1]], c, [a[0], c[1]]]});
+      d.start = null; drawData();
+    });
+    _map.on("click", function (e) {
+      var d = _draw; if (!d || d.t !== "poly") return;
+      var pt = [e.lngLat.lng, e.lngLat.lat];
+      if (d.pts.length >= 3) { var p0 = _map.project(d.pts[0]); if (Math.hypot(p0.x - e.point.x, p0.y - e.point.y) < 12) return endDraw({t: "poly", p: d.pts.slice()}); }
+      d.pts.push(pt); drawData();
+    });
+    _map.on("dblclick", function (e) { var d = _draw; if (d && d.t === "poly") { e.preventDefault(); var p = d.pts.slice(0, -1); if (p.length >= 3) endDraw({t: "poly", p: p}); } });
+    _mapReady = true;
+    renderMap(false);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && _draw) { e.stopPropagation(); endDraw(); } }, true);
+  $("geoClear").onclick = function () { _shapes = []; drawData(); renderMap(true); };
+  $("geoRad").onchange = function () { var v = parseFloat(this.value), c = _shapes[0]; if (c && c.t === "circle" && v > 0) { c.r = v * 1609.34; drawData(); renderMap(true); } };
 }
 function ttRow(k, v, cls) { return '<div class="k' + (cls ? " " + cls : "") + '">' + k + '</div><div class="v">' + (v || '<span class="na">\u2014</span>') + "</div>"; }
 function lTip(o) {
@@ -1488,16 +1665,16 @@ function renderMap(soft) {
       '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "") + ", " + o.state) + (o.geo ? "" : ' <span class="pill gray" title="Address could not be placed on the map">no pin</span>') + "</div><div></div>" +
       '<div class="m"><span>' + (o.land ? '<span class="pill orange">Land / dev.</span>' : o.units ? n0(o.units) + " units" : "units n/a") + "</span><span>" + fmtD(o.onMarket) + "</span><span>" + esc(o.firm || o.brokerCo) + "</span></div></div>";
   }).join("");
-  if (rows.length > 400) html += '<div class="small muted" style="padding:12px 14px">Showing the first 400 of ' + rows.length + " - narrow the filters to see the rest.</div>";
-  if (!rows.length) html = '<div class="small muted" style="padding:24px 14px;text-align:center">No listings match these filters.</div>';
+  if (rows.length > 400) html += '<div class="small muted" style="padding:12px 16px">Showing the first 400 of ' + rows.length + " - narrow the filters to see the rest.</div>";
+  if (!rows.length) html = '<div class="small muted" style="padding:24px 16px;text-align:center">No listings match these filters.</div>';
   $("mvList").innerHTML = html;
   var gb = $("geoBox");
   gb.classList.toggle("on", !!_shapes.length);
   if (_shapes.length) {
     var c = _shapes[0];
-    $("geoKind").textContent = c.getRadius ? "Radius" : "Drawn area";
-    $("geoRadWrap").hidden = !c.getRadius;
-    if (c.getRadius && document.activeElement !== $("geoRad")) $("geoRad").value = (c.getRadius() / 1609.34).toFixed(2).replace(/\.?0+$/, "");
+    $("geoKind").textContent = c.t === "circle" ? "Radius" : "Drawn area";
+    $("geoRadWrap").hidden = c.t !== "circle";
+    if (c.t === "circle" && document.activeElement !== $("geoRad")) $("geoRad").value = (c.r / 1609.34).toFixed(2).replace(/\.?0+$/, "");
     $("geoN").textContent = rows.length;
   }
   $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#34c759"}, {k: "sales", l: "CoStar sales", c: SALE_C}], S.layers, "mly");
@@ -1505,32 +1682,35 @@ function renderMap(soft) {
   $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (!Object.keys(sm).some(function (k) { return sm[k]; }) || sm[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(statusDesc(s.k)) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
     (S.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
     '<div class="small muted" style="margin-top:6px">' + pinned + " of " + rows.length + " on the map</div>";
-  _lyrL.clearLayers(); _lyrS.clearLayers(); _mkById = {};
-  if (S.layers.listings) rows.forEach(function (o) {
-    if (!o.geo) return;
-    var s = ST[o._status], sel = S.drawer && S.drawer.id === o.id;
-    var mk = L.circleMarker(o.geo, {radius: sel ? 9 : 6.5, color: sel ? "#1d1d1f" : "#fff", weight: sel ? 3 : 2, fillColor: s.c, fillOpacity: 1});
-    mk.bindTooltip(function () { return lTip(o); }, {className: "lf-tip", direction: "auto", offset: [8, 0], opacity: 1});
-    mk.on("click", function () { openListing(o.id); });
-    mk.addTo(_lyrL); _mkById[o.id] = mk;
-  });
+  if (!_mapReady) return;
+  var lf = S.layers.listings ? rows.filter(function (o) { return o.geo; }).map(function (o) {
+    return {type: "Feature", properties: {id: o.id, c: ST[o._status].c}, geometry: {type: "Point", coordinates: [o.geo[1], o.geo[0]]}};
+  }) : [];
+  _map.getSource("listings").setData({type: "FeatureCollection", features: lf});
+  var sf = [];
   if (S.layers.sales) {
     var since = String(new Date().getFullYear() - 3);
     S.sales.forEach(function (s) {
       if (!s.geo || s._link || s.pending || (!S.F.within && s.date < since)) return;
       if (!pass(s, "s", "map")) return;
       if (_shapes.length && !inShapes(s.geo)) return;
-      var mk = L.circleMarker(s.geo, {radius: 6, color: "#fff", weight: 2, fillColor: SALE_C, fillOpacity: .9});
-      mk.bindTooltip(function () { return sTip(s); }, {className: "lf-tip", direction: "auto", offset: [8, 0], opacity: 1});
-      mk.on("click", function () { openSale(s.id); });
-      mk.addTo(_lyrS);
+      sf.push({type: "Feature", properties: {id: s.id}, geometry: {type: "Point", coordinates: [s.geo[1], s.geo[0]]}});
     });
   }
-  if (!soft && !S._fitted) {
-    var pts = rows.filter(function (o) { return o.geo; }).map(function (o) { return o.geo; });
-    if (pts.length) { _map.fitBounds(L.latLngBounds(pts).pad(0.05)); S._fitted = 1; }
+  _map.getSource("sales").setData({type: "FeatureCollection", features: sf});
+  _map.setFilter("listings-sel", ["==", ["get", "id"], S.drawer && S.drawer.kind === "l" ? S.drawer.id : ""]);
+  if (!soft && !S._fitted && lf.length) {
+    var b = lf.reduce(function (bb, f) { var p = f.geometry.coordinates; return [[Math.min(bb[0][0], p[0]), Math.min(bb[0][1], p[1])], [Math.max(bb[1][0], p[0]), Math.max(bb[1][1], p[1])]]; }, [[180, 90], [-180, -90]]);
+    fitFlat(b, 1800, 13);
+    S._fitted = 1;
   }
-  setTimeout(function () { _map.invalidateSize(); }, 50);
+  setTimeout(function () { _map.resize(); }, 30);
+}
+/* glide to a listing: tilt in a little so the 3D buildings read */
+function flyToListing(o) {
+  if (!_mapReady || !o || !o.geo) return;
+  var z = Math.max(_map.getZoom(), 15.6);
+  _map.flyTo({center: [o.geo[1], o.geo[0]], zoom: z, pitch: 48, bearing: _map.getBearing() || -14, speed: 1.1, curve: 1.45, padding: mapPad(), essential: true});
 }
 function wireMap() {
   $("msort").value = lsGet("miq_msort", "date");
@@ -1539,8 +1719,10 @@ function wireMap() {
     var b = e.target.closest(".chip.mly"); if (b) { S.layers[b.dataset.k] = !S.layers[b.dataset.k]; lsSet("miq_layers", S.layers); return renderMap(true); }
     b = e.target.closest(".map-legend .row[data-k]");
     if (b) { var m = S.st.map = S.st.map || {}; if (!Object.keys(m).some(function (k) { return m[k]; })) STATUS.forEach(function (s) { m[s.k] = 1; }); m[b.dataset.k] = !m[b.dataset.k]; saveF(); return renderMap(true); }
-    b = e.target.closest(".lc"); if (b) { openListing(b.dataset.id); var o = S.byId[b.dataset.id]; if (o && o.geo) _map.setView(o.geo, Math.max(_map.getZoom(), 14)); }
+    b = e.target.closest(".lc"); if (b) { openListing(b.dataset.id); flyToListing(S.byId[b.dataset.id]); }
   });
+  $("mvList").addEventListener("mouseover", function (e) { var b = e.target.closest(".lc"); setHover(b ? b.dataset.id : null); });
+  $("mvList").addEventListener("mouseleave", function () { setHover(null); });
 }
 
 /* ================================================================ DASHBOARD */
@@ -2263,11 +2445,11 @@ function wire() {
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if ($("modal").classList.contains("open")) closeModal(); else if (S.drawer) closeDrawer(); } });
   wireBars(); wireMap(); wireTable(); wireSales();
   if (/Mac|iPhone|iPad/.test(navigator.platform || "")) $("gqk").textContent = "\u2318K";
-  if (window.ResizeObserver) new ResizeObserver(function () { document.documentElement.style.setProperty("--fbh", $("fb_map").offsetHeight + "px"); if (_map) _map.invalidateSize(); }).observe($("fb_map"));
+  if (window.ResizeObserver) new ResizeObserver(function () { document.documentElement.style.setProperty("--fbh", $("fb_map").offsetHeight + "px"); if (_map) _map.resize(); }).observe($("fb_map"));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInd);
   setTimeout(moveInd, 60);
   window.addEventListener("resize", moveInd);
-  window.addEventListener("resize", function () { clearTimeout(wire._r); wire._r = setTimeout(function () { if (S.view === "dash") renderDash(); if (S.view === "new") renderNew(); if (_map) _map.invalidateSize(); }, 150); });
+  window.addEventListener("resize", function () { clearTimeout(wire._r); wire._r = setTimeout(function () { if (S.view === "dash") renderDash(); if (S.view === "new") renderNew(); if (_map) _map.resize(); }, 150); });
 }
 
 /* ---------------------------------------------------------------- sign-in */
