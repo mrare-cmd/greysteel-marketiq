@@ -398,7 +398,7 @@ select.inp{padding-right:4px}
   --border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.06);--bg:#f5f5f7;--white:#fff;
   --fill:rgba(118,118,128,.12);--fill2:rgba(118,118,128,.08);
   --glass:rgba(255,255,255,.56);--glass-hi:rgba(255,255,255,.76);--glass-max:rgba(255,255,255,.88);
-  --blur:blur(28px) saturate(185%);
+  --blur:blur(18px) saturate(160%);
   --rim:linear-gradient(140deg,rgba(255,255,255,.95),rgba(255,255,255,.25) 32%,rgba(255,255,255,.08) 58%,rgba(255,255,255,.7));
   --lift:0 1px 1px rgba(0,0,0,.02),0 8px 28px rgba(15,23,42,.07);
   --lift-hi:0 2px 4px rgba(0,0,0,.03),0 22px 60px rgba(15,23,42,.14);
@@ -412,11 +412,12 @@ body{font-size:13.5px}
 
 /* colour field behind the glass */
 .bgfx{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(180deg,#f7f8fb 0%,#f2f3f7 100%)}
-.bgfx i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;opacity:.9;will-change:transform}
-.bgfx i:nth-child(1){left:-18vmax;top:-26vmax;background:radial-gradient(circle,rgba(116,185,255,.42),rgba(116,185,255,0) 62%);animation:drift1 34s ease-in-out infinite alternate}
-.bgfx i:nth-child(2){right:-22vmax;top:-10vmax;background:radial-gradient(circle,rgba(191,160,255,.36),rgba(191,160,255,0) 62%);animation:drift2 41s ease-in-out infinite alternate}
-.bgfx i:nth-child(3){left:12vmax;bottom:-38vmax;background:radial-gradient(circle,rgba(255,196,150,.34),rgba(255,196,150,0) 62%);animation:drift3 47s ease-in-out infinite alternate}
-.bgfx i:nth-child(4){right:6vmax;bottom:-30vmax;width:50vmax;height:50vmax;background:radial-gradient(circle,rgba(120,230,200,.26),rgba(120,230,200,0) 62%);animation:drift1 52s ease-in-out infinite alternate-reverse}
+.bgfx i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;opacity:.9}
+/* static on purpose: a drifting background forced every blurred layer to redraw continuously, even with nothing happening */
+.bgfx i:nth-child(1){left:-18vmax;top:-26vmax;background:radial-gradient(circle,rgba(116,185,255,.42),rgba(116,185,255,0) 62%)}
+.bgfx i:nth-child(2){right:-22vmax;top:-10vmax;background:radial-gradient(circle,rgba(191,160,255,.36),rgba(191,160,255,0) 62%)}
+.bgfx i:nth-child(3){left:12vmax;bottom:-38vmax;background:radial-gradient(circle,rgba(255,196,150,.34),rgba(255,196,150,0) 62%)}
+.bgfx i:nth-child(4){right:6vmax;bottom:-30vmax;width:50vmax;height:50vmax;background:radial-gradient(circle,rgba(120,230,200,.26),rgba(120,230,200,0) 62%)}
 @keyframes drift1{to{transform:translate(14vmax,10vmax) scale(1.12)}}
 @keyframes drift2{to{transform:translate(-12vmax,14vmax) scale(.92)}}
 @keyframes drift3{to{transform:translate(10vmax,-12vmax) scale(1.08)}}
@@ -458,7 +459,7 @@ nav.tabs.segnav{position:relative;background:var(--fill);border-radius:13px;padd
 .gsearch svg{left:12px;width:16px;height:16px;color:var(--text3)}
 .gsearch kbd{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-family:var(--ft);font-size:10.5px;font-weight:600;color:var(--text3);background:rgba(255,255,255,.7);border-radius:6px;padding:2px 6px;box-shadow:0 0 0 .5px rgba(0,0,0,.08);pointer-events:none}
 #syncDot{color:var(--text3);font-size:11.5px}
-#syncDot i{background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.18);animation:live 2.4s ease-in-out infinite}
+#syncDot i{background:#34c759;box-shadow:0 0 0 3px rgba(52,199,89,.18)}
 @keyframes live{50%{box-shadow:0 0 0 6px rgba(52,199,89,0)}}
 #syncDot.err i{background:var(--red);animation:none}
 #userChip{border:none;background:var(--fill);height:34px;border-radius:17px}
@@ -506,7 +507,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 /* shelf life: the one control that changes every status */
 .shelf{height:34px;border-radius:17px;padding:0 5px 0 14px;background:linear-gradient(120deg,#0a84ff,#5e5ce6 58%,#bf5af2);color:#fff;font-weight:600;
   box-shadow:0 6px 18px rgba(94,92,230,.35),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.08);position:relative;overflow:hidden}
-.shelf::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);transform:translateX(-120%);animation:shine 5.5s ease-in-out 1.2s infinite;pointer-events:none}
+.shelf::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);transform:translateX(-120%);animation:shine 5.5s ease-in-out 1.2s 2;pointer-events:none}
 @keyframes shine{0%,72%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 .shelf input{height:24px;border-radius:12px;background:rgba(255,255,255,.95);font-weight:700;color:#3634a3;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);position:relative;z-index:1}
 .shelf em,.shelf span{position:relative;z-index:1}
@@ -730,6 +731,13 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   #vDash>.fbar,#vNew>.fbar{margin:var(--top) 8px 0}
   #drawer{right:8px;left:8px;width:auto;bottom:8px}
 }
+/* cards over a static background need no live blur: translucent white reads the same and costs nothing */
+.card,.nc,.cmpbox>div,.mini{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.card,.nc{background:rgba(255,255,255,.72)}
+/* while the map moves: solid panels instead of re-blurring the moving canvas */
+body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving .map-legend,body.map-moving .map-layers .chip,body.map-moving .maplibregl-ctrl-group,
+body.map-moving .geo-box,body.map-moving header,body.map-moving .gpop .maplibregl-popup-content,body.map-moving #drawer{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body.map-moving #drawer{background:rgba(250,250,252,.94)!important}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -755,7 +763,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v13</span>
+    <span id="verBadge" title="Page version">v15</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -897,7 +905,12 @@ document.querySelectorAll("[data-brand]").forEach(function (e) { e.textContent =
 /* ---------------------------------------------------------------- utils */
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); }
-function today() { return new Date().toLocaleDateString("en-CA", {timeZone: "America/New_York"}); }
+var _todayV = null, _todayT = 0;
+function today() {   /* cached for a minute: Intl formatting costs ~0.3 ms and this runs for every row of every date filter */
+  var n = Date.now();
+  if (!_todayV || n - _todayT > 60000) { _todayV = new Date().toLocaleDateString("en-CA", {timeZone: "America/New_York"}); _todayT = n; }
+  return _todayV;
+}
 function dnum(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || "")); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null; }
 function days(a, b) { var x = dnum(a), y = dnum(b); return x == null || y == null ? null : Math.round((y - x) / DAY); }
 function shift(iso, n) { return new Date(dnum(iso) + n * DAY).toISOString().slice(0, 10); }
@@ -938,7 +951,12 @@ var ABBR = {street: "st", str: "st", avenue: "ave", av: "ave", place: "pl", road
   pky: "pkwy", wy: "way", trce: "trace", crescent: "cres", turnpike: "tpke", tpk: "tpke"};   /* CoStar spellings */
 var SUFFIX = {st: 1, ave: 1, pl: 1, rd: 1, ter: 1, dr: 1, ct: 1, blvd: 1, ln: 1, pkwy: 1, cir: 1, sq: 1, hwy: 1, way: 1, pike: 1, trace: 1, cres: 1, tpke: 1};
 var QUAD = {nw: 1, ne: 1, sw: 1, se: 1};
+var _naC = new Map();
 function normAddr(a) {
+  var key = String(a || ""), hit = _naC.get(key); if (hit !== undefined) return hit;
+  var out = normAddr0(key); if (_naC.size > 60000) _naC.clear(); _naC.set(key, out); return out;
+}
+function normAddr0(a) {
   var s = String(a || "").toLowerCase();
   s = s.replace(/\b(n\.?\s?w|n\.?\s?e|s\.?\s?w|s\.?\s?e)\.?(?=\s|$|,)/g, function (m) { return m.replace(/[^nsew]/g, ""); });
   s = s.replace(/[.,#'?]/g, " ").replace(/\s+/g, " ").trim();
@@ -966,7 +984,12 @@ function streetKey(a) {
 }
 function noQuad(k) { return String(k || "").replace(/ (nw|ne|sw|se)$/, ""); }
 /* "n cold spring ln nw" -> name "coldspring", suffix "ln", quadrant "nw", direction "n" */
+var _spC = new Map();
 function stParts(k) {
+  var key = String(k || ""), hit = _spC.get(key); if (hit) return hit;
+  var out = stParts0(key); _spC.set(key, out); return out;
+}
+function stParts0(k) {
   var t = String(k || "").split(" ").filter(Boolean), q = t.length && QUAD[t[t.length - 1]] ? t.pop() : "";
   var suf = t.length > 1 && SUFFIX[t[t.length - 1]] ? t.pop() : "", d = t.length > 1 && /^[nsew]$/.test(t[0]) ? t.shift() : "";
   return {c: t.join(""), s: suf, q: q, d: d};
@@ -979,7 +1002,12 @@ function sameStreet(a, b) {
   return !!x.c && x.c === y.c && (!x.s || !y.s || x.s === y.s) && (!x.q || !y.q || x.q === y.q) && (!x.d || !y.d || x.d === y.d);
 }
 /* an address list split into buildings: "861 Ulster St & 867 Ulster St" -> two parts; "5005, 5009 and 5011 Bass Pl" -> one part, three numbers */
+var _apC = new Map();
 function addrParts(a) {
+  var key = String(a || ""), hit = _apC.get(key); if (hit) return hit;
+  var out = addrParts0(key); if (_apC.size > 40000) _apC.clear(); _apC.set(key, out); return out;
+}
+function addrParts0(a) {
   var s = normAddr(a).split(/\b(?:apt|unit|ste|suite|bldg)\b/)[0], parts = [], pend = [];
   s.split(/\s*(?:&|\band\b|;|\/)\s*/).filter(function (x) { return x.trim(); }).forEach(function (c) {
     var sk = streetKey(c), hn = houseNums(c);
@@ -1012,11 +1040,17 @@ function placeOk(o, s, lim) {
 }
 function overlap(a, b) { return a.some(function (x) { return b.some(function (y) { return x[0] <= y[1] && y[0] <= x[1]; }); }); }
 var GENERIC = {apartments: 1, apartment: 1, apts: 1, the: 1, portfolio: 1, residences: 1, flats: 1, at: 1, of: 1, and: 1};
+var _nkC = new Map();
 function nameKey(n) {
+  var key = String(n || ""), hit = _nkC.get(key); if (hit !== undefined) return hit;
+  var out = nameKey0(key); _nkC.set(key, out); return out;
+}
+function nameKey0(n) {
   var k = String(n || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(function (w) { return w && !GENERIC[w]; }).join(" ");
   return !k || /^\d/.test(k) || k.length < 5 ? "" : k;
 }
 /* the same building, for "listed before" history: state + street + overlapping numbers */
+function gcell(lat, lng) { return Math.round(lat * 100) * 100000 + Math.round(lng * 100); }   /* ~1 km grid cell */
 function sameBldg(a, b) {
   if (a.state !== b.state) return false;
   return partsMatch(a._parts, b._parts);
@@ -1136,7 +1170,7 @@ function derive() {
     o._parts.forEach(function (p) { var c = streetCore(p.sk); if (c && !seenC[c]) { seenC[c] = 1; push(bySk, o.state + "|" + c, o); } });
     o._multi = Object.keys(seenC).length > 1;
     if (o._nk) push(byNk, o.state + "|" + o._nk, o);
-    if (o.geo) push(grid, o.geo[0].toFixed(2) + "|" + o.geo[1].toFixed(2), o);
+    if (o.geo) push(grid, gcell(o.geo[0], o.geo[1]), o);
   });
   var dealUnits = {};
   S.raw.sales.forEach(function (r) { if (!r.pending && r.compId && r.multiN) dealUnits[r.compId] = (dealUnits[r.compId] || 0) + (r.units || 0); });
@@ -1160,7 +1194,7 @@ function derive() {
       if (!cands.length && s.geo) {   /* near: same spot, same size, and CoStar names our firm (under contract: CoStar gives no broker) */
         var du = s.multiN ? dealUnits[s.compId] : null;
         for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
-          (grid[(s.geo[0] + dy * 0.01).toFixed(2) + "|" + (s.geo[1] + dx * 0.01).toFixed(2)] || []).forEach(function (o) {
+          (grid[gcell(s.geo[0] + dy * 0.01, s.geo[1] + dx * 0.01)] || []).forEach(function (o) {
             if (seen[o.id] || o.state !== s.state) return;
             var d = km(o.geo, s.geo);
             var ok = s.pending ? d <= 0.15 && unitsClose(o.units, s.units, 0.05) : d <= 0.3 && (unitsClose(o.units, s.units) || unitsClose(o.units, du)) && firmSame(o, s);
@@ -1202,12 +1236,14 @@ function derive() {
   /* portfolio deals: the listing marketed the whole CoStar deal -> its other unlinked buildings link too */
   var deal = {};
   S.sales.forEach(function (s) { if (!s.pending && s.compId) push(deal, s.compId, s); });
+  var linkedU = {};
+  S.sales.forEach(function (s) { if (s._link) linkedU[s._link.id] = (linkedU[s._link.id] || 0) + (s.units || 0); });
   S.sales.filter(function (s) { return s._link && s._how !== "manual"; }).forEach(function (s) {
     var o = s._link, g = deal[s.compId] || [];
     if (g.length < 2 || !o.units) return;
-    var have = sum(S.sales.filter(function (x) { return x._link === o; }).map(function (x) { return x.units; })), tot = sum(g.map(function (x) { return x.units; }));
+    var have = linkedU[o.id] || 0, tot = sum(g.map(function (x) { return x.units; }));
     if (have < 0.9 * o.units && Math.abs(tot - o.units) <= 0.1 * o.units)
-      g.forEach(function (x) { if (!x._link && x.link !== "none" && x._how !== "resale") { x._link = o; x._how = "deal"; x._why = "deal"; } });
+      g.forEach(function (x) { if (!x._link && x.link !== "none" && x._how !== "resale") { x._link = o; x._how = "deal"; x._why = "deal"; linkedU[o.id] = (linkedU[o.id] || 0) + (x.units || 0); } });
   });
   S.sales.forEach(function (s) {
     if (!s._link) return;
@@ -1290,27 +1326,32 @@ function fv(r, kind) {
   return {state: r.state, date: r.date, units: r.units, price: r.price, ppu: r._ppu, firm: o ? (o.firm || firmOf(o.brokerCo)) : firmOf(firstCo(r.brokerCo)), broker: o ? o.broker : r.brokerAgent, q: r._q + (o ? " " + o._q : ""), linked: !!o};
 }
 function inRange(v, lo, hi) { if (lo == null && hi == null) return true; if (v == null || isNaN(v)) return false; return (lo == null || v >= lo) && (hi == null || v <= hi); }
+/* which filters a row fails, as bits: 1 state, 2 status, 4 firm, 8 broker, 16 anything else */
+var FBIT = {state: 1, status: 2, firm: 4, broker: 8};
+function fctx(kind, view) {   /* the filter values, parsed once per render instead of once per row */
+  var F = S.F, st = S.st[view] || {};
+  return {F: F, kind: kind, view: view, states: Object.keys(F.states).filter(function (k) { return F.states[k]; }),
+    stat: kind === "l" ? Object.keys(st).filter(function (k) { return st[k]; }) : [], w: view !== "new" ? parseNum(F.within) : null, t: today(),
+    umin: parseNum(F.umin), umax: parseNum(F.umax), pmin: amt(F.pmin), pmax: amt(F.pmax), qmin: amt(F.ppumin), qmax: amt(F.ppumax), q: F.q ? normAddr(F.q) : ""};
+}
+function failMask(r, c) {
+  var F = c.F, kind = c.kind, v = fv(r, kind), m = 0;
+  if (kind === "l" && r.hidden && !(c.view === "table" && S.showHidden)) return 16;
+  if (c.states.length && c.states.indexOf(v.state) < 0) m |= 1;
+  if (c.stat.length && c.stat.indexOf(v.status) < 0) m |= 2;
+  if (F.firm && v.firm !== F.firm) m |= 4;
+  if (F.broker && v.broker !== F.broker) m |= 8;
+  if (c.w != null) { var d = days(v.date, c.t); if (d == null || d > c.w) return m | 16; }
+  if (!inRange(v.units, c.umin, c.umax) || !inRange(v.price, c.pmin, c.pmax) || !inRange(v.ppu, c.qmin, c.qmax)) return m | 16;
+  if (kind === "l" && ((F.type === "land" && !v.land) || (F.type === "mf" && v.land) || (F.src === "gs" && !r.gs) || (F.src === "ext" && r.gs))) return m | 16;
+  if (kind === "s" && ((F.link === "uc") !== !!r.pending || (F.link === "yes" && !v.linked) || (F.link === "no" && v.linked))) return m | 16;
+  if (c.q && v.q.indexOf(c.q) < 0) return m | 16;
+  return m;
+}
+var _fc = null;
 function pass(r, kind, view, skip) {
-  var F = S.F, v = fv(r, kind);
-  if (kind === "l" && r.hidden && !(view === "table" && S.showHidden)) return false;
-  if (skip !== "state") { var st = Object.keys(F.states).filter(function (k) { return F.states[k]; }); if (st.length && st.indexOf(v.state) < 0) return false; }
-  if (skip !== "status" && kind === "l" && S.st[view]) { var ss = Object.keys(S.st[view]).filter(function (k) { return S.st[view][k]; }); if (ss.length && ss.indexOf(v.status) < 0) return false; }
-  var w = parseNum(F.within);
-  if (w != null && view !== "new") { var d = days(v.date, today()); if (d == null || d > w) return false; }
-  if (!inRange(v.units, parseNum(F.umin), parseNum(F.umax))) return false;
-  if (!inRange(v.price, amt(F.pmin), amt(F.pmax))) return false;
-  if (!inRange(v.ppu, amt(F.ppumin), amt(F.ppumax))) return false;
-  if (kind === "l" && F.type === "land" && !v.land) return false;
-  if (kind === "l" && F.type === "mf" && v.land) return false;
-  if (kind === "l" && F.src === "gs" && !r.gs) return false;
-  if (kind === "l" && F.src === "ext" && r.gs) return false;
-  if (skip !== "firm" && F.firm && v.firm !== F.firm) return false;
-  if (skip !== "broker" && F.broker && v.broker !== F.broker) return false;
-  if (kind === "s" && (F.link === "uc") !== !!r.pending) return false;
-  if (kind === "s" && F.link === "yes" && !v.linked) return false;
-  if (kind === "s" && F.link === "no" && v.linked) return false;
-  if (F.q) { var q = normAddr(F.q); if (v.q.indexOf(q) < 0) return false; }
-  return true;
+  if (!_fc || _fc.kind !== kind || _fc.view !== view || _fc.F !== S.F || _fc.t !== today()) _fc = fctx(kind, view);
+  return (failMask(r, _fc) & ~(FBIT[skip] || 0)) === 0;
 }
 function applies(f, view) {
   var kind = FB_VIEWS[view];
@@ -1382,22 +1423,25 @@ function cbPick(box, v) {
   S.tp = 0; S.sp = 0; render(true);
 }
 function syncBar(view) {
+  _fc = null;
   var el = $("fb_" + view); if (!el || !el.firstChild) return;
   var kind = FB_VIEWS[view], F = S.F, rows = kind === "l" ? S.L : S.sales;
+  var ctx = fctx(kind, view), masks = rows.map(function (r) { return failMask(r, ctx); });   /* one evaluation per row */
+  var ok = function (i, skip) { return (masks[i] & ~(FBIT[skip] || 0)) === 0; };
   el.querySelectorAll("[data-f]").forEach(function (i) {
     if (i.tagName === "SELECT") i.value = F[i.dataset.f] || "";
     else if (document.activeElement !== i) i.value = F[i.dataset.f] || "";
     i.classList.toggle("on", !!F[i.dataset.f]);
   });
   var sh = el.querySelector("[data-shelf]"); if (sh && document.activeElement !== sh) sh.value = S.shelf;
-  var cs = {}; rows.forEach(function (r) { if (pass(r, kind, view, "state")) cs[r.state] = (cs[r.state] || 0) + 1; });
+  var cs = {}; rows.forEach(function (r, i) { if (ok(i, "state")) cs[r.state] = (cs[r.state] || 0) + 1; });
   el.querySelector("[data-states]").innerHTML = STATES.filter(function (s) { return rows.some(function (r) { return r.state === s; }); }).map(function (s) {
     return '<button class="chip' + (F.states[s] ? " on" : "") + '" data-st="' + s + '"><i style="background:' + ST_COLOR[s] + '"></i>' + s + ' <span class="muted">' + (cs[s] || 0) + "</span></button>";
   }).join("");
   var ms = el.querySelector("[data-ms]");
   if (ms) {
     var m = S.st[view] || {}, on = STATUS.filter(function (s) { return m[s.k]; }), cst = {};
-    rows.forEach(function (r) { if (pass(r, kind, view, "status")) cst[r._status] = (cst[r._status] || 0) + 1; });
+    rows.forEach(function (r, i) { if (ok(i, "status")) cst[r._status] = (cst[r._status] || 0) + 1; });
     var b = ms.querySelector(".msb");
     b.innerHTML = "Status: <b>" + (on.length ? (on.length > 2 ? on.length + " selected" : on.map(function (s) { return s.k; }).join(", ")) : "All") + "</b> ▾";
     b.classList.toggle("on", on.length > 0);
@@ -1408,7 +1452,7 @@ function syncBar(view) {
   el._cb = {};
   ["firm", "broker"].forEach(function (k) {
     var c = {};
-    rows.forEach(function (r) { if (pass(r, kind, view, k)) { var x = fv(r, kind)[k]; if (x) c[x] = (c[x] || 0) + 1; } });
+    rows.forEach(function (r, i) { if (ok(i, k)) { var x = fv(r, kind)[k]; if (x) c[x] = (c[x] || 0) + 1; } });
     el._cb[k] = c;
     var box = el.querySelector('[data-cb="' + k + '"]'), inp = box.querySelector(".cbi");
     if (document.activeElement !== inp) inp.value = F[k] || "";
@@ -1560,9 +1604,9 @@ function styleMap() {
   ["highway-name-minor", "highway-name-major", "highway-name-path"].forEach(function (id) { P(id, "text-color", "#6e6e73"); });
   try {   /* 3D buildings once zoomed in; they rise as you zoom */
     var firstSym = (_map.getStyle().layers || []).find(function (l) { return l.type === "symbol"; });
-    _map.addLayer({id: "building-3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 14.5,
+    _map.addLayer({id: "building-3d", type: "fill-extrusion", source: "openmaptiles", "source-layer": "building", minzoom: 15.2,
       paint: {"fill-extrusion-color": "#ebe8e1", "fill-extrusion-opacity": 0.82,
-        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 14.5, 0, 16, ["coalesce", ["get", "render_height"], 10]],
+        "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 15.2, 0, 16.5, ["coalesce", ["get", "render_height"], 10]],
         "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0]}}, firstSym && firstSym.id);
   } catch (e) {}
 }
@@ -1642,7 +1686,12 @@ function setHover(id) {
 function initMap() {
   if (_map || !window.maplibregl) return;
   _map = new maplibregl.Map({container: "map", style: MAP_STYLE, center: [-77.2, 39.6], zoom: 5.6, minZoom: 4, maxZoom: 19, maxPitch: 65,
-    attributionControl: {compact: true}, fadeDuration: 200, dragRotate: true, cooperativeGestures: false});
+    attributionControl: {compact: true}, fadeDuration: 0, dragRotate: true, cooperativeGestures: false, renderWorldCopies: false,
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5), maxTileCacheSize: 600, refreshExpiredTiles: false});
+  /* while the map moves, the floating glass panels drop their blur (re-blurring a moving WebGL canvas every frame is the costliest thing on the page) */
+  var mvc = document.body.classList;
+  _map.on("movestart", function () { mvc.add("map-moving"); });
+  _map.on("moveend", function () { mvc.remove("map-moving"); });
   _map.scrollZoom.setWheelZoomRate(1 / 300);
   _map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "top-right");
   _map.addControl(new DrawCtl(), "top-right");
