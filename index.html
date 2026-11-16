@@ -405,7 +405,7 @@ select.inp{padding-right:4px}
     <div class="mark">M</div>
     <span class="brand-name">Greysteel</span><span class="brand-sep">|</span>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v3</span>
+    <span id="verBadge" title="Page version">v4</span>
   </div>
   <nav class="tabs">
     <button class="tab active" data-view="map"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1634,6 +1634,13 @@ async function addListings(vals, message, event, src) {
   throw new Error("too many people saving at once - try again");
 }
 /* Salesforce CSV import (same report as the seed) */
+/* CoStar's Excel export carries UTF-8 text that was read as Windows-1252 ("Engel & VÃ¶lkers"). Repair it on upload.
+   Same rule as fix_text in MarketIQ tools/common.py. */
+var CP1252_REV=(function(){var m={},s="€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ";for(var i=0;i<s.length;i++)m[s.charCodeAt(i)]=0x80+i;return m;})();
+function fixRun(r){var b=[];for(var i=0;i<r.length;i++){var c=r.charCodeAt(i);if(c<0x80)b.push(c);else if(CP1252_REV[c]!=null)b.push(CP1252_REV[c]);else if(c<0x100)b.push(c);else return r;}
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(new Uint8Array(b));}catch(e){return r;}}
+function fixText(s){if(typeof s!=="string"||!/[ÂÃ][\u0080-ÿ]|â€/.test(s))return s;var w=fixRun(s);if(w!==s)return w;
+  return s.replace(/[Â-ô][\u0080-¿Œ-™]+/g,fixRun);}
 function parseCsv(text) {
   var rows = [], row = [], cell = "", q = false;
   for (var i = 0; i < text.length; i++) {
@@ -1671,7 +1678,7 @@ function importCsv(file) {
       for (var i = 1; i < aoa.length; i++) {
         var r = aoa[i]; if (!r.some(function (c) { return String(c).trim(); })) continue;
         var v = {};
-        Object.keys(map).forEach(function (k) { v[k] = String(r[map[k]] == null ? "" : r[map[k]]).replace(/ /g, " ").replace(/\s+/g, " ").trim(); });
+        Object.keys(map).forEach(function (k) { v[k] = fixText(String(r[map[k]] == null ? "" : r[map[k]])).replace(/ /g, " ").replace(/\s+/g, " ").trim(); });
         v.onMarket = typedDate(v.onMarket);
         if (!v.onMarket || v.onMarket < "2024-02-05") continue;
         v.state = v.state.toUpperCase();
@@ -1737,7 +1744,7 @@ function importCostar(file) {
           var v = r[map[k]];
           if (k === "date") v = xlDate(v);
           else if (["price", "units", "sf", "yearBuilt", "lat", "lng", "cap", "csAsking", "daysOnMkt"].indexOf(k) > -1) v = parseNum(v);
-          else v = String(v == null ? "" : v).trim();
+          else v = fixText(String(v == null ? "" : v)).trim();
           if (v !== "" && v != null) c[k] = v;
         });
         var pm = c.address && /\s*\((Part of an? [^)]*)\)\s*$/i.exec(c.address); if (pm) { c.portfolio = pm[1]; c.address = c.address.slice(0, pm.index); }
