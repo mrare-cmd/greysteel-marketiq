@@ -775,7 +775,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v16</span>
+    <span id="verBadge" title="Page version">v17</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1836,11 +1836,11 @@ function renderMap(soft) {
   }
   setTimeout(function () { _map.resize(); }, 30);
 }
-/* glide to a listing: tilt in a little so the 3D buildings read */
+/* glide to a listing, flat and north up */
 function flyToListing(o) {
   if (!_mapReady || !o || !o.geo) return;
   var z = Math.max(_map.getZoom(), 15.6);
-  _map.flyTo({center: [o.geo[1], o.geo[0]], zoom: z, pitch: 48, bearing: _map.getBearing() || -14, speed: 1.1, curve: 1.45, padding: mapPad(), essential: true});
+  _map.flyTo({center: [o.geo[1], o.geo[0]], zoom: z, pitch: 0, bearing: 0, speed: 1.1, curve: 1.45, padding: mapPad(), essential: true});   /* flat, north up (Mason) */
 }
 function wireMap() {
   $("msort").value = lsGet("miq_msort", "date");
@@ -2208,7 +2208,8 @@ function openListing(id, keep) {
     "<div><div class=l>vs. ask</div><div class=\"v num\">" + (spr(o._spread) || "–") + '</div><div class="s">' + (o._dtc != null ? o._dtc + " days to close" : "") + (o._capClose ? " · " + pct(o._capClose, 2) + " cap" : "") + "</div></div></div>" +
     (o._noSpr && o._sale ? '<div class="small muted" style="margin-top:6px">No vs. ask: ' + esc(o._noSpr) + ".</div>" : "") +
     (o._capAsk || o._capClose ? '<div class="small muted" style="margin-top:6px">Caps use the T-12 NOI from the listing.</div>' : "") + "</div>";
-  /* matched sales */
+  /* matched sales: built here, shown last in the panel (Mason) */
+  var hTop = h; h = "";
   h += '<div class="dr-sec"><div class="h">CoStar sale' + (o._sales.length > 1 ? "s" : "") + "</div>";
   h += o._sales.length ? o._sales.map(function (x) {
     return '<div class="mini"><div class="g"><b>' + mshort(x.price) + " · " + fmtD(x.date) + "</b><div>" + esc(x.address) + " · " + x.units + " units" + (x.buyer ? " · buyer " + esc(x.buyer) : "") + '</div></div><span class="pill ' + (x._how === "manual" ? "blue" : "gray") + '">' + (x._how === "manual" ? "linked by hand" : "matched automatically") + "</span>" + (x._why && x._how !== "manual" ? '<span class="pill gray" title="How it matched">' + ({address: "by address", name: "by name", near: "same spot, size, firm", deal: "same CoStar deal"}[x._why] || x._why) + "</span>" : "") + (x._remkt ? '<span class="pill orange" title="' + (x.daysOnMkt ? "CoStar shows another firm marketing it from " + esc(fmtD(shift(x.date, -x.daysOnMkt))) : "Another firm sold it more than a year after this listing") + '; left out of asked-vs-closed figures">re-marketed</span>' : "") + '<button class="btn sm" onclick="openSale(\'' + x.id + "')\">Open</button></div>";
@@ -2217,6 +2218,7 @@ function openListing(id, keep) {
   var resales = S.sales.filter(function (x) { return x._resaleOf === o; });
   if (resales.length) h += '<div class="small muted" style="margin-top:6px">Later resale' + (resales.length > 1 ? "s" : "") + " of the building, not counted as this listing's outcome: " + resales.map(function (x) { return '<a href="#" onclick="openSale(\'' + x.id + '\');return false">' + fmtD(x.date) + " " + mshort(x.price) + "</a>"; }).join(", ") + "</div>";
   h += '<div style="margin-top:8px;display:flex;gap:6px"><input class="inp" id="lnkQ" placeholder="Find a sale to link: address or buyer" style="flex:1"></div><div class="srch-res" id="lnkRes"></div></div>';
+  var hSales = h; h = hTop;
   /* fields */
   h += '<div class="dr-sec"><div class="h">Details <span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400">click a value to edit · shared with the team</span></div><div class="kv">' +
     LFIELDS.map(function (f) {
@@ -2233,6 +2235,7 @@ function openListing(id, keep) {
   h += '<div class="dr-sec"><div class="h">Highlight</div><div class="hls">' + HL.map(function (c) { return '<button style="background:' + HL_C[c] + '" class="' + (o._hl === c ? "on" : "") + '" data-hl="' + c + '" title="' + c + '"></button>'; }).join("") +
     '<button class="btn sm" data-hl="" style="width:auto;height:26px;border-radius:13px;border:1px solid var(--border)">None</button><span class="ml-auto"></span><button class="btn sm danger" id="hideBtn">' + (o.hidden ? "Unhide listing" : "Hide listing") + "</button></div></div>";
   h += '<div class="dr-sec"><div class="h">Map location</div><div style="display:flex;gap:6px"><input class="inp" id="pinQ" style="flex:1" placeholder="Street address, city, state" value="' + esc(o.geo ? "" : firstStreet(o.address) + (o.city ? ", " + o.city : "") + ", " + o.state) + '"><button class="btn sm" id="pinGo">' + (o.geo ? "Move pin" : "Set pin") + '</button></div><div class="small muted" style="margin-top:4px">' + (o.geo ? "On the map at " + o.geo[0].toFixed(5) + ", " + o.geo[1].toFixed(5) + (o._ed.geo ? " (set by " + esc(String(o._ed.geo.by).split("@")[0]) + ")" : "") : "Not on the map: the address wasn't found. Type one the geocoder knows.") + "</div></div>";
+  h += hSales;
   h += '<div class="dr-sec small muted">Source: ' + esc(o.src || "") + (o.addedBy && o.addedBy !== "seed" ? " · added by " + esc(o.addedBy) + (o.addedAt ? " " + fmtD(o.addedAt.slice(0, 10)) : "") : "") + (o.geo ? "" : " · not on the map (address not found)") + "</div>";
   $("drB").innerHTML = h;
   $("drawer").classList.add("open");
