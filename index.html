@@ -405,7 +405,7 @@ select.inp{padding-right:4px}
     <div class="mark">M</div>
     <span class="brand-name">Greysteel</span><span class="brand-sep">|</span>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v4</span>
+    <span id="verBadge" title="Page version">v6</span>
   </div>
   <nav class="tabs">
     <button class="tab active" data-view="map"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -523,7 +523,7 @@ var STATES = ["DC", "MD", "VA", "PA", "WV"];
 var ST_COLOR = {DC: "#1a73e8", MD: "#fa7b17", VA: "#9334e6", PA: "#129eaf", WV: "#80868b"};
 var STATUS = [
   {k: "Active", c: "#188038", pill: "green", d: "Listed within the shelf life, no closing found"},
-  {k: "Under Contract", c: "#1a73e8", pill: "blue", d: "Set by hand"},
+  {k: "Under Contract", c: "#1a73e8", pill: "blue", d: "CoStar lists it under contract, or set by hand"},
   {k: "Closed", c: "#f9ab00", pill: "yellow", d: "Matched to a CoStar sale, or set by hand"},
   {k: "Aged", c: "#9aa0a6", pill: "gray", d: "Older than the shelf life, no closing found"},
   {k: "Relisted", c: "#e37400", pill: "orange", d: "The building was listed again later; see the newer listing"},
@@ -575,8 +575,9 @@ var ABBR = {street: "st", str: "st", avenue: "ave", av: "ave", place: "pl", road
   boulevard: "blvd", lane: "ln", parkway: "pkwy", circle: "cir", square: "sq", highway: "hwy", pike: "pike", way: "way", north: "n", south: "s",
   east: "e", west: "w", northwest: "nw", northeast: "ne", southwest: "sw", southeast: "se", first: "1st", second: "2nd", third: "3rd", fourth: "4th",
   fifth: "5th", sixth: "6th", seventh: "7th", eighth: "8th", ninth: "9th", tenth: "10th", saint: "st", mount: "mt", fort: "ft",
-  roadd: "rd", streeet: "st", stret: "st", avneue: "ave", avenu: "ave", aveune: "ave"};   /* typos seen in the Salesforce export */
-var SUFFIX = {st: 1, ave: 1, pl: 1, rd: 1, ter: 1, dr: 1, ct: 1, blvd: 1, ln: 1, pkwy: 1, cir: 1, sq: 1, hwy: 1, way: 1, pike: 1};
+  roadd: "rd", streeet: "st", stret: "st", avneue: "ave", avenu: "ave", aveune: "ave",   /* typos seen in the Salesforce export */
+  pky: "pkwy", wy: "way", trce: "trace", crescent: "cres", turnpike: "tpke", tpk: "tpke"};   /* CoStar spellings */
+var SUFFIX = {st: 1, ave: 1, pl: 1, rd: 1, ter: 1, dr: 1, ct: 1, blvd: 1, ln: 1, pkwy: 1, cir: 1, sq: 1, hwy: 1, way: 1, pike: 1, trace: 1, cres: 1, tpke: 1};
 var QUAD = {nw: 1, ne: 1, sw: 1, se: 1};
 function normAddr(a) {
   var s = String(a || "").toLowerCase();
@@ -600,17 +601,55 @@ function streetKey(a) {
   while (toks.length && /^(\d{1,6}[a-z]?(-\d{1,6}[a-z]?)?|-|and|,)$/.test(toks[0])) toks.shift();
   for (var i = 0; i < toks.length; i++) {
     out.push(toks[i]);
-    if (SUFFIX[toks[i]]) { if (QUAD[toks[i + 1]]) out.push(toks[i + 1]); break; }
+    if (SUFFIX[toks[i]] && !(i === 0 && i + 1 < toks.length)) { if (QUAD[toks[i + 1]]) out.push(toks[i + 1]); break; }   /* a leading "St" + more words = Saint */
   }
   return out.join(" ");
 }
 function noQuad(k) { return String(k || "").replace(/ (nw|ne|sw|se)$/, ""); }
-/* same street key, or the same once the quadrant is dropped when one side has none */
+/* "n cold spring ln nw" -> name "coldspring", suffix "ln", quadrant "nw", direction "n" */
+function stParts(k) {
+  var t = String(k || "").split(" ").filter(Boolean), q = t.length && QUAD[t[t.length - 1]] ? t.pop() : "";
+  var suf = t.length > 1 && SUFFIX[t[t.length - 1]] ? t.pop() : "", d = t.length > 1 && /^[nsew]$/.test(t[0]) ? t.shift() : "";
+  return {c: t.join(""), s: suf, q: q, d: d};
+}
+function streetCore(k) { return stParts(k).c; }
+/* same street name (spaces ignored: Coldspring = Cold Spring); suffix, DC quadrant and N/S/E/W prefix agree when both have one */
 function sameStreet(a, b) {
   if (!a || !b) return false;
-  if (a === b) return true;
-  var qa = / (nw|ne|sw|se)$/.test(a), qb = / (nw|ne|sw|se)$/.test(b);
-  return (!qa || !qb) && noQuad(a) === noQuad(b);
+  var x = stParts(a), y = stParts(b);
+  return !!x.c && x.c === y.c && (!x.s || !y.s || x.s === y.s) && (!x.q || !y.q || x.q === y.q) && (!x.d || !y.d || x.d === y.d);
+}
+/* an address list split into buildings: "861 Ulster St & 867 Ulster St" -> two parts; "5005, 5009 and 5011 Bass Pl" -> one part, three numbers */
+function addrParts(a) {
+  var s = normAddr(a).split(/\b(?:apt|unit|ste|suite|bldg)\b/)[0], parts = [], pend = [];
+  s.split(/\s*(?:&|\band\b|;|\/)\s*/).filter(function (x) { return x.trim(); }).forEach(function (c) {
+    var sk = streetKey(c), hn = houseNums(c);
+    if (sk && /[a-z]/.test(sk)) { parts.push({sk: sk, hn: pend.concat(hn)}); pend = []; } else pend = pend.concat(hn);
+  });
+  if (pend.length && parts.length) parts[parts.length - 1].hn = parts[parts.length - 1].hn.concat(pend);
+  return parts.length ? parts : [{sk: streetKey(a), hn: houseNums(a)}];
+}
+/* numbers overlap, and when both ranges sit on one side of the street (both ends odd or both even) it is the same side */
+function overlapSide(a, b) {
+  return a.some(function (x) { return b.some(function (y) {
+    if (!(x[0] <= y[1] && y[0] <= x[1])) return false;
+    return !(x[0] % 2 === x[1] % 2 && y[0] % 2 === y[1] % 2 && x[0] % 2 !== y[0] % 2);
+  }); });
+}
+function partsMatch(pa, pb) { return pa.some(function (x) { return pb.some(function (y) { return sameStreet(x.sk, y.sk) && x.hn.length && y.hn.length && overlapSide(x.hn, y.hn); }); }); }
+function unitsClose(a, b, tol) { return !!(a && b && Math.abs(a - b) <= (tol || 0.1) * Math.max(a, b)); }
+/* CoStar's listing broker is our listing's firm */
+function firmSame(o, s) { var lf = String(o.firm || o.brokerCo || "").toLowerCase().trim().split(/[\s&,]+/)[0], sb = String(s.brokerCo || "").toLowerCase(); return !!(lf && sb && sb.indexOf(lf) > -1); }
+/* CoStar sale conditions that make the price a poor read on the asking price */
+var COND_X = /auction|recapitali|partial interest|leasehold|distress|bankruptcy|reo sale|court appointed|estate\/probate|short sale|lease option|exercise of option|purchase by tenant|sale leaseback|leased fee/i;
+/* km between two [lat,lng] pins, or null when either is missing */
+function km(a, b) { if (!a || !b) return null; var dy = (a[0] - b[0]) * 111.2, dx = (a[1] - b[1]) * 111.2 * Math.cos(a[0] * Math.PI / 180); return Math.sqrt(dx * dx + dy * dy); }
+/* outside DC a street name repeats from town to town: the sale must sit near the listing (or in the same city when a pin is missing) */
+function placeOk(o, s, lim) {
+  var d = km(o.geo, s.geo);
+  if (d != null) return d <= lim;
+  if (o.state === "DC") return true;
+  return !o.city || !s.city || normAddr(o.city) === normAddr(s.city);
 }
 function overlap(a, b) { return a.some(function (x) { return b.some(function (y) { return x[0] <= y[1] && y[0] <= x[1]; }); }); }
 var GENERIC = {apartments: 1, apartment: 1, apts: 1, the: 1, portfolio: 1, residences: 1, flats: 1, at: 1, of: 1, and: 1};
@@ -621,7 +660,7 @@ function nameKey(n) {
 /* the same building, for "listed before" history: state + street + overlapping numbers */
 function sameBldg(a, b) {
   if (a.state !== b.state) return false;
-  return sameStreet(a._sk, b._sk) && a._hn.length && b._hn.length && overlap(a._hn, b._hn);
+  return partsMatch(a._parts, b._parts);
 }
 
 /* ---------------------------------------------------------------- API */
@@ -715,58 +754,106 @@ function derive() {
     var o = applyEdits("l", r);
     o.state = String(o.state || "").toUpperCase();
     if (typeof o.geo === "string") { var gp = o.geo.split(",").map(Number); o.geo = gp.length === 2 && isFinite(gp[0]) && isFinite(gp[1]) ? gp : null; }
-    o._sk = streetKey(o.address); o._hn = houseNums(o.address); o._nk = nameKey(o.name);
+    o._sk = streetKey(o.address); o._hn = houseNums(o.address); o._nk = nameKey(o.name); o._parts = addrParts(o.address);
     o._q = normAddr([o.name, o.address, o.city, o.state, o.broker, o.brokerCo, o.firm, o.clientContact, o.clientCo, o.notes].join(" "));
     o._days = days(o.onMarket, t);
     o.land = !!(o.land || o.units === 0);   /* 0 units = land / development (Mason, 2026-11-16) */
     o._ppu = o.asking && o.units && !o.land ? o.asking / o.units : null;
     o._capAsk = o.asking && o.noi ? o.noi / o.asking : null;
-    o._sales = [];
+    o._sales = []; o._uc = null;
     return o;
   });
   S.byId = {}; S.L.forEach(function (o) { S.byId[o.id] = o; });
-  /* index listings for the match rule */
-  var bySk = {}, byNk = {};
+  /* MATCH RULE index: listings by street name of each building, by property name, and on a ~1 km grid */
+  var bySk = {}, byNk = {}, grid = {}, push = function (m, k, o) { (m[k] = m[k] || []).push(o); };
   S.L.forEach(function (o) {
     if (o.hidden) return;
-    if (o._sk) (bySk[o.state + "|" + noQuad(o._sk)] = bySk[o.state + "|" + noQuad(o._sk)] || []).push(o);
-    if (o._nk) (byNk[o.state + "|" + o._nk] = byNk[o.state + "|" + o._nk] || []).push(o);
+    var seenC = {};
+    o._parts.forEach(function (p) { var c = streetCore(p.sk); if (c && !seenC[c]) { seenC[c] = 1; push(bySk, o.state + "|" + c, o); } });
+    o._multi = Object.keys(seenC).length > 1;
+    if (o._nk) push(byNk, o.state + "|" + o._nk, o);
+    if (o.geo) push(grid, o.geo[0].toFixed(2) + "|" + o.geo[1].toFixed(2), o);
   });
+  var dealUnits = {};
+  S.raw.sales.forEach(function (r) { if (!r.pending && r.compId && r.multiN) dealUnits[r.compId] = (dealUnits[r.compId] || 0) + (r.units || 0); });
   S.sales = S.raw.sales.map(function (r) {
     var s = applyEdits("s", r);
     s.state = String(s.state || "DC").toUpperCase();
     s._q = normAddr([s.name, s.address, s.buyer, s.seller, s.brokerCo, s.brokerAgent, s.portfolio].join(" "));
     s._ppu = s.price && s.units ? s.price / s.units : null;
-    s._link = null; s._how = null;
-    if (s.link === "none") { s._how = "none"; }
+    s._parts = addrParts(s.address);
+    s._condX = !!(s.cond && COND_X.test(s.cond));
+    s._link = null; s._how = null; s._ucOf = null; s._why = null;
+    var findCands = function () {
+      var nk = nameKey(s.name), seen = {}, cands = [];
+      s._parts.forEach(function (p) {
+        (bySk[s.state + "|" + streetCore(p.sk)] || []).forEach(function (o) {
+          if (seen[o.id] || !partsMatch(o._parts, [p])) return;
+          if (placeOk(o, s, 1.5) || ((unitsClose(o.units, s.units) || o._multi) && placeOk(o, s, 5))) { seen[o.id] = 1; cands.push({o: o, why: "address"}); }
+        });
+      });
+      (byNk[s.state + "|" + nk] || []).forEach(function (o) { if (!seen[o.id] && placeOk(o, s, 5)) { seen[o.id] = 1; cands.push({o: o, why: "name"}); } });
+      if (!cands.length && s.geo) {   /* near: same spot, same size, and CoStar names our firm (under contract: CoStar gives no broker) */
+        var du = s.multiN ? dealUnits[s.compId] : null;
+        for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+          (grid[(s.geo[0] + dy * 0.01).toFixed(2) + "|" + (s.geo[1] + dx * 0.01).toFixed(2)] || []).forEach(function (o) {
+            if (seen[o.id] || o.state !== s.state) return;
+            var d = km(o.geo, s.geo);
+            var ok = s.pending ? d <= 0.15 && unitsClose(o.units, s.units, 0.05) : d <= 0.3 && (unitsClose(o.units, s.units) || unitsClose(o.units, du)) && firmSame(o, s);
+            if (ok) { seen[o.id] = 1; cands.push({o: o, why: "near"}); }
+          });
+        }
+      }
+      return cands;
+    };
+    var latest = function (c) { return c.reduce(function (a, b) { return b.o.onMarket > a.o.onMarket ? b : a; }); };
+    if (s.pending) {
+      /* CoStar "Under Contract" / "Escrow": marks the latest listing of the building Under Contract, if it was listed in the
+         last 730 days and not long before CoStar's own marketing began */
+      if (s.link !== "none") {
+        var lim = Math.min(730, (s.daysOnMkt || 1e6) + 180);
+        var uc = findCands().filter(function (c) { var d = days(c.o.onMarket, t); return d != null && d >= 0 && d <= lim; });
+        if (uc.length) { var u = latest(uc); s._ucOf = u.o; s._why = u.why; s._how = "auto"; }
+      }
+    }
+    else if (s.link === "none") { s._how = "none"; }
     else if (s.link && S.byId[s.link]) { s._link = S.byId[s.link]; s._how = "manual"; }
-    else {
-      var sk = streetKey(s.address), hn = houseNums(s.address), nk = nameKey(s.name), seen = {}, cands = [];
-      (bySk[s.state + "|" + noQuad(sk)] || []).forEach(function (o) { if (sameStreet(sk, o._sk) && hn.length && o._hn.length && overlap(hn, o._hn)) { seen[o.id] = 1; cands.push(o); } });
-      (byNk[s.state + "|" + nk] || []).forEach(function (o) { if (!seen[o.id]) cands.push(o); });
-      cands = cands.filter(function (o) { var d = days(o.onMarket, s.date); return d != null && d >= -30 && d <= 730; });
+    else if (!s.nonArms) {
+      var cands = findCands().filter(function (c) { var d = days(c.o.onMarket, s.date); return d != null && ((d >= 0 && d <= 730) || (d >= -30 && d < 0 && firmSame(c.o, s))); });
       if (cands.length) {
-        var onb = cands.filter(function (o) { return days(o.onMarket, s.date) >= 0; });
-        var pool = onb.length ? onb : cands;
-        s._link = pool.reduce(function (a, b) { return b.onMarket > a.onMarket ? b : a; });
-        s._how = "auto";
+        var onb = cands.filter(function (c) { return days(c.o.onMarket, s.date) >= 0; });
+        var b = latest(onb.length ? onb : cands);
+        s._link = b.o; s._why = b.why; s._how = "auto";
       }
     }
     return s;
   });
-  /* one sale per listing: the earliest linked sale (plus others within 7 days: the same multi-building deal);
-     a later automatic match of the same building is a resale, not this listing's outcome */
-  var first = {};
-  S.sales.forEach(function (s) { if (s._link && (!first[s._link.id] || s.date < first[s._link.id])) first[s._link.id] = s.date; });
+  /* one sale per building: a later automatic sale of a building that already sold under this listing is a resale */
+  var kept = {};
+  S.sales.filter(function (s) { return s._link; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).forEach(function (s) {
+    var k = kept[s._link.id] = kept[s._link.id] || [];
+    if (s._how === "auto" && k.some(function (e) { return days(e.date, s.date) > 7 && partsMatch(e._parts, s._parts); })) { s._resaleOf = s._link; s._link = null; s._how = "resale"; return; }
+    k.push(s);
+  });
+  /* portfolio deals: the listing marketed the whole CoStar deal -> its other unlinked buildings link too */
+  var deal = {};
+  S.sales.forEach(function (s) { if (!s.pending && s.compId) push(deal, s.compId, s); });
+  S.sales.filter(function (s) { return s._link && s._how !== "manual"; }).forEach(function (s) {
+    var o = s._link, g = deal[s.compId] || [];
+    if (g.length < 2 || !o.units) return;
+    var have = sum(S.sales.filter(function (x) { return x._link === o; }).map(function (x) { return x.units; })), tot = sum(g.map(function (x) { return x.units; }));
+    if (have < 0.9 * o.units && Math.abs(tot - o.units) <= 0.1 * o.units)
+      g.forEach(function (x) { if (!x._link && x.link !== "none" && x._how !== "resale") { x._link = o; x._how = "deal"; x._why = "deal"; } });
+  });
   S.sales.forEach(function (s) {
-    if (s._how === "auto" && days(first[s._link.id], s.date) > 7) { s._resaleOf = s._link; s._link = null; s._how = "resale"; }
     if (!s._link) return;
     s._link._sales.push(s);
-    /* re-marketed: CoStar's listing broker is another firm and the sale's own marketing began 180+ days after this listing */
-    var lf = String(s._link.firm || s._link.brokerCo || "").toLowerCase().split(/[\s&,]+/)[0], sb = String(s.brokerCo || "").toLowerCase();
-    s._remkt = !!(lf && sb && sb.indexOf(lf) < 0 && s.daysOnMkt && days(s._link.onMarket, s.date) - s.daysOnMkt > 180);
+    /* re-marketed: CoStar's listing broker is another firm and the sale's own marketing began 180+ days after this listing
+       (with no CoStar days on market: more than 365 days after it) */
+    var other = s.brokerCo && !firmSame(s._link, s), gap = days(s._link.onMarket, s.date);
+    s._remkt = !!(other && (s.daysOnMkt ? gap - s.daysOnMkt > 180 : gap > 365));
   });
-  S.saleById = {}; S.sales.forEach(function (s) { S.saleById[s.id] = s; });
+  S.saleById = {}; S.sales.forEach(function (s) { S.saleById[s.id] = s; if (s._ucOf && !s._ucOf._uc) s._ucOf._uc = s; });
   S.L.forEach(function (o) {
     o._sales.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     var sp = sum(o._sales.map(function (s) { return s.price; }));
@@ -774,17 +861,20 @@ function derive() {
     o._ask = o.asking || null;
     if (!o._ask && o._sales.length === 1 && o._sales[0].csAsking) { o._ask = o._sales[0].csAsking; o._askSrc = "CoStar"; }
     o._remkt = o._sales.some(function (s) { return s._remkt; });
-    o._spread = o._sale && o._sale.price && o._ask && !o._remkt ? o._sale.price / o._ask - 1 : null;
+    o._condX = o._sales.filter(function (s) { return s._condX; }).map(function (s) { return s.cond; })[0] || "";
+    o._unitsOff = !!(o._sale && o.units && o._sale.units && Math.abs(o._sale.units - o.units) > 0.25 * o.units);
+    o._noSpr = o._remkt ? "Re-marketed by another firm" : o._condX ? "CoStar sale condition: " + o._condX : o._unitsOff ? "The sale covers " + n0(o._sale.units) + " of " + n0(o.units) + " units" : "";
+    o._spread = o._sale && o._sale.price && o._ask && !o._noSpr ? o._sale.price / o._ask - 1 : null;
     o._dtc = o._sale ? days(o.onMarket, o._sale.date) : null;
     o._capClose = o._sale && o._sale.price && o.noi ? o.noi / o._sale.price : null;
   });
   /* listed before: other listings of the same building */
   var bk = {};
-  S.L.forEach(function (o) { if (o._sk) (bk[o.state + "|" + noQuad(o._sk)] = bk[o.state + "|" + noQuad(o._sk)] || []).push(o); });
+  S.L.forEach(function (o) { var c = streetCore(o._parts[0].sk); if (c) (bk[o.state + "|" + c] = bk[o.state + "|" + c] || []).push(o); });
   S.L.forEach(function (o) {
-    o._prev = (bk[o.state + "|" + noQuad(o._sk)] || []).filter(function (x) { return x !== o && !x.hidden && sameBldg(o, x); });
+    o._prev = (bk[o.state + "|" + streetCore(o._parts[0].sk)] || []).filter(function (x) { return x !== o && !x.hidden && sameBldg(o, x); });
     var later = o._prev.some(function (x) { return x.onMarket > o.onMarket; });
-    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : later ? "Relisted" : o._days != null && o._days <= S.shelf ? "Active" : "Aged";
+    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : o._uc ? "Under Contract" : later ? "Relisted" : o._days != null && o._days <= S.shelf ? "Active" : "Aged";
   });
   S.firms = {};
   S.L.forEach(function (o) { var f = o.firm || o.brokerCo || ""; if (f) S.firms[f] = (S.firms[f] || 0) + 1; });
@@ -828,7 +918,7 @@ function firstCo(co) { return String(co || "").split("|")[0].trim(); }
 /* a row's filterable values: listings (kind "l") and sales (kind "s"); a sale tied to a listing uses the listing's firm and broker */
 function fv(r, kind) {
   if (kind === "l") return {state: r.state, date: r.onMarket, units: r.land ? null : r.units, price: r._ask, ppu: r._ppu, firm: r.firm || firmOf(r.brokerCo), broker: r.broker, land: !!r.land, q: r._q, status: r._status};
-  var o = r._link;
+  var o = r._link || r._ucOf;
   return {state: r.state, date: r.date, units: r.units, price: r.price, ppu: r._ppu, firm: o ? (o.firm || firmOf(o.brokerCo)) : firmOf(firstCo(r.brokerCo)), broker: o ? o.broker : r.brokerAgent, q: r._q + (o ? " " + o._q : ""), linked: !!o};
 }
 function inRange(v, lo, hi) { if (lo == null && hi == null) return true; if (v == null || isNaN(v)) return false; return (lo == null || v >= lo) && (hi == null || v <= hi); }
@@ -846,6 +936,7 @@ function pass(r, kind, view, skip) {
   if (kind === "l" && F.type === "mf" && v.land) return false;
   if (skip !== "firm" && F.firm && v.firm !== F.firm) return false;
   if (skip !== "broker" && F.broker && v.broker !== F.broker) return false;
+  if (kind === "s" && (F.link === "uc") !== !!r.pending) return false;
   if (kind === "s" && F.link === "yes" && !v.linked) return false;
   if (kind === "s" && F.link === "no" && v.linked) return false;
   if (F.q) { var q = normAddr(F.q); if (v.q.indexOf(q) < 0) return false; }
@@ -889,7 +980,7 @@ function buildBar(view) {
   h += '<span class="fg"><span class="fl">$/unit</span><input class="inp n2" data-f="ppumin" placeholder="min" title="e.g. 150k"><span class="fl">–</span><input class="inp n2" data-f="ppumax" placeholder="max" title="e.g. 300k"></span>';
   if (kind === "l") h += '<select class="inp" data-f="type"><option value="">All types</option><option value="mf">Multifamily</option><option value="land">Land / development</option></select>';
   h += cbHtml("firm", "Listing broker firm - type to search; lists only firms left by the other filters") + cbHtml("broker", "Listing broker - type to search; lists only brokers left by the other filters");
-  if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">External listing</option><option value="no">No listing</option></select>';
+  if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">External listing</option><option value="no">No listing</option><option value="uc">Under contract (CoStar)</option></select>';
   h += '<button class="clearall" data-clear>Clear</button>';
   el.innerHTML = h;
 }
@@ -1108,7 +1199,7 @@ function renderMap(soft) {
     if (c.getRadius && document.activeElement !== $("geoRad")) $("geoRad").value = (c.getRadius() / 1609.34).toFixed(2).replace(/\.?0+$/, "");
     $("geoN").textContent = rows.length;
   }
-  $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#188038"}, {k: "sales", l: "CoStar sales (DC)", c: SALE_C}], S.layers, "mly");
+  $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#188038"}, {k: "sales", l: "CoStar sales", c: SALE_C}], S.layers, "mly");
   var sm = S.st.map || {};
   $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (!Object.keys(sm).some(function (k) { return sm[k]; }) || sm[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(statusDesc(s.k)) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
     (S.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
@@ -1125,7 +1216,7 @@ function renderMap(soft) {
   if (S.layers.sales) {
     var since = String(new Date().getFullYear() - 3);
     S.sales.forEach(function (s) {
-      if (!s.geo || s._link || (!S.F.within && s.date < since)) return;
+      if (!s.geo || s._link || s.pending || (!S.F.within && s.date < since)) return;
       if (!pass(s, "s", "map")) return;
       if (_shapes.length && !inShapes(s.geo)) return;
       var mk = L.circleMarker(s.geo, {radius: 6, color: "#fff", weight: 1.2, fillColor: SALE_C, fillOpacity: .8});
@@ -1183,7 +1274,7 @@ function renderDash() {
   var avc = closed.slice().sort(function (a, b) { return a._sale.date < b._sale.date ? 1 : -1; });
   $("dAvcS").textContent = avc.length + " listings matched to a CoStar sale" + (avc.length ? " · median " + n0(median(closed.map(function (o) { return o._dtc; }))) + " days on market to close" : "");
   $("dAvc").innerHTML = "<thead><tr><th>Property</th><th class=r>Units</th><th class=r>Asking</th><th class=r>Closed</th><th class=r>vs. ask</th><th class='r cap' title='T-12 NOI / sale price'>Cap @ close</th><th class=r>Days</th></tr></thead><tbody>" +
-    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._remkt ? '<span class="muted small" title="Re-marketed by another firm">re-mkt</span>' : '<span class="muted">–</span>')) + '</td><td class="r num cap">' + (o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "") + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
+    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : '<span class="muted">–</span>')) + '</td><td class="r num cap">' + (o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "") + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
   var fm = {};
   all.forEach(function (o) { var k = o.firm || o.brokerCo || "(none)"; var r = fm[k] = fm[k] || {n: 0, u: 0, act: 0, cl: 0, st: {}}; r.n++; r.u += o.land ? 0 : o.units || 0; if (o._status === "Active" || o._status === "Under Contract") r.act++; if (o._sale) r.cl++; r.st[o.state] = 1; });
   $("dFirms").innerHTML = "<thead><tr><th>Firm</th><th class=r>Listings</th><th class=r>Units</th><th class=r>On market</th><th class=r>Closed</th><th>States</th></tr></thead><tbody>" +
@@ -1339,11 +1430,12 @@ var SCOLS = [
 ];
 function sRows() {
   return S.sales.filter(function (s) { return pass(s, "s", "sales"); }).map(function (s) {
-    var o = s._link;
+    var o = s._link || s._ucOf;
     s._tag = o ? 2 : s._how === "resale" ? 1 : 0;
+    if (s.pending) { s._ask2 = (o && o._ask) || s.csAsking || null; s._askCS = !(o && o._ask); s._dtc2 = s.daysOnMkt || null; s._dtcCS = true; s._spr2 = null; s._noi = o && o.noi ? o.noi : null; s._capA = s._noi && s._ask2 ? s._noi / s._ask2 : null; s._capC = null; return s; }
     if (o) { s._ask2 = o._ask || null; s._askCS = !!o._askSrc; s._dtc2 = days(o.onMarket, s.date); s._dtcCS = false; }
     else { s._ask2 = s.csAsking || null; s._askCS = !!s.csAsking; s._dtc2 = s.daysOnMkt || null; s._dtcCS = !!s.daysOnMkt; }
-    s._spr2 = s._ask2 && s.price && !s._remkt ? (o && o._sales.length > 1 ? o._spread : s.price / s._ask2 - 1) : null;
+    s._spr2 = s._ask2 && s.price && !s._remkt && !s._condX ? (o && o._sales.length > 1 ? o._spread : o && o._noSpr ? null : s.price / s._ask2 - 1) : null;
     s._noi = o && o.noi ? o.noi : null;
     s._capA = s._noi && s._ask2 ? s._noi / s._ask2 : null;
     s._capC = s._noi ? (o._sales.length > 1 ? o._capClose : s.price ? s._noi / s.price : null) : null;
@@ -1355,21 +1447,21 @@ function renderSales() {
   var rows = sRows(), k = S.ssort.k, d = S.ssort.d;
   sortRows(rows, S.ssort);
   var PG = 200; if (S.sp * PG >= rows.length) S.sp = 0;
-  var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link; }).length;
-  $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> sales · " + mshort(sum(rows.map(function (s) { return s.price; }))) + " · " + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to an external listing";
+  var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link || s._ucOf; }).length;
+  $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> " + (S.F.link === "uc" ? "deals" : "sales") + " · " + (S.F.link === "uc" ? "" : mshort(sum(rows.map(function (s) { return s.price; }))) + " · ") + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to an external listing" + (S.F.link === "uc" ? " · CoStar shows these under contract" : "");
   $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.t ? ' title="' + esc(c.t) + '"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (s) {
-      var o = s._link;
+      var o = s._link || s._ucOf;
       return '<tr data-id="' + s.id + '" class="' + (o ? "lk" : "") + (S.drawer && S.drawer.id === s.id ? " sel" : "") + '">' + SCOLS.map(function (c) {
         var v = s[c.k], h;
         if (c.k === "_tag") h = o ? '<span class="pill xl" title="' + esc(o.name + " · on market " + fmtD(o.onMarket) + " · " + (o.firm || o.brokerCo || "")) + '">External listing</span>' + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "")
           : s._how === "resale" ? '<span class="pill gray" title="Later resale of ' + esc(s._resaleOf.name) + '">Resale</span>' : s._how === "none" ? '<span class="muted small">not a match</span>' : '<span class="muted">—</span>';
-        else if (c.k === "date") h = fmtDs(v);
-        else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "");
+        else if (c.k === "date") h = s.pending ? '<span class="pill blue" title="CoStar: ' + esc(s.pendingStatus || "Under Contract") + '">Under contract</span>' : fmtDs(v);
+        else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "") + (s._condX ? ' <span class="pill orange" title="CoStar sale condition: ' + esc(s.cond) + '">' + esc(String(s.cond).split(",").filter(function (x) { return COND_X.test(x); })[0].trim()) + "</span>" : "");
         else if (c.k === "units") h = n0(v);
         else if (c.k === "price" || c.k === "_ppu") h = mshort(v);
         else if (c.k === "_ask2") h = v == null ? "" : mshort(v) + (s._askCS ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "");
-        else if (c.k === "_spr2") h = spr(v) || (s._remkt ? '<span class="muted small" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-mkt</span>' : "");
+        else if (c.k === "_spr2") h = spr(v) || (s._remkt ? '<span class="muted small" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-mkt</span>' : s._condX ? '<span class="muted small" title="' + esc(s.cond) + '; left out of asked-vs-closed figures">' + esc(String(s.cond).split(",")[0].replace(/ Sale$/, "")) + "</span>" : o && o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : "");
         else if (c.k === "_dtc2") h = v == null ? "" : n0(v) + (s._dtcCS ? '<span class="cs" title="CoStar days on market">CS</span>' : "");
         else if (c.k === "_noi") h = v ? mshort(v) : "";
         else if (c.k === "_capA" || c.k === "_capC") h = v == null ? "" : "<b>" + pct(v, 2) + "</b>";
@@ -1415,12 +1507,14 @@ function openListing(id, keep) {
     "<div><div class=l>Asking" + (o._askSrc ? " (CoStar)" : "") + '</div><div class="v num">' + (o._ask ? mshort(o._ask) : "–") + '</div><div class="s">' + (o._ppu || (o._ask && o.units) ? mshort(o._ask / o.units) + " / unit" : "") + (o._capAsk ? " · " + pct(o._capAsk, 2) + " cap" : "") + "</div></div>" +
     "<div><div class=l>Closed</div><div class=\"v num\">" + (o._sale ? mshort(o._sale.price) : "–") + '</div><div class="s">' + (o._sale ? fmtD(o._sale.date) + (o._sale.price && o.units ? " · " + mshort(o._sale.price / (o._sale.units || o.units)) + "/u" : "") : "no matched sale") + "</div></div>" +
     "<div><div class=l>vs. ask</div><div class=\"v num\">" + (spr(o._spread) || "–") + '</div><div class="s">' + (o._dtc != null ? o._dtc + " days to close" : "") + (o._capClose ? " · " + pct(o._capClose, 2) + " cap" : "") + "</div></div></div>" +
+    (o._noSpr && o._sale ? '<div class="small muted" style="margin-top:6px">No vs. ask: ' + esc(o._noSpr) + ".</div>" : "") +
     (o._capAsk || o._capClose ? '<div class="small muted" style="margin-top:6px">Caps use the T-12 NOI from the listing.</div>' : "") + "</div>";
   /* matched sales */
   h += '<div class="dr-sec"><div class="h">CoStar sale' + (o._sales.length > 1 ? "s" : "") + "</div>";
   h += o._sales.length ? o._sales.map(function (x) {
-    return '<div class="mini"><div class="g"><b>' + mshort(x.price) + " · " + fmtD(x.date) + "</b><div>" + esc(x.address) + " · " + x.units + " units" + (x.buyer ? " · buyer " + esc(x.buyer) : "") + '</div></div><span class="pill ' + (x._how === "manual" ? "blue" : "gray") + '">' + (x._how === "manual" ? "linked by hand" : "matched by address") + "</span>" + (x._remkt ? '<span class="pill orange" title="CoStar shows another firm marketing it from ' + esc(fmtD(shift(x.date, -x.daysOnMkt))) + '; left out of asked-vs-closed figures">re-marketed</span>' : "") + '<button class="btn sm" onclick="openSale(\'' + x.id + "')\">Open</button></div>";
-  }).join("") : '<div class="small muted">' + (o.state === "DC" ? "No CoStar sale matched yet." : "CoStar sales are loaded for DC only so far - import " + o.state + " sales on the Closings tab, or set the status by hand.") + "</div>";
+    return '<div class="mini"><div class="g"><b>' + mshort(x.price) + " · " + fmtD(x.date) + "</b><div>" + esc(x.address) + " · " + x.units + " units" + (x.buyer ? " · buyer " + esc(x.buyer) : "") + '</div></div><span class="pill ' + (x._how === "manual" ? "blue" : "gray") + '">' + (x._how === "manual" ? "linked by hand" : "matched automatically") + "</span>" + (x._why && x._how !== "manual" ? '<span class="pill gray" title="How it matched">' + ({address: "by address", name: "by name", near: "same spot, size, firm", deal: "same CoStar deal"}[x._why] || x._why) + "</span>" : "") + (x._remkt ? '<span class="pill orange" title="' + (x.daysOnMkt ? "CoStar shows another firm marketing it from " + esc(fmtD(shift(x.date, -x.daysOnMkt))) : "Another firm sold it more than a year after this listing") + '; left out of asked-vs-closed figures">re-marketed</span>' : "") + '<button class="btn sm" onclick="openSale(\'' + x.id + "')\">Open</button></div>";
+  }).join("") : '<div class="small muted">No CoStar sale matched yet.</div>';
+  if (o._uc) h += '<div class="mini"><div class="g"><b>Under contract per CoStar</b><div>' + (o._uc.csAsking ? "asking " + mshort(o._uc.csAsking) + " · " : "") + (o._uc.daysOnMkt ? o._uc.daysOnMkt + " days on market · " : "") + esc(o._uc.address) + '</div></div><span class="pill blue">' + esc(o._uc.pendingStatus || "Under Contract") + '</span><button class="btn sm" onclick="openSale(\'' + o._uc.id + "')\">Open</button></div>";
   var resales = S.sales.filter(function (x) { return x._resaleOf === o; });
   if (resales.length) h += '<div class="small muted" style="margin-top:6px">Later resale' + (resales.length > 1 ? "s" : "") + " of the building, not counted as this listing's outcome: " + resales.map(function (x) { return '<a href="#" onclick="openSale(\'' + x.id + '\');return false">' + fmtD(x.date) + " " + mshort(x.price) + "</a>"; }).join(", ") + "</div>";
   h += '<div style="margin-top:8px;display:flex;gap:6px"><input class="inp" id="lnkQ" placeholder="Find a sale to link: address or buyer" style="flex:1"></div><div class="srch-res" id="lnkRes"></div></div>';
@@ -1503,6 +1597,8 @@ function openSale(id, keep) {
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(s.name || s.address) + '</div><div class="dr-s">' + esc(s.address) + ", " + esc(s.city || "") + " " + s.state + "</div>" +
     '<div class="dr-pills"><span class="pill purple">CoStar sale</span><span class="pill gray">' + s.units + " units</span>" + (s.portfolio || s.multiN ? '<span class="pill orange">' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + "</span>" : "") + "</div>";
   var o = s._link, h = "";
+  if (s.pending) h += '<div class="warn">CoStar lists this property <b>' + esc((s.pendingStatus || "under contract").toLowerCase()) + "</b>; no closing yet." + (s.csAsking ? " Asking " + mshort(s.csAsking) + "." : "") + (s.daysOnMkt ? " " + s.daysOnMkt + " days on market." : "") +
+    (s._ucOf ? ' It marks <a href="#" onclick="openListing(\'' + s._ucOf.id + '\');return false">' + esc(s._ucOf.name) + "</a> Under Contract." : "") + "</div>";
   h += '<div class="dr-sec"><div class="h">Sale</div><div class="cmpbox"><div><div class=l>Price</div><div class="v num">' + mshort(s.price) + '</div><div class="s">' + (s._ppu ? mshort(s._ppu) + " / unit" : "") + "</div></div><div><div class=l>Date</div><div class=\"v\" style=\"font-size:16px\">" + fmtD(s.date) + '</div><div class="s">' + (s.daysOnMkt ? s.daysOnMkt + " days on market (CoStar)" : "") + "</div></div><div><div class=l>Cap rate</div><div class=\"v num\">" + (s.cap ? s.cap.toFixed(2) + "%" : "–") + '</div><div class="s">' + (s.capPF ? "pro forma " + s.capPF.toFixed(2) + "%" : "actual, CoStar") + "</div></div></div>" +
     (s.multiN ? '<div class="small muted" style="margin-top:6px">One of ' + s.multiN + " buildings in this CoStar sale; the price is CoStar's allocation (all buildings: " + mshort(s.multiTotal) + ").</div>" : "") + "</div>";
   h += '<div class="dr-sec"><div class="h">Matched listing</div>';
@@ -1515,7 +1611,7 @@ function openSale(id, keep) {
     (s._how === "auto" || s._how === "resale" ? '<button class="btn sm danger" id="slNone">Not a match</button>' : "") + (s._how === "manual" || s._how === "none" ? '<button class="btn sm" id="slAuto">Back to automatic</button>' : "") + "</div>" +
     '<input class="inp" id="slQ" placeholder="Find a ' + s.state + ' listing to link: name or address" style="width:100%;margin-top:8px"><div class="srch-res" id="slRes"></div></div>';
   h += '<div class="dr-sec"><div class="h">Details</div><div class="kv">' +
-    [["Buyer", s.buyer], ["Seller", s.seller], ["Listing broker", [s.brokerCo, s.brokerAgent].filter(Boolean).join(" · ")], ["CoStar asking", money(s.csAsking)], ["Building SF", n0(s.sf)], ["Year built", s.yearBuilt], ["Class", s.bldgClass], ["Affordable", s.affordable], ["CoStar comp", s.compId], ["Source", s.src === "topa" ? "TOPA Tracker comps" : s.src === "loanid" ? "LoanID CoStar export" : s.src]]
+    [["Buyer", s.buyer], ["Seller", s.seller], ["Listing broker", [s.brokerCo, s.brokerAgent].filter(Boolean).join(" · ")], ["Buyer's broker", s.buyerBroker], ["CoStar asking", money(s.csAsking)], ["Sale type", s.saleType], ["Sale condition", s.cond], ["Non-arms-length", s.nonArms], ["Market", s.market], ["Building SF", n0(s.sf)], ["Year built", s.yearBuilt], ["Class", s.bldgClass], ["Affordable", s.affordable], ["CoStar comp", s.compId], ["Source", s.src === "topa" ? "TOPA Tracker comps" : s.src === "loanid" ? "LoanID CoStar export" : /^costar:/.test(s.src || "") ? "CoStar sale comps export (" + s.src.slice(7) + ")" : s.src]]
       .map(function (x) { return '<div class="k">' + x[0] + '</div><div class="v">' + (x[1] ? esc(x[1]) : '<span class="muted">–</span>') + "</div>"; }).join("") + "</div>" +
     (s.notes ? '<div class="small" style="margin-top:10px;line-height:1.5;color:var(--text2)">' + esc(s.notes) + "</div>" : "") + "</div>";
   $("drB").innerHTML = h;
