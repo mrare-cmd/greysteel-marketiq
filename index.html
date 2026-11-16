@@ -500,6 +500,8 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .pill.purple{background:rgba(175,82,222,.14);color:#8944ab}.pill.dark{background:rgba(60,60,67,.15);color:#1d1d1f}
 .pill.xl{background:linear-gradient(180deg,#3ad667,#2bb24f);color:#fff;box-shadow:0 2px 6px rgba(52,199,89,.35)}
 .cs{color:#5e5ce6;background:rgba(94,92,230,.12);border-radius:5px}
+.pill.gsb{background:linear-gradient(180deg,#3a3a3c,#1d1d1f);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);letter-spacing:.01em}
+.lc .n .pill.gsb,.tbl td .pill.gsb{height:18px;font-size:10px;padding:0 7px;vertical-align:1px}
 
 /* shelf life: the one control that changes every status */
 .shelf{height:34px;border-radius:17px;padding:0 5px 0 14px;background:linear-gradient(120deg,#0a84ff,#5e5ce6 58%,#bf5af2);color:#fff;font-weight:600;
@@ -673,7 +675,13 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .drawctl button.on{background:#0071e3!important;color:#fff}
 .maplibregl-ctrl-attrib{background:rgba(255,255,255,.62)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:10px!important;font-size:10.5px}
 .maplibregl-ctrl-bottom-right{right:200px}
-.maplibregl-popup.gpop{z-index:5;animation:pop .28s var(--spring)}
+.maplibregl-popup.gpop{z-index:5}
+/* only the card animates (fade + slight grow from its anchor); the popup box itself is positioned by MapLibre's transform */
+.gpop .maplibregl-popup-content{animation:popIn .2s var(--ease) both;transform-origin:50% 100%}
+.gpop.maplibregl-popup-anchor-top .maplibregl-popup-content,.gpop.maplibregl-popup-anchor-top-left .maplibregl-popup-content,.gpop.maplibregl-popup-anchor-top-right .maplibregl-popup-content{transform-origin:50% 0}
+.gpop.maplibregl-popup-anchor-left .maplibregl-popup-content{transform-origin:0 50%}
+.gpop.maplibregl-popup-anchor-right .maplibregl-popup-content{transform-origin:100% 50%}
+@keyframes popIn{from{opacity:0;transform:scale(.97)}}
 .gpop .maplibregl-popup-content{padding:0;background:rgba(255,255,255,.86);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:18px;box-shadow:var(--lift-hi)}
 .gpop .maplibregl-popup-tip{display:none}
 #vMap .geo-box{left:412px;transform:none;top:calc(var(--top) + var(--fbh) + 56px);animation:pop .35s var(--spring)}
@@ -725,7 +733,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v8</span>
+    <span id="verBadge" title="Page version">v9</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -984,6 +992,10 @@ function sameBldg(a, b) {
   return partsMatch(a._parts, b._parts);
 }
 
+/* Greysteel's own listings (gs:1) */
+function gsBadge(o) { return o && o.gs ? ' <span class="pill gsb" title="Greysteel listing">Greysteel</span>' : ""; }
+function locLine(o) { return [o.address, o.city, o.state].filter(Boolean).join(", ") || (o.gs ? "No address in the Salesforce report" : "No address"); }
+
 /* ---------------------------------------------------------------- API */
 function authH() { try { return {Authorization: "Bearer " + (localStorage.getItem(TKEY) || "")}; } catch (e) { return {}; } }
 function expired() { try { localStorage.removeItem(TKEY); } catch (e) {} location.reload(); }
@@ -1059,7 +1071,7 @@ async function poll() {
    the same property name; sale dated 30 days before to 730 days after the date on
    market; the latest such listing on or before the sale wins. A sale's "link" edit
    (a listing id, or "none") overrides the rule. */
-var EDITABLE_L = ["name", "address", "city", "state", "units", "yearBuilt", "onMarket", "asking", "broker", "brokerCo", "clientContact", "clientCo", "om", "noi", "status", "notes", "hidden"];
+var EDITABLE_L = ["name", "address", "city", "state", "units", "yearBuilt", "onMarket", "asking", "broker", "brokerCo", "clientContact", "clientCo", "om", "dd", "pdf", "noi", "status", "notes", "hidden"];
 var NUM_F = {units: 1, yearBuilt: 1, asking: 1, noi: 1, price: 1, sf: 1};
 function applyEdits(kind, r) {
   var e = S.raw.overlay.edits[kind + "/" + r.id], o = Object.assign({}, r);
@@ -1232,7 +1244,7 @@ function render(soft) {
    filters, with live counts (like the PBS8 database). Status is per tab: the map starts on what is
    on the market, the table on everything. Shelf life (miq_shelf) decides Active vs Aged. */
 var FB_VIEWS = {map: "l", dash: "l", new: "l", table: "l", sales: "s"};
-function defaultF() { return {q: "", states: {}, within: "", umin: "", umax: "", pmin: "", pmax: "", ppumin: "", ppumax: "", type: "", firm: "", broker: "", link: ""}; }
+function defaultF() { return {q: "", states: {}, within: "", umin: "", umax: "", pmin: "", pmax: "", ppumin: "", ppumax: "", type: "", src: "", firm: "", broker: "", link: ""}; }
 function saveF() { lsSet("miq_f", S.F); lsSet("miq_st", S.st); }
 function amt(v) {   /* "2.5m", "750k", "$1,200,000" */
   var s = String(v == null ? "" : v).trim().toLowerCase().replace(/[$,\s]/g, ""); if (!s) return null;
@@ -1259,6 +1271,8 @@ function pass(r, kind, view, skip) {
   if (!inRange(v.ppu, amt(F.ppumin), amt(F.ppumax))) return false;
   if (kind === "l" && F.type === "land" && !v.land) return false;
   if (kind === "l" && F.type === "mf" && v.land) return false;
+  if (kind === "l" && F.src === "gs" && !r.gs) return false;
+  if (kind === "l" && F.src === "ext" && r.gs) return false;
   if (skip !== "firm" && F.firm && v.firm !== F.firm) return false;
   if (skip !== "broker" && F.broker && v.broker !== F.broker) return false;
   if (kind === "s" && (F.link === "uc") !== !!r.pending) return false;
@@ -1270,7 +1284,7 @@ function pass(r, kind, view, skip) {
 function applies(f, view) {
   var kind = FB_VIEWS[view];
   if (f === "within") return view !== "new";
-  if (f === "type") return kind === "l";
+  if (f === "type" || f === "src") return kind === "l";
   if (f === "link") return kind === "s";
   return true;
 }
@@ -1304,6 +1318,7 @@ function buildBar(view) {
   h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Price" : "Asking") + '</span><input class="inp n2" data-f="pmin" placeholder="min" title="e.g. 2m or 750k"><span class="fl">–</span><input class="inp n2" data-f="pmax" placeholder="max" title="e.g. 2m or 750k"></span>';
   h += '<span class="fg"><span class="fl">$/unit</span><input class="inp n2" data-f="ppumin" placeholder="min" title="e.g. 150k"><span class="fl">–</span><input class="inp n2" data-f="ppumax" placeholder="max" title="e.g. 300k"></span>';
   if (kind === "l") h += '<select class="inp" data-f="type"><option value="">All types</option><option value="mf">Multifamily</option><option value="land">Land / development</option></select>';
+  if (kind === "l") h += '<select class="inp" data-f="src" title="Greysteel\'s own listings or other brokers\' (external)"><option value="">All listings</option><option value="gs">Greysteel listings</option><option value="ext">External listings</option></select>';
   h += cbHtml("firm", "Listing broker firm - type to search; lists only firms left by the other filters") + cbHtml("broker", "Listing broker - type to search; lists only brokers left by the other filters");
   if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">External listing</option><option value="no">No listing</option><option value="uc">Under contract (CoStar)</option></select>';
   h += '<button class="clearall" data-clear>Clear</button>';
@@ -1491,7 +1506,23 @@ function styleMap() {
   ["highway_motorway_inner", "highway_motorway_bridge_inner"].forEach(function (id) { P(id, "line-color", "#fde2a6"); });
   ["highway_motorway_casing", "highway_motorway_bridge_casing"].forEach(function (id) { P(id, "line-color", "#efc673"); });
   ["highway_motorway_subtle", "highway_major_subtle"].forEach(function (id) { P(id, "line-color", "rgba(222,218,209,.8)"); });
-  ["boundary_2", "boundary_3"].forEach(function (id) { P(id, "line-color", "#b9b4cc"); });
+  P("boundary_2", "line-color", "#a39dbd");
+  /* the style draws states only from z8, dotted together with counties: keep counties (5-6) there, lighter */
+  try {
+    if (_map.getLayer("boundary_3")) {
+      _map.setFilter("boundary_3", ["all", ["==", ["typeof", ["get", "admin_level"]], "number"], [">=", ["get", "admin_level"], 5], ["<=", ["get", "admin_level"], 6], ["!=", ["get", "maritime"], 1]]);
+      _map.setLayerZoomRange("boundary_3", 9, 24);
+      P("boundary_3", "line-color", "rgba(160,155,185,.55)");
+    }
+    var sym0 = (_map.getStyle().layers || []).find(function (l) { return l.type === "symbol"; });
+    /* state lines at every zoom: a soft white casing under a lavender-grey line, like Apple Maps */
+    var st = ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]];
+    _map.addLayer({id: "state-casing", type: "line", source: "openmaptiles", "source-layer": "boundary", filter: st, layout: {"line-join": "round", "line-cap": "round"},
+      paint: {"line-color": "rgba(255,255,255,.9)", "line-width": ["interpolate", ["linear"], ["zoom"], 4, 3, 8, 4.2, 12, 6]}}, sym0 && sym0.id);
+    _map.addLayer({id: "state-lines", type: "line", source: "openmaptiles", "source-layer": "boundary", filter: st, layout: {"line-join": "round", "line-cap": "round"},
+      paint: {"line-color": "#7f78a6", "line-width": ["interpolate", ["linear"], ["zoom"], 4, 1.3, 8, 1.9, 12, 2.6], "line-opacity": 1}}, sym0 && sym0.id);
+  } catch (e) {}
+  P("label_state", "text-color", "#8e89a8");
   ["water_name_point_label", "water_name_line_label"].forEach(function (id) { P(id, "text-color", "#3d72a8"); });
   ["label_city", "label_city_capital", "label_town", "label_village"].forEach(function (id) { P(id, "text-color", "#1d1d1f"); P(id, "text-halo-color", "rgba(255,255,255,.9)"); });
   ["label_state", "label_other"].forEach(function (id) { P(id, "text-color", "#8e8e93"); });
@@ -1592,7 +1623,8 @@ function initMap() {
     _map.addLayer({id: "listings-halo", type: "circle", source: "listings", filter: ["==", ["get", "id"], ""],
       paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 11, 13, 18, 17, 24], "circle-color": ["get", "c"], "circle-opacity": 0.22, "circle-blur": 0.35}});
     _map.addLayer({id: "listings-dots", type: "circle", source: "listings", paint: {"circle-radius": R, "circle-color": ["get", "c"],
-      "circle-stroke-color": "#ffffff", "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 1.1, 12, 2.2], "circle-pitch-alignment": "map"}});
+      "circle-stroke-color": ["case", ["==", ["get", "g"], 1], "#1d1d1f", "#ffffff"],
+      "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, ["case", ["==", ["get", "g"], 1], 1.8, 1.1], 12, ["case", ["==", ["get", "g"], 1], 3, 2.2]], "circle-pitch-alignment": "map"}});
     _map.addLayer({id: "listings-sel", type: "circle", source: "listings", filter: ["==", ["get", "id"], ""],
       paint: {"circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 6, 13, 10, 17, 13], "circle-color": ["get", "c"], "circle-stroke-color": "#1d1d1f", "circle-stroke-width": 3}});
     [["listings-dots", "l"], ["sales-dots", "s"]].forEach(function (x) {
@@ -1627,8 +1659,8 @@ function initMap() {
 function ttRow(k, v, cls) { return '<div class="k' + (cls ? " " + cls : "") + '">' + k + '</div><div class="v">' + (v || '<span class="na">\u2014</span>') + "</div>"; }
 function lTip(o) {
   var s = ST[o._status], prev = o._prev.slice().sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; });
-  return '<div class="tt"><div class="tt-n">' + esc(o.name) + '</div><div class="tt-a">' + esc(o.address + (o.city ? ", " + o.city : "") + ", " + o.state) + "</div>" +
-    '<div class="tt-p"><span class="pill ' + s.pill + '">' + o._status + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") +
+  return '<div class="tt"><div class="tt-n">' + esc(o.name) + '</div><div class="tt-a">' + esc(locLine(o)) + "</div>" +
+    '<div class="tt-p">' + (o.gs ? '<span class="pill gsb">Greysteel</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") +
     (o.yearBuilt ? '<span class="pill gray">Built ' + o.yearBuilt + "</span>" : "") + (prev.length ? '<span class="pill purple">Listed ' + (prev.length + 1) + " times</span>" : "") + "</div>" +
     '<div class="tt-g">' +
     ttRow("Asking", o._ask ? "<b>" + mshort(o._ask) + "</b>" + (o._askSrc ? '<span class="cs">CS</span>' : "") + (o._ppu ? " \u00b7 " + mshort(o._ppu) + " / unit" : "") : "") +
@@ -1660,9 +1692,9 @@ function renderMap(soft) {
   var html = rows.slice(0, 400).map(function (o) {
     var s = ST[o._status];
     return '<div class="lc' + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '" data-id="' + o.id + '"><div class="d" style="background:' + s.c + '"></div>' +
-      '<div class="n">' + esc(o.name) + "</div>" +
+      '<div class="n">' + esc(o.name) + gsBadge(o) + "</div>" +
       '<div class="p">' + (o._sale ? mshort(o._sale.price) + "<small>closed " + fmtDs(o._sale.date) + "</small>" : o._ask ? mshort(o._ask) + "<small>asking</small>" : "<small>no ask</small>") + "</div>" +
-      '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "") + ", " + o.state) + (o.geo ? "" : ' <span class="pill gray" title="Address could not be placed on the map">no pin</span>') + "</div><div></div>" +
+      '<div class="a">' + esc(locLine(o)) + (o.geo ? "" : ' <span class="pill gray" title="Not on the map: open it and use Map location to place it">no pin</span>') + "</div><div></div>" +
       '<div class="m"><span>' + (o.land ? '<span class="pill orange">Land / dev.</span>' : o.units ? n0(o.units) + " units" : "units n/a") + "</span><span>" + fmtD(o.onMarket) + "</span><span>" + esc(o.firm || o.brokerCo) + "</span></div></div>";
   }).join("");
   if (rows.length > 400) html += '<div class="small muted" style="padding:12px 16px">Showing the first 400 of ' + rows.length + " - narrow the filters to see the rest.</div>";
@@ -1681,10 +1713,11 @@ function renderMap(soft) {
   var sm = S.st.map || {};
   $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (!Object.keys(sm).some(function (k) { return sm[k]; }) || sm[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(statusDesc(s.k)) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
     (S.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
+    '<div class="row" style="cursor:default" title="Greysteel\'s own listings have a dark ring"><i style="background:#fff;box-shadow:0 0 0 2.5px #1d1d1f"></i>Greysteel listing</div>' +
     '<div class="small muted" style="margin-top:6px">' + pinned + " of " + rows.length + " on the map</div>";
   if (!_mapReady) return;
   var lf = S.layers.listings ? rows.filter(function (o) { return o.geo; }).map(function (o) {
-    return {type: "Feature", properties: {id: o.id, c: ST[o._status].c}, geometry: {type: "Point", coordinates: [o.geo[1], o.geo[0]]}};
+    return {type: "Feature", properties: {id: o.id, c: ST[o._status].c, g: o.gs ? 1 : 0}, geometry: {type: "Point", coordinates: [o.geo[1], o.geo[0]]}};
   }) : [];
   _map.getSource("listings").setData({type: "FeatureCollection", features: lf});
   var sf = [];
@@ -1838,8 +1871,8 @@ function renderNew() {
 }
 function ncard(o) {
   var s = ST[o._status];
-  return '<div class="nc" data-id="' + o.id + '"><div class="top"><span class="st" style="background:' + (ST_COLOR[o.state] || "#80868b") + '">' + esc(o.state) + '</span><span class="n">' + esc(o.name) + '</span><span class="pill ' + s.pill + '">' + o._status + "</span></div>" +
-    '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "")) + "</div>" +
+  return '<div class="nc" data-id="' + o.id + '"><div class="top"><span class="st" style="background:' + (ST_COLOR[o.state] || "#80868b") + '">' + esc(o.state) + '</span><span class="n">' + esc(o.name) + '</span>' + (o.gs ? '<span class="pill gsb">Greysteel</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + "</span></div>" +
+    '<div class="a">' + esc(locLine(o)) + "</div>" +
     '<div class="f">' + (o.land ? '<span class="pill orange">Land / development</span>' : "<span><b>" + (o.units ? n0(o.units) : "–") + "</b> units</span>") + (o.yearBuilt ? "<span>built <b>" + o.yearBuilt + "</b></span>" : "") + "<span>" + (o._ask ? "<b>" + mshort(o._ask) + "</b> ask" + (o._ppu ? " · " + mshort(o._ppu) + "/u" : "") : "no ask yet") + "</span></div>" +
     '<div class="br">' + esc([o.broker, o.firm || o.brokerCo].filter(Boolean).join(" · ")) + " · on market " + fmtDs(o.onMarket) + (o.om ? ' · <a href="' + esc(o.om) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "") + "</div></div>";
 }
@@ -1877,6 +1910,7 @@ function renderTable() {
         if (c.k === "_status") h = '<span class="pill ' + ST[v].pill + '">' + v + "</span>";
         else if (c.k === "om") h = v ? '<a href="' + esc(v) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "";
         else if (c.k === "state") h = '<span class="dot" style="background:' + (ST_COLOR[v] || "#999") + '"></span>' + esc(v);
+        else if (c.k === "name") h = esc(v) + gsBadge(o);
         else if (c.k === "units") h = o.land ? '<span class="pill orange" title="0 units: land / development">Land</span>' : n0(v);
         else if (c.k === "_ask" && o._askSrc) h = mshort(v) + '<span class="cs" title="Asking price from CoStar">CS</span>';
         else if (c.h) h = c.h(v);
@@ -1968,7 +2002,7 @@ function wireSales() {
 var LFIELDS = [
   ["name", "Engagement name"], ["address", "Address"], ["city", "City"], ["state", "State", "select", STATES], ["units", "Units (0 = land / development)", "num"], ["yearBuilt", "Year built", "num"],
   ["onMarket", "Date on market", "date"], ["asking", "Asking (high / whisper)", "num"], ["noi", "T-12 NOI", "num"], ["broker", "Listing broker"], ["brokerCo", "Broker company"],
-  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["status", "Status (by hand)", "select", [""].concat(STATUS.map(function (s) { return s.k; }))], ["notes", "Notes", "text"]
+  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["dd", "DD folder", "url"], ["pdf", "Final PDF folder", "url"], ["status", "Status (by hand)", "select", [""].concat(STATUS.map(function (s) { return s.k; }))], ["notes", "Notes", "text"]
 ];
 function closeDrawer() { $("drawer").classList.remove("open"); S.drawer = null; if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); else if (S.view === "sales") renderSales(); }
 function fmtField(f, v) {
@@ -1977,14 +2011,15 @@ function fmtField(f, v) {
   if (f === "units") return n0(v);
   if (f === "onMarket") return fmtD(v);
   if (f === "om") return '<a href="' + esc(v) + '" target="_blank" rel="noopener">Open OM</a>';
+  if (f === "dd" || f === "pdf") return '<a href="' + esc(v) + '" target="_blank" rel="noopener">Open in Box</a>';
   return esc(v);
 }
 function openListing(id, keep) {
   var o = S.byId[id]; if (!o) return;
   S.drawer = {kind: "l", id: id};
   var s = ST[o._status];
-  $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(o.address) + (o.city ? ", " + esc(o.city) : "") + ", " + o.state + "</div>" +
-    '<div class="dr-pills"><span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
+  $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(locLine(o)) + "</div>" +
+    '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
     (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
   var h = "";
   /* pricing */
@@ -2007,6 +2042,7 @@ function openListing(id, keep) {
   h += '<div class="dr-sec"><div class="h">Details <span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400">click a value to edit · shared with the team</span></div><div class="kv">' +
     LFIELDS.map(function (f) {
       var e = o._ed[f[0]];
+      if ((f[0] === "dd" || f[0] === "pdf") && !o.gs && !o[f[0]]) return "";
       return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + fmtField(f[0], o[f[0]]) +
         (e ? '<span class="was">edited by ' + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + (e.was != null && e.was !== "" ? " · was " + esc(f[0] === "asking" || f[0] === "noi" ? money(e.was) : e.was) : "") + "</span>" : "") + "</div>";
     }).join("") + "</div></div>";
