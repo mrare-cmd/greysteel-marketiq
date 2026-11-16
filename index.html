@@ -534,6 +534,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .kpi .k-l{font-size:12px;font-weight:550;color:var(--text2)}
 .kpi .k-v{font-family:var(--fd);font-size:34px;font-weight:650;letter-spacing:-.035em;margin:6px 0 3px;line-height:1.08}
 .kpi .k-d{font-size:12px;color:var(--text3)}
+.kpi .k-u{font-family:var(--ft);font-size:15px;font-weight:500;letter-spacing:-.01em;color:var(--text3);margin-left:7px}
 .delta.up{color:#248a3d}.delta.down{color:#d70015}
 .g-kpi>.card{animation:rise .6s var(--spring) both}
 .g-kpi>.card:nth-child(2){animation-delay:.04s}.g-kpi>.card:nth-child(3){animation-delay:.08s}.g-kpi>.card:nth-child(4){animation-delay:.12s}.g-kpi>.card:nth-child(5){animation-delay:.16s}
@@ -733,7 +734,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v10</span>
+    <span id="verBadge" title="Page version">v11</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1764,7 +1765,7 @@ function wireMap() {
 }
 
 /* ================================================================ DASHBOARD */
-function kpi(l, v, d) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num">' + v + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
+function kpi(l, v, d, unit) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num"><span class="k-n">' + v + "</span>" + (unit ? '<span class="k-u">' + unit + "</span>" : "") + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
 function renderDash() {
   syncBar("dash");
   var all = S.L.filter(function (o) { return pass(o, "l", "dash"); }), t = today();
@@ -1774,11 +1775,11 @@ function renderDash() {
   var withSpr = closed.filter(function (o) { return o._spread != null; });
   var dd = n30.length - p30.length;
   $("kpis").innerHTML =
-    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.land ? 0 : o.units; }))) + " units · " + S.shelf + "-day shelf life") +
-    kpi("New in the last 30 days", n30.length, '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the 30 days before") +
-    kpi("Closed (CoStar)", closed.length, "listings matched to a 5+ unit sale") +
+    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.land ? 0 : o.units; }))) + " units · " + S.shelf + "-day shelf life", "properties") +
+    kpi("New in the last 30 days", n30.length, '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the 30 days before", "listings") +
+    kpi("Closed (CoStar)", closed.length, "listings matched to a 5+ unit sale", "properties") +
     kpi("Median closed vs. ask", withSpr.length ? spr(median(withSpr.map(function (o) { return o._spread; }))) : "–", withSpr.length + " closings with an asking price") +
-    kpi("Median days to close", n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "date on market to sale date");
+    kpi("Median days to close", n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "date on market to sale date", closed.length ? "days" : "");
   countUp($("vDash"));
   var nM = S.dmonths, months = [], d0 = new Date(dnum(t));
   for (var i = nM - 1; i >= 0; i--) { var d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - i, 1)); months.push(d.toISOString().slice(0, 7)); }
@@ -1854,9 +1855,9 @@ function renderNew() {
   var fc = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) fc[k] = (fc[k] || 0) + 1; });
   var top = Object.keys(fc).sort(function (a, b) { return fc[b] - fc[a]; })[0];
   $("nlKpis").innerHTML =
-    kpi("New listings", cur.length, '<span class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "+" : "") + d + "</span> vs the " + per + " days before") +
+    kpi("New listings", cur.length, '<span class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "+" : "") + d + "</span> vs the " + per + " days before", "listings") +
     kpi("Units", n0(sum(cur.map(function (o) { return o.land ? 0 : o.units; }))) || "0", "median " + (n0(median(cur.map(function (o) { return o.land ? null : o.units; }))) || "–") + " per listing" + (cur.some(function (o) { return o.land; }) ? " · " + cur.filter(function (o) { return o.land; }).length + " land" : "")) +
-    kpi("With an asking price", withAsk.length, withAsk.length ? "median " + money(median(withAsk.map(function (o) { return o._ppu; }))) + " / unit" : "") +
+    kpi("With an asking price", withAsk.length, withAsk.length ? "median " + money(median(withAsk.map(function (o) { return o._ppu; }))) + " / unit" : "", "listings") +
     kpi("Busiest firm", top ? '<span style="font-size:20px">' + esc(top) + "</span>" : "–", top ? fc[top] + " listings" : "") +
     kpi("By state", '<span style="font-size:18px">' + (used.map(function (s) { var n = cur.filter(function (o) { return o.state === s; }).length; return n ? '<span style="color:' + ST_COLOR[s] + '">' + s + "</span> " + n : ""; }).filter(Boolean).join(" · ") || "–") + "</span>", "");
   countUp($("vNew"));
@@ -2434,7 +2435,7 @@ var _kpiPrev = {};
 function countUp(root) {
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   root.querySelectorAll(".kpi").forEach(function (card) {
-    var el = card.querySelector(".k-v"), lab = (card.querySelector(".k-l") || {}).textContent || "";
+    var el = card.querySelector(".k-n") || card.querySelector(".k-v"), lab = (card.querySelector(".k-l") || {}).textContent || "";
     if (!el || el.children.length) return;
     var m = /^([^\d-]*)(-?[\d,]*\.?\d+)(.*)$/.exec(el.textContent.trim()); if (!m) return;
     var to = parseFloat(m[2].replace(/,/g, "")), key = root.id + "|" + lab, from = _kpiPrev[key] == null ? 0 : _kpiPrev[key];
