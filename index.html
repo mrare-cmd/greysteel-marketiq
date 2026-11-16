@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greysteel MarketIQ</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23188038'/%3E%3Cstop offset='.55' stop-color='%231a73e8'/%3E%3Cstop offset='1' stop-color='%235b5bd6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='45.5' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='700' fill='%23fff'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css">
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a73e8;--blue-dark:#1557b0;--blue-light:#e8f0fe;--green:#188038;--green-light:#e6f4ea;
+  --yellow:#f9ab00;--yellow-light:#fef7e0;--orange:#fa7b17;--orange-light:#feefe3;
+  --red:#d93025;--red-light:#fce8e6;--purple:#9334e6;--purple-light:#f3e8fd;--teal:#129eaf;
+  --text:#202124;--text2:#5f6368;--text3:#80868b;
+  --border:#dadce0;--border2:#e8eaed;--bg:#f8f9fa;--white:#fff;
+  --shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+  --shadow-lg:0 4px 12px rgba(60,64,67,.15),0 2px 6px rgba(60,64,67,.1);
+  --header:60px;
+}
+html,body{height:100%;font-family:'Roboto',sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+body{overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.mono{font-family:'Roboto Mono',monospace}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- sign-in gate (same Worker + session as GreyHub / PBS8 / LoanID / TOPA) ---------- */
+#authGate{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 600px at 50% 30%,#eaf5ee 0%,#f8f9fa 55%,#f1f3f4 100%);transition:opacity .35s ease}
+#authGate.hidden{opacity:0;pointer-events:none}
+#authGate.gone{display:none}
+.ag-card{width:380px;max-width:calc(100vw - 32px);background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 18px 50px rgba(32,33,36,.12);padding:34px 32px 28px;text-align:center}
+.ag-brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px}
+.ag-title{font-family:'Google Sans',sans-serif;font-size:22px;color:var(--text)}
+.ag-by{font-size:12px;color:var(--text3);margin-bottom:18px}
+.ag-sub{font-size:13.5px;color:var(--text2);margin:0 0 22px;line-height:1.5}
+.ag-btn{width:100%;height:44px;display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1px solid #c4c7cc;border-radius:22px;background:var(--white);color:var(--text);font-size:14px;font-weight:500;transition:background .2s,box-shadow .2s}
+.ag-btn:hover{background:var(--bg);box-shadow:0 1px 4px rgba(32,33,36,.12)}
+.ag-btn:disabled{opacity:.6;cursor:default}
+.ag-msg{min-height:18px;margin-top:14px;font-size:12.5px;color:var(--red)}
+.ag-msg.ok{color:var(--text2)}
+.mark{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Google Sans',sans-serif;font-weight:700;font-size:19px;background:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,0) 46%),linear-gradient(135deg,#188038 0%,#1a73e8 55%,#5b5bd6 100%);box-shadow:0 2px 8px rgba(26,115,232,.3);flex-shrink:0}
+
+/* ---------- header ---------- */
+header{position:fixed;top:0;left:0;right:0;height:var(--header);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:14px;z-index:200}
+.brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.brand-name{font-family:'Google Sans',sans-serif;font-size:15px;color:var(--text2)}
+.brand-sep{color:var(--border);font-size:20px;font-weight:300}
+.brand-page{font-family:'Google Sans',sans-serif;font-size:18px;color:var(--text)}
+#verBadge{font-size:10.5px;font-weight:500;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px}
+nav.tabs{display:flex;gap:2px;margin-left:8px}
+.tab{height:36px;padding:0 14px;border-radius:18px;font-family:'Google Sans',sans-serif;font-size:14px;color:var(--text2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tab:hover{background:var(--bg)}
+.tab.active{background:var(--blue-light);color:var(--blue);font-weight:500}
+.tab .rvc{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--green);color:#fff;font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+.gsearch{flex:1;max-width:460px;position:relative;margin-left:auto}
+.gsearch input{width:100%;height:40px;border:1px solid transparent;border-radius:20px;padding:0 16px 0 42px;background:#f1f3f4;outline:none;transition:all .2s}
+.gsearch input:focus{background:var(--white);border-color:var(--border);box-shadow:var(--shadow)}
+.gsearch svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text2);pointer-events:none}
+.hdr-right{display:flex;align-items:center;gap:8px}
+#syncDot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);white-space:nowrap}
+#syncDot i{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+#syncDot.busy i{background:var(--yellow)}
+#syncDot.err i{background:var(--red)}
+.btn{height:36px;padding:0 16px;border-radius:18px;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--white);color:var(--text);white-space:nowrap;transition:background .15s,box-shadow .15s}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue-dark);box-shadow:var(--shadow)}
+.btn.sm{height:30px;padding:0 12px;font-size:12.5px;border-radius:15px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--blue)}
+.btn.ghost:hover{background:var(--blue-light)}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.5;cursor:default}
+#userWrap{position:relative}
+#userChip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 10px 0 4px;border:1px solid var(--border);border-radius:17px;background:var(--white);font-size:12.5px}
+#userChip:hover{background:var(--bg)}
+.uc-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:700;background:linear-gradient(135deg,#188038,#1a73e8)}
+#userMenu{position:absolute;top:calc(100% + 8px);right:0;z-index:6000;min-width:230px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(32,33,36,.18);padding:12px 14px;display:none}
+#userMenu.open{display:block}
+#userMenu .um-n{font-size:13px;font-weight:600}
+#userMenu .um-e{font-size:12px;color:var(--text2);margin:2px 0 12px;word-break:break-all}
+#userMenu button{width:100%;height:32px;border-radius:16px;border:1px solid var(--border);font-size:12.5px}
+
+/* ---------- layout ---------- */
+main{position:fixed;top:var(--header);left:0;right:0;bottom:0;overflow:hidden}
+.view{position:absolute;inset:0;overflow:auto;display:none}
+.view.active{display:block}
+.wrap{max-width:1480px;margin:0 auto;padding:20px 24px 48px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 18px 10px;flex-wrap:wrap}
+.card-t{font-family:'Google Sans',sans-serif;font-size:16px;color:var(--text)}
+.card-s{font-size:12.5px;color:var(--text2)}
+.card-b{padding:0 18px 16px}
+.grid{display:grid;gap:16px}
+.g-kpi{grid-template-columns:repeat(5,minmax(0,1fr))}
+.g-2{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.g-2e{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mt{margin-top:16px}
+.kpi{padding:16px 18px}
+.kpi .k-l{font-size:12.5px;color:var(--text2)}
+.kpi .k-v{font-family:'Google Sans',sans-serif;font-size:28px;color:var(--text);margin:6px 0 4px;letter-spacing:-.01em}
+.kpi .k-d{font-size:12.5px;color:var(--text2)}
+.delta{font-weight:500}
+.delta.up{color:var(--green)}
+.delta.down{color:var(--red)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:16px;overflow:hidden;flex-shrink:0}
+.seg button{height:28px;padding:0 12px;font-size:12px;color:var(--text2);border-right:1px solid var(--border);white-space:nowrap}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--blue-light);color:var(--blue);font-weight:500}
+.ml-auto{margin-left:auto}
+.muted{color:var(--text2)}
+.small{font-size:12px}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:11.5px;font-weight:500;white-space:nowrap}
+.pill.blue{background:var(--blue-light);color:var(--blue)}
+.pill.green{background:var(--green-light);color:var(--green)}
+.pill.gray{background:#f1f3f4;color:var(--text2)}
+.pill.orange{background:var(--orange-light);color:#b5520c}
+.pill.yellow{background:var(--yellow-light);color:#a56300}
+.pill.red{background:var(--red-light);color:var(--red)}
+.pill.purple{background:var(--purple-light);color:var(--purple)}
+.pill.dark{background:#e8eaed;color:#3c4043}
+.chip{height:28px;padding:0 11px;border-radius:14px;border:1px solid var(--border);background:var(--white);font-size:12.5px;color:var(--text2);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip:hover{background:var(--bg)}
+.chip.on{background:var(--blue-light);border-color:#c6dafc;color:var(--blue);font-weight:500}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.inp{height:30px;border:1px solid var(--border);border-radius:8px;padding:0 9px;outline:none;background:var(--white);font-size:12.5px;min-width:0}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.12)}
+select.inp{padding-right:4px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;display:inline-block;animation:spin .8s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+#boot{position:fixed;inset:var(--header) 0 0 0;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text2);background:var(--bg);z-index:150}
+
+/* charts */
+.chart{position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart .ax{font-size:11px;fill:var(--text3)}
+.chart .gl{stroke:var(--border2);stroke-width:1}
+.chart rect.b{transition:opacity .12s}
+.chart rect.b:hover{opacity:.8}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text2)}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.tip{position:fixed;z-index:8000;pointer-events:none;background:#202124;color:#fff;font-size:12px;padding:7px 10px;border-radius:6px;box-shadow:var(--shadow-lg);white-space:nowrap;display:none;line-height:1.45}
+.tip b{font-weight:500}
+
+/* tables */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+.tbl th{position:sticky;top:0;z-index:2;background:var(--white);text-align:left;font-weight:500;color:var(--text2);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.tbl th.r,.tbl td.r{text-align:right}
+.tbl th:hover{color:var(--text)}
+.tbl th .ar{font-size:10px;margin-left:3px;color:var(--blue)}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover td{background:#f6f9fe}
+.tbl tr.sel td{background:#e8f0fe!important}
+.tbl td.wrap{white-space:normal}
+.tbl tr.hl-yellow td{background:#fef7e0}.tbl tr.hl-green td{background:#e6f4ea}.tbl tr.hl-blue td{background:#e8f0fe}
+.tbl tr.hl-red td{background:#fce8e6}.tbl tr.hl-purple td{background:#f3e8fd}.tbl tr.hl-orange td{background:#feefe3}
+.tbl tfoot td{font-weight:500;background:var(--bg);position:sticky;bottom:0}
+.tblwrap{overflow:auto;border-top:1px solid var(--border2)}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border2);background:var(--white)}
+.toolbar .lbl{font-size:12px;color:var(--text2)}
+.pager{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:12.5px;color:var(--text2);border-top:1px solid var(--border2);background:var(--white)}
+.spr.neg{color:var(--red)}.spr.pos{color:var(--green)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:0}
+
+/* ---------- map view (LoanID-style: list left, map right) ---------- */
+#vMap{overflow:hidden}
+.mv{position:absolute;inset:0;display:grid;grid-template-columns:420px minmax(0,1fr)}
+.mv-side{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border);background:var(--white)}
+.mv-f{padding:12px 14px 10px;border-bottom:1px solid var(--border2);display:flex;flex-direction:column;gap:8px}
+.mv-f .r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mv-f .r .lbl{font-size:11.5px;color:var(--text2);min-width:46px}
+.mv-q{flex:1;height:32px;border:1px solid var(--border);border-radius:16px;padding:0 12px;outline:none;min-width:0}
+.mv-q:focus{border-color:var(--blue)}
+.mv-n{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12.5px;color:var(--text2);border-bottom:1px solid var(--border2)}
+.mv-n b{color:var(--text);font-weight:500}
+#mvList{flex:1;overflow:auto}
+.lc{padding:10px 14px;border-bottom:1px solid var(--border2);cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:start}
+.lc:hover{background:#f6f9fe}
+.lc.sel{background:#e8f0fe}
+.lc .d{width:10px;height:10px;border-radius:50%;margin-top:4px}
+.lc .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc .a{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;grid-column:2}
+.lc .m{font-size:12px;color:var(--text2);grid-column:2;display:flex;gap:10px;flex-wrap:wrap}
+.lc .p{text-align:right;font-size:12.5px;font-weight:500;white-space:nowrap}
+.lc .p small{display:block;font-weight:400;color:var(--text2);font-size:11.5px}
+.mv-map{position:relative;min-width:0}
+#map{position:absolute;inset:0}
+.map-legend{position:absolute;right:12px;bottom:24px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px;box-shadow:var(--shadow);min-width:150px}
+.map-legend .t{font-weight:500;margin-bottom:6px;font-size:11.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.map-legend .row{display:flex;align-items:center;gap:7px;margin:3px 0;cursor:pointer;user-select:none}
+.map-legend .row.off{opacity:.35}
+.map-legend .row i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1.5px solid rgba(0,0,0,.15)}
+.map-layers{position:absolute;left:56px;top:12px;z-index:500;display:flex;gap:6px;flex-wrap:wrap}
+.map-layers .chip{box-shadow:var(--shadow)}
+.geo-box{position:absolute;left:50%;transform:translateX(-50%);top:12px;z-index:520;background:var(--white);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);height:36px;padding:0 6px 0 14px;display:none;align-items:center;gap:10px;font-size:12.5px}
+.geo-box.on{display:flex}
+.geo-box input{width:52px;height:26px;border:1px solid var(--border);border-radius:6px;padding:0 6px;text-align:right}
+.geo-box b{font-weight:500}
+.lf-tip{font-size:12px;line-height:1.45}
+.lf-tip b{font-weight:500}
+.leaflet-tooltip.lf-tip{border-radius:8px;border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:7px 10px}
+
+/* ---------- drawer ---------- */
+#drawer{position:fixed;top:var(--header);right:0;bottom:0;width:480px;max-width:100vw;background:var(--white);border-left:1px solid var(--border);box-shadow:-8px 0 24px rgba(32,33,36,.12);z-index:300;transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+#drawer.open{transform:none}
+.dr-h{padding:16px 20px 12px;border-bottom:1px solid var(--border2);position:relative}
+.dr-x{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:16px;font-size:20px;color:var(--text2)}
+.dr-x:hover{background:var(--bg)}
+.dr-t{font-family:'Google Sans',sans-serif;font-size:19px;line-height:1.3;padding-right:36px}
+.dr-s{font-size:12.5px;color:var(--text2);margin-top:3px}
+.dr-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.dr-b{flex:1;overflow:auto;padding:4px 20px 24px}
+.dr-sec{margin-top:16px}
+.dr-sec>.h{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:0;font-size:13px}
+.kv>div{padding:6px 0;border-bottom:1px solid var(--border2)}
+.kv .k{color:var(--text2);font-size:12.5px}
+.kv .v{word-break:break-word}
+.kv .v.ed{cursor:text;border-radius:4px}
+.kv .v.ed:hover{background:#f1f3f4;box-shadow:-4px 0 0 #f1f3f4,4px 0 0 #f1f3f4}
+.kv .v .was{font-size:11px;color:var(--text3);display:block}
+.kv .v input,.kv .v select,.kv .v textarea{width:100%;height:28px;border:1px solid var(--blue);border-radius:4px;padding:0 6px;outline:none;font-size:13px}
+.kv .v textarea{height:70px;padding:4px 6px;resize:vertical}
+.cmpbox{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cmpbox>div{border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.cmpbox .l{font-size:11.5px;color:var(--text2)}
+.cmpbox .v{font-family:'Google Sans',sans-serif;font-size:19px;margin-top:2px}
+.cmpbox .s{font-size:11.5px;color:var(--text2)}
+.mini{border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-top:8px;font-size:12.5px;display:flex;gap:10px;align-items:center}
+.mini .g{flex:1;min-width:0}
+.mini .g b{font-weight:500}
+.mini .g div{color:var(--text2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hls{display:flex;gap:6px;align-items:center}
+.hls button{width:22px;height:22px;border-radius:50%;border:2px solid transparent}
+.hls button.on{border-color:var(--text)}
+.srch-res{max-height:240px;overflow:auto;margin-top:6px}
+
+/* ---------- new listings ---------- */
+.nl-hd{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.nl-t{font-family:'Google Sans',sans-serif;font-size:22px}
+.nl-s{font-size:12.5px;color:var(--text2);margin-top:2px}
+.wk{margin-top:18px}
+.wk-h{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.wk-h b{font-family:'Google Sans',sans-serif;font-size:15px;font-weight:500}
+.wk-h span{font-size:12.5px;color:var(--text2)}
+.nlg{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.nc{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;flex-direction:column;gap:3px;animation:rise .35s both}
+.nc:hover{border-color:#c6dafc;box-shadow:0 2px 10px rgba(26,115,232,.1)}
+.nc .top{display:flex;align-items:center;gap:8px}
+.nc .st{font-size:11px;font-weight:600;color:#fff;border-radius:5px;padding:1px 6px}
+.nc .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.nc .a{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nc .f{display:flex;gap:12px;font-size:12.5px;margin-top:4px;flex-wrap:wrap}
+.nc .f span{color:var(--text2)}
+.nc .f b{font-weight:500;color:var(--text)}
+.nc .br{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+
+/* ---------- modal ---------- */
+#modal{position:fixed;inset:0;z-index:7000;background:rgba(32,33,36,.38);display:none;align-items:center;justify-content:center;padding:16px}
+#modal.open{display:flex}
+.mbox{background:var(--white);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.25);width:760px;max-width:100%;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+.mh{display:flex;align-items:flex-start;gap:12px;padding:18px 22px 12px;border-bottom:1px solid var(--border2)}
+.mh .t{font-family:'Google Sans',sans-serif;font-size:18px}
+.mh .s{font-size:12.5px;color:var(--text2);margin-top:2px}
+.mb{padding:14px 22px;overflow:auto;flex:1}
+.mf{display:flex;align-items:center;gap:8px;padding:12px 22px;border-top:1px solid var(--border2)}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)}
+.form label.full{grid-column:1/-1}
+.form input,.form select{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;outline:none;font-size:13.5px;color:var(--text)}
+.form input:focus,.form select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.12)}
+.form .req::after{content:" *";color:var(--red)}
+.warn{background:var(--yellow-light);border:1px solid #fde293;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-top:12px}
+.ptable{width:100%;border-collapse:collapse;font-size:12px}
+.ptable th,.ptable td{padding:5px 8px;border-bottom:1px solid var(--border2);text-align:left;white-space:nowrap}
+.ptable tr.dup td{color:var(--text3)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#202124;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9500;opacity:0;transition:all .25s;pointer-events:none;max-width:90vw}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#toast.err{background:var(--red)}
+
+@media (max-width:1100px){
+  .g-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g-2,.g-2e{grid-template-columns:minmax(0,1fr)}
+  .tab .tl{display:none}
+  .gsearch{display:none}
+}
+@media (max-width:760px){
+  .mv{grid-template-columns:minmax(0,1fr);grid-template-rows:46% minmax(0,1fr)}
+  .mv-map{grid-row:1}
+  .g-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brand-name,.brand-sep,#syncDot span{display:none}
+  .wrap{padding:16px}
+  .form{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div id="authGate">
+  <div class="ag-card">
+    <div class="ag-brand"><div class="mark">M</div><div class="ag-title" data-brand>MarketIQ</div></div>
+    <div class="ag-by">Greysteel · Created by Mason Rareshide</div>
+    <div class="ag-sub">Sign in with your Greysteel Microsoft account to continue.</div>
+    <button id="agBtn" class="ag-btn">
+      <svg width="16" height="16" viewBox="0 0 23 23" aria-hidden="true"><rect x="1" y="1" width="10" height="10" fill="#f25022"/><rect x="12" y="1" width="10" height="10" fill="#7fba00"/><rect x="1" y="12" width="10" height="10" fill="#00a4ef"/><rect x="12" y="12" width="10" height="10" fill="#ffb900"/></svg>
+      Sign in with Microsoft
+    </button>
+    <div class="ag-msg" id="agMsg"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="mark">M</div>
+    <span class="brand-name">Greysteel</span><span class="brand-sep">|</span>
+    <span class="brand-page" data-brand>MarketIQ</span>
+    <span id="verBadge" title="Page version">v1</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="map"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
+    <button class="tab" data-view="dash"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span class="tl">Dashboard</span></button>
+    <button class="tab" data-view="new"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="tl">New Listings</span><span class="rvc" id="newCount" hidden></span></button>
+    <button class="tab" data-view="table"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="10" x2="9" y2="20"/></svg><span class="tl">Listings</span></button>
+    <button class="tab" data-view="sales"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><span class="tl">Closings</span></button>
+  </nav>
+  <div class="gsearch">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="gq" type="search" placeholder="Search listings - name, address, broker, client..." autocomplete="off">
+  </div>
+  <div class="hdr-right">
+    <span id="syncDot" title="Live: changes from teammates appear within ~20 seconds"><i></i><span>Live</span></span>
+    <button class="btn primary sm" id="addBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</button>
+    <div id="userWrap" hidden>
+      <button id="userChip" aria-haspopup="true" aria-expanded="false"><span class="uc-av" id="ucAv"></span><span id="ucName"></span></button>
+      <div id="userMenu"><div class="um-n" id="umName"></div><div class="um-e" id="umEmail"></div><button id="signOutBtn">Sign out</button></div>
+    </div>
+  </div>
+</header>
+
+<div id="boot"><span class="spinner"></span> Loading listings...</div>
+
+<main>
+  <!-- ======================= MAP ======================= -->
+  <section class="view active" id="vMap"><div class="mv">
+    <div class="mv-side">
+      <div class="mv-f">
+        <div class="r"><input class="mv-q" id="mq" placeholder="Filter by name, address, broker, client" autocomplete="off"><select class="inp" id="msort" title="Sort">
+          <option value="date">Newest on market</option><option value="units">Most units</option><option value="ask">Highest asking</option><option value="ppu">Highest $/unit</option><option value="name">Name A-Z</option></select></div>
+        <div class="r" id="mStates"></div>
+        <div class="r" id="mStatus"></div>
+        <div class="r"><span class="lbl">Units</span><input class="inp" id="mumin" placeholder="min" style="width:62px" inputmode="numeric"><input class="inp" id="mumax" placeholder="max" style="width:62px" inputmode="numeric">
+          <span class="lbl" style="min-width:0;margin-left:6px">Listed</span><select class="inp" id="mper"><option value="">Any time</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="180">Last 6 months</option><option value="365">Last 12 months</option></select></div>
+        <div class="r"><span class="lbl">Firm</span><select class="inp" id="mfirm" style="flex:1"></select></div>
+      </div>
+      <div class="mv-n"><span><b id="mN">0</b> listings</span><span id="mUnits"></span><button class="btn ghost sm ml-auto" id="mClear">Clear filters</button></div>
+      <div id="mvList"></div>
+    </div>
+    <div class="mv-map">
+      <div id="map"></div>
+      <div class="map-layers" id="mLayers"></div>
+      <div class="geo-box" id="geoBox"><span id="geoKind"></span><span id="geoRadWrap"><input id="geoRad" inputmode="decimal" title="Radius in miles"> mi</span><span><b id="geoN">0</b> inside</span><button class="btn sm" id="geoClear">Clear area</button></div>
+      <div class="map-legend" id="mLegend"></div>
+    </div>
+  </div></section>
+
+  <!-- ======================= DASHBOARD ======================= -->
+  <section class="view" id="vDash"><div class="wrap">
+    <div class="grid g-kpi" id="kpis"></div>
+    <div class="grid g-2 mt">
+      <div class="card"><div class="card-h"><div><div class="card-t">New listings by month</div><div class="card-s">Date on market, by state</div></div><div class="seg ml-auto" id="dMonths"><button data-v="12">12 mo</button><button data-v="24" class="on">24 mo</button><button data-v="34">All</button></div></div>
+        <div class="card-b"><div class="legend" id="dLeg"></div><div class="chart mt" id="dChart"></div></div></div>
+      <div class="card"><div class="card-h"><div><div class="card-t">By state</div><div class="card-s">Every listing since Feb 2024</div></div></div><div class="card-b" style="padding:0"><table class="tbl" id="dStates"></table></div></div>
+    </div>
+    <div class="grid g-2e mt">
+      <div class="card"><div class="card-h"><div><div class="card-t">Asked vs. closed</div><div class="card-s" id="dAvcS"></div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dAvc"></table></div></div>
+      <div class="card"><div class="card-h"><div><div class="card-t">Listing brokers</div><div class="card-s">Listings in the last 12 months</div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dFirms"></table></div></div>
+    </div>
+    <div class="card mt"><div class="card-h"><div><div class="card-t">Recent changes</div><div class="card-s">Edits, new listings and imports by the team</div></div><button class="btn sm ml-auto" id="actRefresh">Refresh</button></div><div class="card-b" id="activity"><span class="muted small">Loading…</span></div></div>
+  </div></section>
+
+  <!-- ======================= NEW LISTINGS ======================= -->
+  <section class="view" id="vNew"><div class="wrap">
+    <div class="nl-hd">
+      <div><div class="nl-t">New Listings</div><div class="nl-s" id="nlSub"></div></div>
+      <div class="seg ml-auto" id="nlPer"><button data-v="7">This week</button><button data-v="14" class="on">2 weeks</button><button data-v="30">30 days</button><button data-v="90">90 days</button></div>
+      <div class="seg" id="nlSt"></div>
+      <button class="btn sm" id="nlImport" title="Add the new rows from a Salesforce External Listings export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import Salesforce CSV</button>
+      <button class="btn primary sm" id="nlAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</button>
+    </div>
+    <div class="grid g-kpi" id="nlKpis"></div>
+    <div class="card mt"><div class="card-h"><div><div class="card-t">Weekly new listings</div><div class="card-s">Last 16 weeks, by state</div></div></div><div class="card-b"><div class="chart" id="nlChart"></div></div></div>
+    <div id="nlWeeks"></div>
+  </div></section>
+
+  <!-- ======================= LISTINGS TABLE ======================= -->
+  <section class="view" id="vTable"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div class="toolbar">
+      <input class="inp" id="tq" placeholder="Search" style="width:200px">
+      <div id="tStates" style="display:flex;gap:4px"></div>
+      <select class="inp" id="tStatus"><option value="">Any status</option></select>
+      <span class="lbl">Listed</span><input class="inp" id="tFrom" type="date" style="width:132px"><span class="lbl">to</span><input class="inp" id="tTo" type="date" style="width:132px">
+      <select class="inp" id="tFirm" style="max-width:180px"></select>
+      <label class="lbl"><input type="checkbox" id="tAsk"> Asking only</label>
+      <label class="lbl"><input type="checkbox" id="tHid"> Show hidden</label>
+      <span class="ml-auto lbl" id="tCount"></span>
+      <button class="btn sm" id="tCsv">Export CSV</button>
+    </div>
+    <div class="tblwrap" style="flex:1"><table class="tbl" id="tbl"></table></div>
+    <div class="pager" id="tPager"></div>
+  </div></section>
+
+  <!-- ======================= CLOSINGS ======================= -->
+  <section class="view" id="vSales"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div class="toolbar">
+      <input class="inp" id="sq" placeholder="Search address, buyer, seller, broker" style="width:240px">
+      <div class="seg" id="sLink"><button data-v="linked" class="on">Matched to a listing</button><button data-v="">All sales</button><button data-v="unlinked">Not matched</button></div>
+      <select class="inp" id="sYears"><option value="2024">Since 2024</option><option value="2022">Since 2022</option><option value="2018">Since 2018</option></select>
+      <span class="lbl">Units</span><input class="inp" id="sumin" placeholder="min" style="width:60px" inputmode="numeric">
+      <span class="ml-auto lbl" id="sCount"></span>
+      <button class="btn sm" id="sImport" title="Add sales from a CoStar sale comps export (.xlsx or .csv)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CoStar sales</button>
+    </div>
+    <div class="tblwrap" style="flex:1"><table class="tbl" id="stbl"></table></div>
+    <div class="pager" id="sPager"></div>
+  </div></section>
+</main>
+
+<aside id="drawer"><div class="dr-h" id="drH"></div><div class="dr-b" id="drB"></div></aside>
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="tip" id="tip"></div>
+<div id="toast"></div>
+<input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+<input type="file" id="compFile" accept=".xlsx,.xls,.csv" hidden>
+
+<script>
+/* ======================================================================
+   Greysteel MarketIQ - external listings tracker.
+   Public page, private data: everything is read through the hap-update
+   Worker's /marketiq/* routes after Microsoft Entra sign-in (the same
+   session as GreyHub, PBS8, LoanID and TOPA). Data repo: listings.json,
+   sales.json (CoStar 5+ unit sales), overlay.json (shared edits), imports.json.
+   Shared edits go to overlay.json via /marketiq/edit; new listings and
+   imported sales commit whole files via /marketiq/commit.
+   ====================================================================== */
+var BRAND = "MarketIQ";
+var API = "https://hap-update.mrareshide.workers.dev";
+(function () {   /* local preview only: ?api=http://localhost:8787 points at tools/devserver.py */
+  var q = new URLSearchParams(location.search).get("api");
+  if (q && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) API = q;
+})();
+var TKEY = "hap_session";
+var DAY = 864e5;
+var STATES = ["DC", "MD", "VA", "PA", "WV"];
+var ST_COLOR = {DC: "#1a73e8", MD: "#fa7b17", VA: "#9334e6", PA: "#129eaf", WV: "#80868b"};
+var ACTIVE_DAYS = 180;   /* no closing found and older than this = "Aged" */
+var STATUS = [
+  {k: "Active", c: "#188038", pill: "green", d: "On the market, listed in the last " + ACTIVE_DAYS + " days"},
+  {k: "Under Contract", c: "#1a73e8", pill: "blue", d: "Set by hand"},
+  {k: "Closed", c: "#f9ab00", pill: "yellow", d: "Matched to a CoStar sale, or set by hand"},
+  {k: "Aged", c: "#9aa0a6", pill: "gray", d: "Listed over " + ACTIVE_DAYS + " days ago, no closing found"},
+  {k: "Relisted", c: "#e37400", pill: "orange", d: "The building was listed again later; see the newer listing"},
+  {k: "Off Market", c: "#5f6368", pill: "dark", d: "Withdrawn, set by hand"}
+];
+var ST = {}; STATUS.forEach(function (s) { ST[s.k] = s; });
+var SALE_C = "#9334e6";
+var HL = ["yellow", "green", "blue", "red", "purple", "orange"];
+var HL_C = {yellow: "#fdd663", green: "#81c995", blue: "#8ab4f8", red: "#f28b82", purple: "#c58af9", orange: "#fcad70"};
+document.querySelectorAll("[data-brand]").forEach(function (e) { e.textContent = BRAND; });
+
+/* ---------------------------------------------------------------- utils */
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); }
+function today() { return new Date().toLocaleDateString("en-CA", {timeZone: "America/New_York"}); }
+function dnum(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || "")); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null; }
+function days(a, b) { var x = dnum(a), y = dnum(b); return x == null || y == null ? null : Math.round((y - x) / DAY); }
+function shift(iso, n) { return new Date(dnum(iso) + n * DAY).toISOString().slice(0, 10); }
+function fmtD(iso) { var t = dnum(iso); return t == null ? "" : new Date(t).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric", timeZone: "UTC"}); }
+function fmtDs(iso) { var t = dnum(iso); return t == null ? "" : new Date(t).toLocaleDateString("en-US", {month: "numeric", day: "numeric", year: "2-digit", timeZone: "UTC"}); }
+function n0(v) { return v == null || v === "" || isNaN(v) ? "" : Math.round(v).toLocaleString("en-US"); }
+function money(v) { return v == null || v === "" || isNaN(v) ? "" : "$" + Math.round(v).toLocaleString("en-US"); }
+function mshort(v) {
+  if (v == null || v === "" || isNaN(v)) return "";
+  var a = Math.abs(v);
+  return a >= 1e9 ? "$" + (v / 1e9).toFixed(2) + "B" : a >= 1e6 ? "$" + (v / 1e6).toFixed(a >= 1e8 ? 0 : a >= 1e7 ? 1 : 2) + "M" : a >= 1e3 ? "$" + Math.round(v / 1e3) + "K" : "$" + Math.round(v);
+}
+function pct(v, d) { return v == null || isNaN(v) ? "" : (v * 100).toFixed(d == null ? 1 : d) + "%"; }
+function spr(v) { return v == null || isNaN(v) ? "" : '<span class="spr ' + (v < -0.0005 ? "neg" : v > 0.0005 ? "pos" : "") + '">' + (v > 0 ? "+" : "") + (v * 100).toFixed(1) + "%</span>"; }
+function median(a) { a = a.filter(function (x) { return x != null && !isNaN(x); }).sort(function (x, y) { return x - y; }); if (!a.length) return null; var m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; }
+function sum(a) { return a.reduce(function (s, x) { return s + (+x || 0); }, 0); }
+function parseNum(v) { if (v == null) return null; if (typeof v === "number") return isFinite(v) ? v : null; var s = String(v).replace(/[$,\s]/g, ""); if (!s) return null; var n = Number(s); return isFinite(n) ? n : null; }
+function toast(m, err) { var t = $("toast"); t.textContent = m; t.className = "on" + (err ? " err" : ""); clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = ""; }, err ? 6000 : 3200); }
+function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function typedDate(s) {
+  s = String(s || "").trim(); var m;
+  if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s))) return m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0");
+  if ((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/.exec(s))) { var y = m[3].length === 2 ? "20" + m[3] : m[3]; return y + "-" + m[1].padStart(2, "0") + "-" + m[2].padStart(2, "0"); }
+  return "";
+}
+function utf8b64(str) { var b = new TextEncoder().encode(str), s = ""; for (var i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+async function sha1hex(s) { var h = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(s)); return Array.from(new Uint8Array(h)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }
+
+/* ---------------------------------------------------------- ADDRESS RULES
+   Mirror tools/common.py (norm_addr, house_nums, street_key) and tools/match.py
+   (name_key, the match rule). Keep them in step. */
+var ABBR = {street: "st", str: "st", avenue: "ave", av: "ave", place: "pl", road: "rd", terrace: "ter", terr: "ter", drive: "dr", court: "ct",
+  boulevard: "blvd", lane: "ln", parkway: "pkwy", circle: "cir", square: "sq", highway: "hwy", pike: "pike", way: "way", north: "n", south: "s",
+  east: "e", west: "w", northwest: "nw", northeast: "ne", southwest: "sw", southeast: "se", first: "1st", second: "2nd", third: "3rd", fourth: "4th",
+  fifth: "5th", sixth: "6th", seventh: "7th", eighth: "8th", ninth: "9th", tenth: "10th", saint: "st", mount: "mt", fort: "ft",
+  roadd: "rd", streeet: "st", stret: "st", avneue: "ave", avenu: "ave", aveune: "ave"};   /* typos seen in the Salesforce export */
+var SUFFIX = {st: 1, ave: 1, pl: 1, rd: 1, ter: 1, dr: 1, ct: 1, blvd: 1, ln: 1, pkwy: 1, cir: 1, sq: 1, hwy: 1, way: 1, pike: 1};
+var QUAD = {nw: 1, ne: 1, sw: 1, se: 1};
+function normAddr(a) {
+  var s = String(a || "").toLowerCase();
+  s = s.replace(/\b(n\.?\s?w|n\.?\s?e|s\.?\s?w|s\.?\s?e)\.?(?=\s|$|,)/g, function (m) { return m.replace(/[^nsew]/g, ""); });
+  s = s.replace(/[.,#'?]/g, " ").replace(/\s+/g, " ").trim();
+  return s.split(" ").map(function (w) { return ABBR[w] || w; }).join(" ");
+}
+function houseNums(a) {
+  var out = [], s = normAddr(a).replace(/&/g, " , ").replace(/ and /g, " , "), re = /(?<![\w-])(\d{1,6})[a-z]?(?:\s*-\s*(\d{1,6})[a-z]?)?(?=\s|,|$)/g, m;
+  while ((m = re.exec(s)) && out.length < 6) {
+    var lo = +m[1], hi = m[2] ? +m[2] : lo;
+    if (hi < lo && m[2].length < m[1].length) hi = +(m[1].slice(0, m[1].length - m[2].length) + m[2]);
+    if (hi < lo || hi - lo > 400) hi = lo;
+    out.push([lo, hi]);
+  }
+  return out;
+}
+function streetKey(a) {
+  var t = normAddr(a).split(/\b(?:apt|unit|ste|suite|bldg)\b/)[0];
+  var toks = t.replace(/&/g, " ").split(/\s+/).filter(Boolean), out = [];
+  while (toks.length && /^(\d{1,6}[a-z]?(-\d{1,6}[a-z]?)?|-|and|,)$/.test(toks[0])) toks.shift();
+  for (var i = 0; i < toks.length; i++) {
+    out.push(toks[i]);
+    if (SUFFIX[toks[i]]) { if (QUAD[toks[i + 1]]) out.push(toks[i + 1]); break; }
+  }
+  return out.join(" ");
+}
+function noQuad(k) { return String(k || "").replace(/ (nw|ne|sw|se)$/, ""); }
+/* same street key, or the same once the quadrant is dropped when one side has none */
+function sameStreet(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  var qa = / (nw|ne|sw|se)$/.test(a), qb = / (nw|ne|sw|se)$/.test(b);
+  return (!qa || !qb) && noQuad(a) === noQuad(b);
+}
+function overlap(a, b) { return a.some(function (x) { return b.some(function (y) { return x[0] <= y[1] && y[0] <= x[1]; }); }); }
+var GENERIC = {apartments: 1, apartment: 1, apts: 1, the: 1, portfolio: 1, residences: 1, flats: 1, at: 1, of: 1, and: 1};
+function nameKey(n) {
+  var k = String(n || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(function (w) { return w && !GENERIC[w]; }).join(" ");
+  return !k || /^\d/.test(k) || k.length < 5 ? "" : k;
+}
+/* the same building, for "listed before" history: state + street + overlapping numbers */
+function sameBldg(a, b) {
+  if (a.state !== b.state) return false;
+  return sameStreet(a._sk, b._sk) && a._hn.length && b._hn.length && overlap(a._hn, b._hn);
+}
+
+/* ---------------------------------------------------------------- API */
+function authH() { try { return {Authorization: "Bearer " + (localStorage.getItem(TKEY) || "")}; } catch (e) { return {}; } }
+function expired() { try { localStorage.removeItem(TKEY); } catch (e) {} location.reload(); }
+async function apiGet(path) {
+  var r = await fetch(API + path, {headers: authH(), cache: "no-store"});
+  if (r.status === 401) { expired(); throw new Error("Your sign-in expired"); }
+  if (!r.ok) { var t = ""; try { t = (await r.json()).error; } catch (e) {} throw new Error(t || ("HTTP " + r.status)); }
+  return r.json();
+}
+async function apiPost(path, body) {
+  var r = await fetch(API + path, {method: "POST", headers: Object.assign({"Content-Type": "application/json"}, authH()), body: JSON.stringify(body)});
+  if (r.status === 401) { expired(); throw new Error("Your sign-in expired"); }
+  var j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok || j.ok === false) { var e = new Error(j.error || ("HTTP " + r.status)); e.status = r.status; e.conflict = j.conflict; throw e; }
+  return j;
+}
+
+/* ---------------------------------------------------------------- state */
+var S = {
+  me: null, manifest: {}, raw: {listings: [], sales: [], overlay: {edits: {}, hl: {}}, imports: []},
+  L: [], byId: {}, sales: [], saleById: {}, view: "map", drawer: null,
+  mf: lsGet("miq_mf", {states: {}, status: {Active: 1, "Under Contract": 1}, umin: "", umax: "", per: "", firm: "", sort: "date", q: "", layers: {listings: 1, sales: 0}}),
+  tf: {q: "", states: {}, status: "", from: "", to: "", firm: "", ask: false, hid: false, sort: {k: "onMarket", d: -1}, page: 0},
+  sf: {q: "", link: "linked", since: "2024", umin: "", sort: {k: "date", d: -1}, page: 0},
+  nl: {per: 14, st: ""}, dmonths: 24, geo: null
+};
+var FILES = ["listings.json", "sales.json", "overlay.json", "imports.json"];
+
+async function loadFile(path) {
+  var sha = S.manifest[path];
+  if (!sha) return null;
+  return apiGet("/marketiq/data/" + path + "?v=" + sha);
+}
+async function boot() {
+  var m = await apiGet("/marketiq/manifest?load=1");
+  S.manifest = m.files || {};
+  var got = await Promise.all(FILES.map(loadFile));
+  S.raw.listings = (got[0] && got[0].listings) || [];
+  S.raw.sales = (got[1] && got[1].sales) || [];
+  S.raw.overlay = got[2] || {edits: {}, hl: {}};
+  S.raw.imports = (got[3] && got[3].imports) || [];
+  derive();
+  $("boot").hidden = true;
+  var h = (location.hash || "").replace("#", "");
+  setView(["map", "dash", "new", "table", "sales"].indexOf(h) > -1 ? h : "map");
+  setInterval(poll, 20000);
+}
+async function poll() {
+  if (document.visibilityState !== "visible") return;
+  var dot = $("syncDot");
+  try {
+    var m = await apiGet("/marketiq/manifest");
+    var changed = FILES.filter(function (f) { return (m.files || {})[f] !== S.manifest[f]; });
+    dot.className = "";
+    if (!changed.length) return;
+    S.manifest = m.files;
+    for (var i = 0; i < changed.length; i++) {
+      var f = changed[i], j = await loadFile(f);
+      if (f === "listings.json") S.raw.listings = (j && j.listings) || [];
+      if (f === "sales.json") S.raw.sales = (j && j.sales) || [];
+      if (f === "overlay.json") S.raw.overlay = j || {edits: {}, hl: {}};
+      if (f === "imports.json") S.raw.imports = (j && j.imports) || [];
+    }
+    derive(); render(true);
+  } catch (e) { dot.className = "err"; }
+}
+
+/* ------------------------------------------------------------- derive ----
+   listing status: a status set by hand wins; else Closed when a CoStar sale is
+   matched to it; else Active through ACTIVE_DAYS after the date on market, then Aged.
+   MATCH RULE (tools/match.py): same state; street + overlapping house numbers, or
+   the same property name; sale dated 30 days before to 730 days after the date on
+   market; the latest such listing on or before the sale wins. A sale's "link" edit
+   (a listing id, or "none") overrides the rule. */
+var EDITABLE_L = ["name", "address", "city", "state", "units", "yearBuilt", "onMarket", "asking", "broker", "brokerCo", "clientContact", "clientCo", "om", "noi", "status", "notes", "hidden"];
+var NUM_F = {units: 1, yearBuilt: 1, asking: 1, noi: 1, price: 1, sf: 1};
+function applyEdits(kind, r) {
+  var e = S.raw.overlay.edits[kind + "/" + r.id], o = Object.assign({}, r);
+  o._ed = {};
+  if (e) Object.keys(e).forEach(function (f) { o._ed[f] = {was: r[f], by: e[f].by, at: e[f].at}; o[f] = NUM_F[f] ? parseNum(e[f].v) : e[f].v; });
+  var hl = S.raw.overlay.hl[kind + "/" + r.id];
+  o._hl = hl ? hl.c : null;
+  return o;
+}
+function derive() {
+  var t = today();
+  S.L = S.raw.listings.map(function (r) {
+    var o = applyEdits("l", r);
+    o.state = String(o.state || "").toUpperCase();
+    if (typeof o.geo === "string") { var gp = o.geo.split(",").map(Number); o.geo = gp.length === 2 && isFinite(gp[0]) && isFinite(gp[1]) ? gp : null; }
+    o._sk = streetKey(o.address); o._hn = houseNums(o.address); o._nk = nameKey(o.name);
+    o._q = normAddr([o.name, o.address, o.city, o.state, o.broker, o.brokerCo, o.firm, o.clientContact, o.clientCo, o.notes].join(" "));
+    o._days = days(o.onMarket, t);
+    o._ppu = o.asking && o.units ? o.asking / o.units : null;
+    o._capAsk = o.asking && o.noi ? o.noi / o.asking : null;
+    o._sales = [];
+    return o;
+  });
+  S.byId = {}; S.L.forEach(function (o) { S.byId[o.id] = o; });
+  /* index listings for the match rule */
+  var bySk = {}, byNk = {};
+  S.L.forEach(function (o) {
+    if (o.hidden) return;
+    if (o._sk) (bySk[o.state + "|" + noQuad(o._sk)] = bySk[o.state + "|" + noQuad(o._sk)] || []).push(o);
+    if (o._nk) (byNk[o.state + "|" + o._nk] = byNk[o.state + "|" + o._nk] || []).push(o);
+  });
+  S.sales = S.raw.sales.map(function (r) {
+    var s = applyEdits("s", r);
+    s.state = String(s.state || "DC").toUpperCase();
+    s._q = normAddr([s.name, s.address, s.buyer, s.seller, s.brokerCo, s.brokerAgent, s.portfolio].join(" "));
+    s._ppu = s.price && s.units ? s.price / s.units : null;
+    s._link = null; s._how = null;
+    if (s.link === "none") { s._how = "none"; }
+    else if (s.link && S.byId[s.link]) { s._link = S.byId[s.link]; s._how = "manual"; }
+    else {
+      var sk = streetKey(s.address), hn = houseNums(s.address), nk = nameKey(s.name), seen = {}, cands = [];
+      (bySk[s.state + "|" + noQuad(sk)] || []).forEach(function (o) { if (sameStreet(sk, o._sk) && hn.length && o._hn.length && overlap(hn, o._hn)) { seen[o.id] = 1; cands.push(o); } });
+      (byNk[s.state + "|" + nk] || []).forEach(function (o) { if (!seen[o.id]) cands.push(o); });
+      cands = cands.filter(function (o) { var d = days(o.onMarket, s.date); return d != null && d >= -30 && d <= 730; });
+      if (cands.length) {
+        var onb = cands.filter(function (o) { return days(o.onMarket, s.date) >= 0; });
+        var pool = onb.length ? onb : cands;
+        s._link = pool.reduce(function (a, b) { return b.onMarket > a.onMarket ? b : a; });
+        s._how = "auto";
+      }
+    }
+    return s;
+  });
+  /* one sale per listing: the earliest linked sale (plus others within 7 days: the same multi-building deal);
+     a later automatic match of the same building is a resale, not this listing's outcome */
+  var first = {};
+  S.sales.forEach(function (s) { if (s._link && (!first[s._link.id] || s.date < first[s._link.id])) first[s._link.id] = s.date; });
+  S.sales.forEach(function (s) {
+    if (s._how === "auto" && days(first[s._link.id], s.date) > 7) { s._resaleOf = s._link; s._link = null; s._how = "resale"; }
+    if (!s._link) return;
+    s._link._sales.push(s);
+    /* re-marketed: CoStar's listing broker is another firm and the sale's own marketing began 180+ days after this listing */
+    var lf = String(s._link.firm || s._link.brokerCo || "").toLowerCase().split(/[\s&,]+/)[0], sb = String(s.brokerCo || "").toLowerCase();
+    s._remkt = !!(lf && sb && sb.indexOf(lf) < 0 && s.daysOnMkt && days(s._link.onMarket, s.date) - s.daysOnMkt > 180);
+  });
+  S.saleById = {}; S.sales.forEach(function (s) { S.saleById[s.id] = s; });
+  S.L.forEach(function (o) {
+    o._sales.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    var sp = sum(o._sales.map(function (s) { return s.price; }));
+    o._sale = o._sales.length ? {price: sp || null, date: o._sales[o._sales.length - 1].date, units: sum(o._sales.map(function (s) { return s.units; }))} : null;
+    o._ask = o.asking || null;
+    if (!o._ask && o._sales.length === 1 && o._sales[0].csAsking) { o._ask = o._sales[0].csAsking; o._askSrc = "CoStar"; }
+    o._remkt = o._sales.some(function (s) { return s._remkt; });
+    o._spread = o._sale && o._sale.price && o._ask && !o._remkt ? o._sale.price / o._ask - 1 : null;
+    o._dtc = o._sale ? days(o.onMarket, o._sale.date) : null;
+    o._capClose = o._sale && o._sale.price && o.noi ? o.noi / o._sale.price : null;
+  });
+  /* listed before: other listings of the same building */
+  var bk = {};
+  S.L.forEach(function (o) { if (o._sk) (bk[o.state + "|" + noQuad(o._sk)] = bk[o.state + "|" + noQuad(o._sk)] || []).push(o); });
+  S.L.forEach(function (o) {
+    o._prev = (bk[o.state + "|" + noQuad(o._sk)] || []).filter(function (x) { return x !== o && !x.hidden && sameBldg(o, x); });
+    var later = o._prev.some(function (x) { return x.onMarket > o.onMarket; });
+    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : later ? "Relisted" : o._days != null && o._days <= ACTIVE_DAYS ? "Active" : "Aged";
+  });
+  S.firms = {};
+  S.L.forEach(function (o) { var f = o.firm || o.brokerCo || ""; if (f) S.firms[f] = (S.firms[f] || 0) + 1; });
+  var nc = S.L.filter(function (o) { return !o.hidden && o._days != null && o._days >= 0 && o._days < 7; }).length;
+  $("newCount").hidden = !nc; $("newCount").textContent = nc;
+}
+function visibleL() { return S.L.filter(function (o) { return !o.hidden; }); }
+
+/* ---------------------------------------------------------------- views */
+function setView(v) {
+  S.view = v;
+  document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("active", b.dataset.view === v); });
+  document.querySelectorAll(".view").forEach(function (s) { s.classList.remove("active"); });
+  $({map: "vMap", dash: "vDash", new: "vNew", table: "vTable", sales: "vSales"}[v]).classList.add("active");
+  try { history.replaceState(null, "", "#" + v); } catch (e) {}
+  render();
+}
+function render(soft) {
+  if (S.view === "map") renderMap(soft);
+  else if (S.view === "dash") renderDash();
+  else if (S.view === "new") renderNew();
+  else if (S.view === "table") renderTable();
+  else if (S.view === "sales") renderSales();
+  if (S.drawer) S.drawer.kind === "l" ? openListing(S.drawer.id, true) : openSale(S.drawer.id, true);
+}
+
+/* ================================================================ MAP */
+var _map, _lyrL, _lyrS, _shapes = [], _mkById = {};
+function mfPass(o, f, skipGeo) {
+  if (o.hidden) return false;
+  var st = Object.keys(f.states).filter(function (k) { return f.states[k]; });
+  if (st.length && st.indexOf(o.state) < 0) return false;
+  var ss = Object.keys(f.status).filter(function (k) { return f.status[k]; });
+  if (ss.length && ss.indexOf(o._status) < 0) return false;
+  var umin = parseNum(f.umin), umax = parseNum(f.umax);
+  if (umin != null && !(o.units >= umin)) return false;
+  if (umax != null && !(o.units <= umax)) return false;
+  if (f.per && !(o._days != null && o._days <= +f.per)) return false;
+  if (f.firm && (o.firm || o.brokerCo) !== f.firm) return false;
+  if (f.q) { var q = normAddr(f.q); if (o._q.indexOf(q) < 0) return false; }
+  if (!skipGeo && _shapes.length) { if (!o.geo || !inShapes(o.geo)) return false; }
+  return true;
+}
+function chipsHtml(list, on, cls) {
+  return list.map(function (x) { return '<button class="chip ' + cls + (on[x.k] ? " on" : "") + '" data-k="' + esc(x.k) + '">' + (x.c ? '<i style="background:' + x.c + '"></i>' : "") + esc(x.l || x.k) + (x.n != null ? ' <span class="muted">' + x.n + "</span>" : "") + "</button>"; }).join("");
+}
+function firmOptions(sel, cur) {
+  var f = Object.keys(S.firms).sort(function (a, b) { return S.firms[b] - S.firms[a] || a.localeCompare(b); });
+  sel.innerHTML = '<option value="">Any broker firm</option>' + f.map(function (x) { return '<option value="' + esc(x) + '"' + (x === cur ? " selected" : "") + ">" + esc(x) + " (" + S.firms[x] + ")</option>"; }).join("");
+}
+function initMap() {
+  if (_map) return;
+  _map = L.map("map", {zoomControl: false, preferCanvas: true, maxZoom: 18}).setView([39.2, -77.3], 7);
+  L.control.zoom({position: "topleft"}).addTo(_map);
+  [ "World_Light_Gray_Base", "World_Light_Gray_Reference" ].forEach(function (n) {
+    var t = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/" + n + "/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 16, maxZoom: 18, attribution: n.indexOf("Base") > -1 ? "Tiles &copy; Esri" : ""});
+    t.on("tileerror", function (e) { var el = e.tile, k = +(el.dataset.r || 0); if (k < 3) { el.dataset.r = k + 1; setTimeout(function () { el.src = el.src.replace(/[?&]_r=\d+$/, "") + (el.src.indexOf("?") < 0 ? "?" : "&") + "_r=" + (k + 1); }, 700 * (k + 1)); } });
+    t.addTo(_map);
+  });
+  _lyrS = L.layerGroup().addTo(_map); _lyrL = L.layerGroup().addTo(_map);
+  if (_map.pm) {
+    _map.pm.addControls({position: "topleft", drawMarker: false, drawCircleMarker: false, drawPolyline: false, drawText: false, cutPolygon: false, rotateMode: false, editMode: false, dragMode: false, removalMode: false});
+    _map.pm.setGlobalOptions({pathOptions: {color: "#1a73e8", weight: 2, fillOpacity: .06}});
+    _map.on("pm:create", function (e) {
+      _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = [e.layer];
+      e.layer.on("pm:edit", function () { renderMap(true); });
+      renderMap(true);
+    });
+  }
+  $("geoClear").onclick = function () { _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = []; renderMap(true); };
+  $("geoRad").onchange = function () { var v = parseFloat(this.value); var c = _shapes[0]; if (c && c.setRadius && v > 0) { c.setRadius(v * 1609.34); renderMap(true); } };
+}
+function inShapes(g) {
+  var ll = L.latLng(g[0], g[1]);
+  return _shapes.some(function (s) {
+    if (s.getRadius) return s.getLatLng().distanceTo(ll) <= s.getRadius();
+    var pts = s.getLatLngs()[0], inside = false;
+    for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      var xi = pts[i].lng, yi = pts[i].lat, xj = pts[j].lng, yj = pts[j].lat;
+      if (((yi > g[0]) !== (yj > g[0])) && (g[1] < (xj - xi) * (g[0] - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  });
+}
+function renderMap(soft) {
+  initMap();
+  var f = S.mf;
+  var all = visibleL();
+  /* filter controls */
+  var cnt = {}; all.forEach(function (o) { cnt[o.state] = (cnt[o.state] || 0) + 1; });
+  $("mStates").innerHTML = '<span class="lbl">State</span>' + chipsHtml(STATES.filter(function (s) { return cnt[s]; }).map(function (s) { return {k: s, c: ST_COLOR[s], n: cnt[s]}; }), f.states, "mst");
+  var sc = {}; all.forEach(function (o) { if (mfPass(o, Object.assign({}, f, {status: {}}), true)) sc[o._status] = (sc[o._status] || 0) + 1; });
+  $("mStatus").innerHTML = '<span class="lbl">Status</span>' + chipsHtml(STATUS.map(function (s) { return {k: s.k, c: s.c, n: sc[s.k] || 0}; }), f.status, "mss");
+  if (!soft || !$("mfirm").options.length) firmOptions($("mfirm"), f.firm);
+  $("mq").value = f.q; $("msort").value = f.sort; $("mumin").value = f.umin; $("mumax").value = f.umax; $("mper").value = f.per;
+  var rows = all.filter(function (o) { return mfPass(o, f); });
+  var srt = {date: function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }, units: function (a, b) { return (b.units || 0) - (a.units || 0); },
+    ask: function (a, b) { return (b._ask || 0) - (a._ask || 0); }, ppu: function (a, b) { return (b._ppu || 0) - (a._ppu || 0); }, name: function (a, b) { return String(a.name).localeCompare(b.name); }}[f.sort];
+  rows.sort(srt);
+  $("mN").textContent = rows.length.toLocaleString();
+  $("mUnits").textContent = n0(sum(rows.map(function (o) { return o.units; }))) + " units";
+  var pinned = rows.filter(function (o) { return o.geo; }).length;
+  var html = rows.slice(0, 400).map(function (o) {
+    var s = ST[o._status];
+    return '<div class="lc' + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '" data-id="' + o.id + '"><div class="d" style="background:' + s.c + '"></div>' +
+      '<div class="n">' + esc(o.name) + "</div>" +
+      '<div class="p">' + (o._sale ? mshort(o._sale.price) + "<small>closed " + fmtDs(o._sale.date) + "</small>" : o._ask ? mshort(o._ask) + "<small>asking</small>" : '<small>no ask</small>') + "</div>" +
+      '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "") + ", " + o.state) + (o.geo ? "" : ' <span class="pill gray" title="Address could not be placed on the map">no pin</span>') + "</div><div></div>" +
+      '<div class="m"><span>' + (o.units ? n0(o.units) + " units" : "units n/a") + "</span><span>" + fmtD(o.onMarket) + "</span><span>" + esc(o.firm || o.brokerCo) + "</span></div></div>";
+  }).join("");
+  if (rows.length > 400) html += '<div class="small muted" style="padding:12px 14px">Showing the first 400 of ' + rows.length + " - narrow the filters to see the rest.</div>";
+  if (!rows.length) html = '<div class="small muted" style="padding:24px 14px;text-align:center">No listings match these filters.</div>';
+  $("mvList").innerHTML = html;
+  /* geo box */
+  var gb = $("geoBox");
+  gb.classList.toggle("on", !!_shapes.length);
+  if (_shapes.length) {
+    var c = _shapes[0];
+    $("geoKind").textContent = c.getRadius ? "Radius" : "Drawn area";
+    $("geoRadWrap").hidden = !c.getRadius;
+    if (c.getRadius && document.activeElement !== $("geoRad")) $("geoRad").value = (c.getRadius() / 1609.34).toFixed(2).replace(/\.?0+$/, "");
+    $("geoN").textContent = rows.length;
+  }
+  /* layers */
+  $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#188038"}, {k: "sales", l: "CoStar sales (DC)", c: SALE_C}], f.layers, "mly");
+  $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (f.status[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(s.d) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
+    (f.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
+    '<div class="small muted" style="margin-top:6px">' + pinned + " of " + rows.length + " on the map</div>";
+  _lyrL.clearLayers(); _lyrS.clearLayers(); _mkById = {};
+  if (f.layers.listings) rows.forEach(function (o) {
+    if (!o.geo) return;
+    var s = ST[o._status], sel = S.drawer && S.drawer.id === o.id;
+    var mk = L.circleMarker(o.geo, {radius: sel ? 9 : o.units >= 100 ? 7 : 5.5, color: sel ? "#202124" : "#fff", weight: sel ? 2.5 : 1.2, fillColor: s.c, fillOpacity: .92});
+    mk.bindTooltip('<b>' + esc(o.name) + "</b><br>" + esc(o.address) + ", " + esc(o.city) + " " + o.state + "<br>" + (o.units ? n0(o.units) + " units · " : "") + (o._ask ? mshort(o._ask) + " ask · " : "") + o._status +
+      (o._sale ? "<br>Closed " + fmtD(o._sale.date) + " at " + mshort(o._sale.price) + (o._spread != null ? " (" + (o._spread > 0 ? "+" : "") + (o._spread * 100).toFixed(1) + "% vs ask)" : "") : ""), {className: "lf-tip", direction: "top", offset: [0, -4]});
+    mk.on("click", function () { openListing(o.id); });
+    mk.addTo(_lyrL); _mkById[o.id] = mk;
+  });
+  if (f.layers.sales) {
+    var since = String(new Date().getFullYear() - 3);
+    S.sales.forEach(function (s) {
+      if (!s.geo || s._link || s.date < since) return;
+      if (_shapes.length && !inShapes(s.geo)) return;
+      var umin = parseNum(f.umin), umax = parseNum(f.umax);
+      if ((umin != null && !(s.units >= umin)) || (umax != null && !(s.units <= umax))) return;
+      var mk = L.circleMarker(s.geo, {radius: 4.5, color: "#fff", weight: 1, fillColor: SALE_C, fillOpacity: .8});
+      mk.bindTooltip("<b>" + esc(s.name || s.address) + "</b><br>" + esc(s.address) + "<br>Sold " + fmtD(s.date) + " · " + mshort(s.price) + " · " + s.units + " units<br><span style='color:#80868b'>CoStar sale, not matched to a listing</span>", {className: "lf-tip", direction: "top"});
+      mk.on("click", function () { openSale(s.id); });
+      mk.addTo(_lyrS);
+    });
+  }
+  if (!soft && !S._fitted) {
+    var pts = rows.filter(function (o) { return o.geo; }).map(function (o) { return o.geo; });
+    if (pts.length) { _map.fitBounds(L.latLngBounds(pts).pad(0.05)); S._fitted = 1; }
+  }
+  setTimeout(function () { _map.invalidateSize(); }, 50);
+}
+function wireMap() {
+  var f = S.mf, save = function () { lsSet("miq_mf", S.mf); renderMap(true); };
+  $("vMap").addEventListener("click", function (e) {
+    var b = e.target.closest(".chip.mst"); if (b) { f.states[b.dataset.k] = !f.states[b.dataset.k]; return save(); }
+    b = e.target.closest(".chip.mss"); if (b) { f.status[b.dataset.k] = !f.status[b.dataset.k]; return save(); }
+    b = e.target.closest(".chip.mly"); if (b) { f.layers[b.dataset.k] = !f.layers[b.dataset.k]; return save(); }
+    b = e.target.closest(".map-legend .row[data-k]"); if (b) { f.status[b.dataset.k] = !f.status[b.dataset.k]; return save(); }
+    b = e.target.closest(".lc"); if (b) { openListing(b.dataset.id); var o = S.byId[b.dataset.id]; if (o && o.geo) _map.setView(o.geo, Math.max(_map.getZoom(), 14)); }
+  });
+  $("mq").oninput = function () { f.q = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 180); };
+  $("msort").onchange = function () { f.sort = this.value; save(); };
+  $("mumin").oninput = function () { f.umin = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 250); };
+  $("mumax").oninput = function () { f.umax = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 250); };
+  $("mper").onchange = function () { f.per = this.value; save(); };
+  $("mfirm").onchange = function () { f.firm = this.value; save(); };
+  $("mClear").onclick = function () { S.mf = {states: {}, status: {}, umin: "", umax: "", per: "", firm: "", sort: "date", q: "", layers: f.layers}; f = S.mf; $("mfirm").value = ""; save(); };
+}
+
+/* ================================================================ DASHBOARD */
+function kpi(l, v, d) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num">' + v + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
+function renderDash() {
+  var all = visibleL(), t = today();
+  var act = all.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; });
+  var n30 = all.filter(function (o) { return o._days != null && o._days >= 0 && o._days < 30; }), p30 = all.filter(function (o) { return o._days >= 30 && o._days < 60; });
+  var closed = all.filter(function (o) { return o._sale; });
+  var withSpr = closed.filter(function (o) { return o._spread != null; });
+  var dd = n30.length - p30.length;
+  $("kpis").innerHTML =
+    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.units; }))) + " units · listed in the last " + ACTIVE_DAYS + " days") +
+    kpi("New in the last 30 days", n30.length, '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the 30 days before") +
+    kpi("Closed (DC, CoStar)", closed.length, "listings matched to a 5+ unit sale") +
+    kpi("Median closed vs. ask", withSpr.length ? spr(median(withSpr.map(function (o) { return o._spread; }))) : "–", withSpr.length + " closings with an asking price") +
+    kpi("Median days to close", n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "date on market to sale date");
+  /* monthly chart */
+  var nM = S.dmonths, months = [], d0 = new Date(dnum(t));
+  for (var i = nM - 1; i >= 0; i--) { var d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - i, 1)); months.push(d.toISOString().slice(0, 7)); }
+  if (nM >= 34) months = months.filter(function (m) { return m >= "2024-02"; });
+  var by = {}; all.forEach(function (o) { var m = String(o.onMarket).slice(0, 7); (by[m] = by[m] || {})[o.state] = ((by[m] || {})[o.state] || 0) + 1; });
+  var used = STATES.filter(function (s) { return all.some(function (o) { return o.state === s; }); });
+  $("dLeg").innerHTML = used.map(function (s) { return '<span><i style="background:' + ST_COLOR[s] + '"></i>' + s + "</span>"; }).join("");
+  stackChart($("dChart"), months.map(function (m) { return {label: m, parts: used.map(function (s) { return {k: s, v: (by[m] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (m) { var d = new Date(m + "-01T00:00:00Z"); return d.toLocaleDateString("en-US", {month: "short", timeZone: "UTC"}) + (m.slice(5) === "01" ? " '" + m.slice(2, 4) : ""); }, 240);
+  /* states */
+  $("dStates").innerHTML = "<thead><tr><th>State</th><th class=r>Listings</th><th class=r>On market</th><th class=r>Med. units</th><th class=r>Med. ask $/unit</th><th class=r>Closed</th></tr></thead><tbody>" +
+    used.map(function (s) {
+      var r = all.filter(function (o) { return o.state === s; });
+      return '<tr data-st="' + s + '"><td><span class="dot" style="background:' + ST_COLOR[s] + '"></span>' + s + '</td><td class="r num">' + r.length + '</td><td class="r num">' + r.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; }).length +
+        '</td><td class="r num">' + n0(median(r.map(function (o) { return o.units; }))) + '</td><td class="r num">' + money(median(r.map(function (o) { return o._ppu; }))) + '</td><td class="r num">' + r.filter(function (o) { return o._sale; }).length + "</td></tr>";
+    }).join("") + "</tbody>";
+  /* asked vs closed */
+  var avc = closed.slice().sort(function (a, b) { return a._sale.date < b._sale.date ? 1 : -1; });
+  $("dAvcS").textContent = avc.length + " DC listings matched to a CoStar sale · median " + n0(median(closed.map(function (o) { return o._dtc; }))) + " days on market to close";
+  $("dAvc").innerHTML = "<thead><tr><th>Property</th><th class=r>Units</th><th class=r>Asking</th><th class=r>Closed</th><th class=r>vs. ask</th><th class=r>Days</th></tr></thead><tbody>" +
+    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? ' <span class="small muted" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || '<span class="muted">–</span>') + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
+  /* firms */
+  var yr = all.filter(function (o) { return o._days != null && o._days <= 365; }), fm = {};
+  yr.forEach(function (o) { var k = o.firm || o.brokerCo || "(none)"; var r = fm[k] = fm[k] || {n: 0, u: 0, act: 0, cl: 0, st: {}}; r.n++; r.u += o.units || 0; if (o._status === "Active" || o._status === "Under Contract") r.act++; if (o._sale) r.cl++; r.st[o.state] = 1; });
+  $("dFirms").innerHTML = "<thead><tr><th>Firm</th><th class=r>Listings</th><th class=r>Units</th><th class=r>On market</th><th>States</th></tr></thead><tbody>" +
+    Object.keys(fm).sort(function (a, b) { return fm[b].n - fm[a].n; }).map(function (k) { var r = fm[k]; return '<tr data-firm="' + esc(k) + '"><td>' + esc(k) + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + r.act + "</td><td>" + Object.keys(r.st).sort().join(", ") + "</td></tr>"; }).join("") + "</tbody>";
+  loadActivity();
+}
+function stackChart(el, data, fmt, H) {
+  var W = el.clientWidth || 700, pl = 30, pb = 22, pt = 8, iw = W - pl - 4, ih = H - pb - pt;
+  var mx = Math.max(1, Math.max.apply(null, data.map(function (d) { return sum(d.parts.map(function (p) { return p.v; })); })));
+  var step = mx > 40 ? 20 : mx > 20 ? 10 : mx > 8 ? 4 : 2, top = Math.ceil(mx / step) * step;
+  var bw = iw / data.length, g = "";
+  for (var y = 0; y <= top; y += step) { var yy = pt + ih - ih * y / top; g += '<line class="gl" x1="' + pl + '" x2="' + (W - 4) + '" y1="' + yy + '" y2="' + yy + '"/><text class="ax" x="' + (pl - 6) + '" y="' + (yy + 4) + '" text-anchor="end">' + y + "</text>"; }
+  var every = Math.ceil(data.length / 14);
+  data.forEach(function (d, i) {
+    var x = pl + i * bw + bw * 0.14, w = bw * 0.72, acc = 0, tot = sum(d.parts.map(function (p) { return p.v; }));
+    d.parts.forEach(function (p) {
+      if (!p.v) return;
+      var h = ih * p.v / top, yy = pt + ih - ih * (acc + p.v) / top; acc += p.v;
+      g += '<rect class="b" x="' + x + '" y="' + yy + '" width="' + w + '" height="' + Math.max(h - 1, 0.5) + '" rx="2" fill="' + p.c + '" data-tip="' + esc("<b>" + fmt(d.label, true) + "</b> · " + tot + " total<br>" + d.parts.filter(function (q) { return q.v; }).map(function (q) { return q.k + ": " + q.v; }).join(" · ")) + '"/>';
+    });
+    if (i % every === 0) g += '<text class="ax" x="' + (x + w / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(fmt(d.label)) + "</text>";
+  });
+  el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '">' + g + "</svg>";
+}
+document.addEventListener("mousemove", function (e) {
+  var t = e.target.closest && e.target.closest("[data-tip]"), tip = $("tip");
+  if (!t) { tip.style.display = "none"; return; }
+  tip.innerHTML = t.getAttribute("data-tip"); tip.style.display = "block";
+  var x = e.clientX + 14, y = e.clientY + 14, w = tip.offsetWidth;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+async function loadActivity() {
+  var el = $("activity");
+  try {
+    var j = await apiGet("/marketiq/history");
+    el.innerHTML = j.commits.length ? '<table class="tbl"><tbody>' + j.commits.slice(0, 25).map(function (c) {
+      return "<tr style=\"cursor:default\"><td class=\"muted\" style=\"width:150px\">" + esc(new Date(c.date).toLocaleString("en-US", {month: "short", day: "numeric", hour: "numeric", minute: "2-digit"})) + "</td><td style=\"width:220px\">" + esc(c.by || "") + '</td><td class="wrap">' + esc(c.msg) + "</td></tr>";
+    }).join("") + "</tbody></table>" : '<span class="muted small">Nothing yet.</span>';
+  } catch (e) { el.innerHTML = '<span class="muted small">Could not load the change history: ' + esc(e.message) + "</span>"; }
+}
+
+/* ================================================================ NEW LISTINGS */
+function weekStart(iso) { var t = dnum(iso), d = new Date(t).getUTCDay(); return new Date(t - d * DAY).toISOString().slice(0, 10); }   /* Sunday */
+function renderNew() {
+  var per = S.nl.per, t = today(), all = visibleL();
+  var used = STATES.filter(function (s) { return all.some(function (o) { return o.state === s; }); });
+  $("nlSt").innerHTML = '<button data-v=""' + (S.nl.st ? "" : ' class="on"') + ">All</button>" + used.map(function (s) { return '<button data-v="' + s + '"' + (S.nl.st === s ? ' class="on"' : "") + ">" + s + "</button>"; }).join("");
+  document.querySelectorAll("#nlPer button").forEach(function (b) { b.classList.toggle("on", +b.dataset.v === per); });
+  var stF = function (o) { return !S.nl.st || o.state === S.nl.st; };
+  var cur = all.filter(function (o) { return stF(o) && o._days != null && o._days >= 0 && o._days < per; });
+  var prev = all.filter(function (o) { return stF(o) && o._days >= per && o._days < per * 2; });
+  var late = all.filter(function (o) { return stF(o) && o.addedAt && days(o.addedAt.slice(0, 10), t) < per && !(o._days < per); });
+  $("nlSub").textContent = "Listings whose date on market falls in the " + (per === 7 ? "last 7 days" : "last " + per + " days") + " (" + fmtD(shift(t, -per + 1)) + " – " + fmtD(t) + ")" + (S.nl.st ? " · " + S.nl.st : "");
+  var d = cur.length - prev.length, withAsk = cur.filter(function (o) { return o._ask; });
+  $("nlKpis").innerHTML =
+    kpi("New listings", cur.length, '<span class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "+" : "") + d + "</span> vs the " + per + " days before") +
+    kpi("Units", n0(sum(cur.map(function (o) { return o.units; }))) || "0", "median " + (n0(median(cur.map(function (o) { return o.units; }))) || "–") + " per listing") +
+    kpi("With an asking price", withAsk.length, withAsk.length ? "median " + money(median(withAsk.map(function (o) { return o._ppu; }))) + " / unit" : "") +
+    kpi("Busiest firm", (function () { var c = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) c[k] = (c[k] || 0) + 1; }); var k = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0]; return k ? '<span style="font-size:20px">' + esc(k) + "</span>" : "–"; })(), (function () { var c = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) c[k] = (c[k] || 0) + 1; }); var k = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0]; return k ? c[k] + " listings" : ""; })()) +
+    kpi("By state", '<span style="font-size:18px">' + (used.map(function (s) { var n = cur.filter(function (o) { return o.state === s; }).length; return n ? '<span style="color:' + ST_COLOR[s] + '">' + s + "</span> " + n : ""; }).filter(Boolean).join(" · ") || "–") + "</span>", "");
+  /* weekly chart, 16 weeks */
+  var wk = weekStart(t), weeks = [];
+  for (var i = 15; i >= 0; i--) weeks.push(shift(wk, -7 * i));
+  var by = {}; all.forEach(function (o) { if (!stF(o) || !o.onMarket) return; var w = weekStart(o.onMarket); (by[w] = by[w] || {})[o.state] = ((by[w] || {})[o.state] || 0) + 1; });
+  stackChart($("nlChart"), weeks.map(function (w) { return {label: w, parts: used.map(function (s) { return {k: s, v: (by[w] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (w, long) { return long ? "Week of " + fmtD(w) : fmtDs(w).replace(/\/\d+$/, ""); }, 170);
+  /* cards grouped by week */
+  var groups = {};
+  cur.forEach(function (o) { var w = weekStart(o.onMarket); (groups[w] = groups[w] || []).push(o); });
+  var html = Object.keys(groups).sort().reverse().map(function (w) {
+    var g = groups[w].sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : a.onMarket > b.onMarket ? -1 : (b.units || 0) - (a.units || 0); });
+    return '<div class="wk"><div class="wk-h"><b>Week of ' + fmtD(w) + "</b><span>" + g.length + " listing" + (g.length > 1 ? "s" : "") + " · " + n0(sum(g.map(function (o) { return o.units; }))) + " units</span></div><div class=\"nlg\">" + g.map(ncard).join("") + "</div></div>";
+  }).join("");
+  if (late.length) html += '<div class="wk"><div class="wk-h"><b>Added recently with an older date on market</b><span>' + late.length + '</span></div><div class="nlg">' + late.map(ncard).join("") + "</div></div>";
+  if (!cur.length && !late.length) html = '<div class="card mt" style="padding:28px;text-align:center;color:var(--text2)">No listings went on the market in this period. Use <b>Add listing</b> or <b>Import Salesforce CSV</b> to add new ones.</div>';
+  $("nlWeeks").innerHTML = html;
+}
+function ncard(o) {
+  var s = ST[o._status];
+  return '<div class="nc" data-id="' + o.id + '"><div class="top"><span class="st" style="background:' + (ST_COLOR[o.state] || "#80868b") + '">' + esc(o.state) + '</span><span class="n">' + esc(o.name) + '</span><span class="pill ' + s.pill + '">' + o._status + "</span></div>" +
+    '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "")) + "</div>" +
+    '<div class="f"><span><b>' + (o.units ? n0(o.units) : "–") + "</b> units</span>" + (o.yearBuilt ? "<span>built <b>" + o.yearBuilt + "</b></span>" : "") + "<span>" + (o._ask ? "<b>" + mshort(o._ask) + "</b> ask" + (o._ppu ? " · " + mshort(o._ppu) + "/u" : "") : "no ask yet") + "</span></div>" +
+    '<div class="br">' + esc([o.broker, o.firm || o.brokerCo].filter(Boolean).join(" · ")) + " · on market " + fmtDs(o.onMarket) + (o.om ? ' · <a href="' + esc(o.om) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "") + "</div></div>";
+}
+
+/* ================================================================ LISTINGS TABLE */
+var TCOLS = [
+  {k: "name", l: "Property"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "St"},
+  {k: "units", l: "Units", r: 1, f: n0}, {k: "yearBuilt", l: "Built", r: 1}, {k: "onMarket", l: "On market", f: fmtDs}, {k: "_days", l: "Days", r: 1, f: n0},
+  {k: "_ask", l: "Asking", r: 1, f: mshort}, {k: "_ppu", l: "$/unit", r: 1, f: mshort}, {k: "noi", l: "T-12 NOI", r: 1, f: mshort}, {k: "_capAsk", l: "Cap @ ask", r: 1, f: function (v) { return pct(v, 2); }},
+  {k: "broker", l: "Broker"}, {k: "firm", l: "Firm"}, {k: "clientContact", l: "Client"}, {k: "clientCo", l: "Client company"},
+  {k: "_status", l: "Status"}, {k: "_salePrice", l: "Closed at", r: 1, f: mshort}, {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days to close", r: 1, f: n0}, {k: "om", l: "OM"}
+];
+function tRows() {
+  var f = S.tf, q = normAddr(f.q || $("gq").value);
+  var st = Object.keys(f.states).filter(function (k) { return f.states[k]; });
+  return S.L.filter(function (o) {
+    if (o.hidden && !f.hid) return false;
+    if (st.length && st.indexOf(o.state) < 0) return false;
+    if (f.status && o._status !== f.status) return false;
+    if (f.from && !(o.onMarket >= f.from)) return false;
+    if (f.to && !(o.onMarket <= f.to)) return false;
+    if (f.firm && (o.firm || o.brokerCo) !== f.firm) return false;
+    if (f.ask && !o._ask) return false;
+    if (q && o._q.indexOf(q) < 0) return false;
+    return true;
+  }).map(function (o) { o._salePrice = o._sale ? o._sale.price : null; return o; });
+}
+function renderTable() {
+  var f = S.tf, rows = tRows(), k = f.sort.k, d = f.sort.d;
+  rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * d; });
+  $("tStates").innerHTML = STATES.filter(function (s) { return S.L.some(function (o) { return o.state === s; }); }).map(function (s) { return '<button class="chip tst' + (f.states[s] ? " on" : "") + '" data-k="' + s + '"><i style="background:' + ST_COLOR[s] + '"></i>' + s + "</button>"; }).join("");
+  if (!$("tStatus").options[1]) $("tStatus").innerHTML += STATUS.map(function (s) { return '<option value="' + s.k + '">' + s.k + "</option>"; }).join("");
+  if (!$("tFirm").options.length) firmOptions($("tFirm"), f.firm);
+  var PG = 200, pages = Math.max(1, Math.ceil(rows.length / PG)); if (f.page >= pages) f.page = 0;
+  var pr = rows.slice(f.page * PG, f.page * PG + PG);
+  $("tCount").textContent = rows.length.toLocaleString() + " listings · " + n0(sum(rows.map(function (o) { return o.units; }))) + " units";
+  $("tbl").innerHTML = "<thead><tr>" + TCOLS.map(function (c) { return '<th data-k="' + c.k + '"' + (c.r ? ' class="r"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    pr.map(function (o) {
+      return '<tr data-id="' + o.id + '" class="' + (o._hl ? "hl-" + o._hl : "") + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TCOLS.map(function (c) {
+        var v = o[c.k], h;
+        if (c.k === "_status") h = '<span class="pill ' + ST[v].pill + '">' + v + "</span>";
+        else if (c.k === "om") h = v ? '<a href="' + esc(v) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "";
+        else if (c.k === "state") h = '<span class="dot" style="background:' + (ST_COLOR[v] || "#999") + '"></span>' + esc(v);
+        else if (c.k === "_ask" && o._askSrc) h = mshort(v) + ' <span class="small muted" title="Asking price from CoStar">CS</span>';
+        else if (c.h) h = c.h(v);
+        else h = esc(c.f ? c.f(v) : v == null ? "" : v);
+        return "<td" + (c.r ? ' class="r num"' : "") + (c.k === "name" || c.k === "address" ? ' title="' + esc(v) + '"' : "") + ">" + h + "</td>";
+      }).join("") + "</tr>";
+    }).join("") + "</tbody>";
+  $("tPager").innerHTML = rows.length > PG ? '<button class="btn sm" data-p="-1"' + (f.page ? "" : " disabled") + '>Previous</button><span>Page ' + (f.page + 1) + " of " + pages + '</span><button class="btn sm" data-p="1"' + (f.page < pages - 1 ? "" : " disabled") + ">Next</button>" : "";
+}
+function wireTable() {
+  var f = S.tf, go = function () { f.page = 0; renderTable(); };
+  $("tq").oninput = function () { f.q = this.value; clearTimeout(wireTable._t); wireTable._t = setTimeout(go, 180); };
+  $("tStatus").onchange = function () { f.status = this.value; go(); };
+  $("tFrom").onchange = function () { f.from = this.value; go(); };
+  $("tTo").onchange = function () { f.to = this.value; go(); };
+  $("tFirm").onchange = function () { f.firm = this.value; go(); };
+  $("tAsk").onchange = function () { f.ask = this.checked; go(); };
+  $("tHid").onchange = function () { f.hid = this.checked; go(); };
+  $("vTable").addEventListener("click", function (e) {
+    var b = e.target.closest(".chip.tst"); if (b) { f.states[b.dataset.k] = !f.states[b.dataset.k]; return go(); }
+    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; f.sort = {k: k, d: f.sort.k === k ? -f.sort.d : (/^(name|address|city|state|broker|firm|client|_status|om)/.test(k) ? 1 : -1)}; return renderTable(); }
+    var p = e.target.closest("[data-p]"); if (p) { f.page += +p.dataset.p; return renderTable(); }
+    var tr = e.target.closest("tr[data-id]"); if (tr) openListing(tr.dataset.id);
+  });
+  $("tCsv").onclick = function () {
+    var rows = tRows(), cols = TCOLS.filter(function (c) { return c.k !== "om"; }).concat([{k: "om", l: "Link to OM"}, {k: "notes", l: "Notes"}]);
+    var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var csv = [cols.map(function (c) { return q(c.l); }).join(",")].concat(rows.map(function (o) { return cols.map(function (c) { var v = o[c.k]; if (c.k === "_spread" || c.k === "_capAsk") v = v == null ? "" : (v * 100).toFixed(2) + "%"; else if (typeof v === "number") v = Math.round(v * 100) / 100; return q(v); }).join(","); })).join("\r\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], {type: "text/csv"})); a.download = BRAND + " listings " + today() + ".csv"; a.click();
+  };
+}
+
+/* ================================================================ CLOSINGS (CoStar sales) */
+var SCOLS = [
+  {k: "date", l: "Sold", f: fmtDs}, {k: "address", l: "Address"}, {k: "name", l: "Property"}, {k: "units", l: "Units", r: 1, f: n0}, {k: "price", l: "Price", r: 1, f: mshort},
+  {k: "_ppu", l: "$/unit", r: 1, f: mshort}, {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"},
+  {k: "_lname", l: "Our listing"}, {k: "_lon", l: "On market", f: fmtDs}, {k: "_lask", l: "Asking", r: 1, f: mshort}, {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days", r: 1, f: n0}
+];
+function sRows() {
+  var f = S.sf, q = normAddr(f.q), umin = parseNum(f.umin);
+  return S.sales.filter(function (s) {
+    if (f.link === "linked" && !s._link) return false;
+    if (f.link === "unlinked" && s._link) return false;
+    if (s.date < f.since) return false;
+    if (umin != null && !(s.units >= umin)) return false;
+    if (q && s._q.indexOf(q) < 0 && !(s._link && s._link._q.indexOf(q) > -1)) return false;
+    return true;
+  }).map(function (s) {
+    var o = s._link;
+    s._lname = o ? o.name : ""; s._lon = o ? o.onMarket : ""; s._lask = o ? o._ask : null;
+    s._spread = o && o._ask && s.price && !s._remkt ? (o._sales.length > 1 ? o._spread : s.price / o._ask - 1) : null;
+    s._dtc = o ? days(o.onMarket, s.date) : null;
+    return s;
+  });
+}
+function renderSales() {
+  var f = S.sf, rows = sRows(), k = f.sort.k, d = f.sort.d;
+  rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * d; });
+  document.querySelectorAll("#sLink button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === f.link); });
+  var PG = 200, pages = Math.max(1, Math.ceil(rows.length / PG)); if (f.page >= pages) f.page = 0;
+  var pr = rows.slice(f.page * PG, f.page * PG + PG);
+  var vol = sum(rows.map(function (s) { return s.price; }));
+  $("sCount").textContent = rows.length.toLocaleString() + " sales · " + mshort(vol) + " · " + n0(sum(rows.map(function (s) { return s.units; }))) + " units";
+  $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '"' + (c.r ? ' class="r"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    pr.map(function (s) {
+      return '<tr data-id="' + s.id + '"' + (S.drawer && S.drawer.id === s.id ? ' class="sel"' : "") + ">" + SCOLS.map(function (c) {
+        var v = s[c.k], h;
+        if (c.k === "_lname") h = s._link ? esc(v) + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "") : s._how === "none" ? '<span class="muted">not a match</span>' : s._how === "resale" ? '<span class="muted">resale of ' + esc(s._resaleOf.name) + "</span>" : "";
+        else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "");
+        else if (c.h) h = c.h(v);
+        else h = esc(c.f ? c.f(v) : v == null ? "" : v);
+        return "<td" + (c.r ? ' class="r num"' : "") + ">" + h + "</td>";
+      }).join("") + "</tr>";
+    }).join("") + "</tbody>";
+  $("sPager").innerHTML = rows.length > PG ? '<button class="btn sm" data-p="-1"' + (f.page ? "" : " disabled") + '>Previous</button><span>Page ' + (f.page + 1) + " of " + pages + '</span><button class="btn sm" data-p="1"' + (f.page < pages - 1 ? "" : " disabled") + ">Next</button>" : "";
+}
+function wireSales() {
+  var f = S.sf, go = function () { f.page = 0; renderSales(); };
+  $("sq").oninput = function () { f.q = this.value; clearTimeout(wireSales._t); wireSales._t = setTimeout(go, 180); };
+  $("sYears").onchange = function () { f.since = this.value; go(); };
+  $("sumin").oninput = function () { f.umin = this.value; clearTimeout(wireSales._t); wireSales._t = setTimeout(go, 250); };
+  $("vSales").addEventListener("click", function (e) {
+    var b = e.target.closest("#sLink button"); if (b) { f.link = b.dataset.v; return go(); }
+    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; f.sort = {k: k, d: f.sort.k === k ? -f.sort.d : (/^(address|name|buyer|seller|brokerCo|_lname)$/.test(k) ? 1 : -1)}; return renderSales(); }
+    var p = e.target.closest("[data-p]"); if (p) { f.page += +p.dataset.p; return renderSales(); }
+    var tr = e.target.closest("tr[data-id]"); if (tr) openSale(tr.dataset.id);
+  });
+}
+
+/* ================================================================ DRAWER */
+var LFIELDS = [
+  ["name", "Engagement name"], ["address", "Address"], ["city", "City"], ["state", "State", "select", STATES], ["units", "Units", "num"], ["yearBuilt", "Year built", "num"],
+  ["onMarket", "Date on market", "date"], ["asking", "Asking (high / whisper)", "num"], ["noi", "T-12 NOI", "num"], ["broker", "Listing broker"], ["brokerCo", "Broker company"],
+  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["status", "Status (by hand)", "select", [""].concat(STATUS.map(function (s) { return s.k; }))], ["notes", "Notes", "text"]
+];
+function closeDrawer() { $("drawer").classList.remove("open"); S.drawer = null; if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); else if (S.view === "sales") renderSales(); }
+function fmtField(f, v) {
+  if (v == null || v === "") return '<span class="muted">–</span>';
+  if (f === "asking" || f === "noi") return money(v);
+  if (f === "units") return n0(v);
+  if (f === "onMarket") return fmtD(v);
+  if (f === "om") return '<a href="' + esc(v) + '" target="_blank" rel="noopener">Open OM</a>';
+  return esc(v);
+}
+function openListing(id, keep) {
+  var o = S.byId[id]; if (!o) return;
+  S.drawer = {kind: "l", id: id};
+  var s = ST[o._status];
+  $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(o.address) + (o.city ? ", " + esc(o.city) : "") + ", " + o.state + "</div>" +
+    '<div class="dr-pills"><span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
+    (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
+  var h = "";
+  /* pricing */
+  h += '<div class="dr-sec"><div class="h">Pricing</div><div class="cmpbox">' +
+    "<div><div class=l>Asking" + (o._askSrc ? " (CoStar)" : "") + '</div><div class="v num">' + (o._ask ? mshort(o._ask) : "–") + '</div><div class="s">' + (o._ppu || (o._ask && o.units) ? mshort(o._ask / o.units) + " / unit" : "") + (o._capAsk ? " · " + pct(o._capAsk, 2) + " cap" : "") + "</div></div>" +
+    "<div><div class=l>Closed</div><div class=\"v num\">" + (o._sale ? mshort(o._sale.price) : "–") + '</div><div class="s">' + (o._sale ? fmtD(o._sale.date) + (o._sale.price && o.units ? " · " + mshort(o._sale.price / (o._sale.units || o.units)) + "/u" : "") : "no matched sale") + "</div></div>" +
+    "<div><div class=l>vs. ask</div><div class=\"v num\">" + (spr(o._spread) || "–") + '</div><div class="s">' + (o._dtc != null ? o._dtc + " days to close" : "") + (o._capClose ? " · " + pct(o._capClose, 2) + " cap" : "") + "</div></div></div>" +
+    (o._capAsk || o._capClose ? '<div class="small muted" style="margin-top:6px">Caps use the T-12 NOI from the listing.</div>' : "") + "</div>";
+  /* matched sales */
+  h += '<div class="dr-sec"><div class="h">CoStar sale' + (o._sales.length > 1 ? "s" : "") + "</div>";
+  h += o._sales.length ? o._sales.map(function (x) {
+    return '<div class="mini"><div class="g"><b>' + mshort(x.price) + " · " + fmtD(x.date) + "</b><div>" + esc(x.address) + " · " + x.units + " units" + (x.buyer ? " · buyer " + esc(x.buyer) : "") + '</div></div><span class="pill ' + (x._how === "manual" ? "blue" : "gray") + '">' + (x._how === "manual" ? "linked by hand" : "matched by address") + "</span>" + (x._remkt ? '<span class="pill orange" title="CoStar shows another firm marketing it from ' + esc(fmtD(shift(x.date, -x.daysOnMkt))) + '; left out of asked-vs-closed figures">re-marketed</span>' : "") + '<button class="btn sm" onclick="openSale(\'' + x.id + "')\">Open</button></div>";
+  }).join("") : '<div class="small muted">' + (o.state === "DC" ? "No CoStar sale matched yet." : "CoStar sales are loaded for DC only so far - import " + o.state + " sales on the Closings tab, or set the status by hand.") + "</div>";
+  var resales = S.sales.filter(function (x) { return x._resaleOf === o; });
+  if (resales.length) h += '<div class="small muted" style="margin-top:6px">Later resale' + (resales.length > 1 ? "s" : "") + " of the building, not counted as this listing's outcome: " + resales.map(function (x) { return '<a href="#" onclick="openSale(\'' + x.id + '\');return false">' + fmtD(x.date) + " " + mshort(x.price) + "</a>"; }).join(", ") + "</div>";
+  h += '<div style="margin-top:8px;display:flex;gap:6px"><input class="inp" id="lnkQ" placeholder="Find a sale to link: address or buyer" style="flex:1"></div><div class="srch-res" id="lnkRes"></div></div>';
+  /* fields */
+  h += '<div class="dr-sec"><div class="h">Details <span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400">click a value to edit · shared with the team</span></div><div class="kv">' +
+    LFIELDS.map(function (f) {
+      var e = o._ed[f[0]];
+      return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + fmtField(f[0], o[f[0]]) +
+        (e ? '<span class="was">edited by ' + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + (e.was != null && e.was !== "" ? " · was " + esc(f[0] === "asking" || f[0] === "noi" ? money(e.was) : e.was) : "") + "</span>" : "") + "</div>";
+    }).join("") + "</div></div>";
+  /* listed before */
+  if (o._prev.length) h += '<div class="dr-sec"><div class="h">Other listings of this building</div>' + o._prev.slice().sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }).map(function (x) {
+    return '<div class="mini"><div class="g"><b>' + esc(x.name) + " · " + fmtD(x.onMarket) + "</b><div>" + esc([x.broker, x.firm || x.brokerCo].filter(Boolean).join(" · ")) + (x._ask ? " · ask " + mshort(x._ask) : "") + '</div></div><button class="btn sm" onclick="openListing(\'' + x.id + "')\">Open</button></div>";
+  }).join("") + "</div>";
+  /* highlight + hide */
+  h += '<div class="dr-sec"><div class="h">Highlight</div><div class="hls">' + HL.map(function (c) { return '<button style="background:' + HL_C[c] + '" class="' + (o._hl === c ? "on" : "") + '" data-hl="' + c + '" title="' + c + '"></button>'; }).join("") +
+    '<button class="btn sm" data-hl="" style="width:auto;height:26px;border-radius:13px;border:1px solid var(--border)">None</button><span class="ml-auto"></span><button class="btn sm danger" id="hideBtn">' + (o.hidden ? "Unhide listing" : "Hide listing") + "</button></div></div>";
+  h += '<div class="dr-sec"><div class="h">Map location</div><div style="display:flex;gap:6px"><input class="inp" id="pinQ" style="flex:1" placeholder="Street address, city, state" value="' + esc(o.geo ? "" : firstStreet(o.address) + (o.city ? ", " + o.city : "") + ", " + o.state) + '"><button class="btn sm" id="pinGo">' + (o.geo ? "Move pin" : "Set pin") + '</button></div><div class="small muted" style="margin-top:4px">' + (o.geo ? "On the map at " + o.geo[0].toFixed(5) + ", " + o.geo[1].toFixed(5) + (o._ed.geo ? " (set by " + esc(String(o._ed.geo.by).split("@")[0]) + ")" : "") : "Not on the map: the address wasn't found. Type one the geocoder knows.") + "</div></div>";
+  h += '<div class="dr-sec small muted">Source: ' + esc(o.src || "") + (o.addedBy && o.addedBy !== "seed" ? " · added by " + esc(o.addedBy) + (o.addedAt ? " " + fmtD(o.addedAt.slice(0, 10)) : "") : "") + (o.geo ? "" : " · not on the map (address not found)") + "</div>";
+  $("drB").innerHTML = h;
+  $("drawer").classList.add("open");
+  if (!keep) { if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); }
+  /* wire */
+  $("drB").querySelectorAll(".v.ed").forEach(function (el) { el.onclick = function (e) { if (e.target.tagName === "A") return; startEdit(el, o); }; });
+  $("drB").querySelectorAll("[data-hl]").forEach(function (b) { b.onclick = function () { saveOps([{t: "hl", k: "l/" + o.id, c: b.dataset.hl || null}], "highlight"); }; });
+  $("pinGo").onclick = async function () {
+    var q = $("pinQ").value.trim(); if (!q) return;
+    var parts = q.split(",").map(function (x) { return x.trim(); }), st = (parts.length > 2 ? parts[parts.length - 1] : o.state).toUpperCase().slice(0, 2);
+    var btn = this; btn.disabled = true;
+    try {
+      var j = await apiPost("/marketiq/geocode", {items: [{k: "p", a: parts[0], c: parts.length > 2 ? parts[1] : (parts[1] || o.city), s: st}]});
+      var g = j.results.p;
+      if (!g) { toast("That address wasn't found", true); btn.disabled = false; return; }
+      saveOps([{t: "set", k: "l/" + o.id, f: "geo", v: g.lat.toFixed(6) + "," + g.lng.toFixed(6)}], "pin");
+    } catch (e) { toast("Could not look it up: " + e.message, true); btn.disabled = false; }
+  };
+  $("hideBtn").onclick = function () { saveOps([{t: "set", k: "l/" + o.id, f: "hidden", v: o.hidden ? null : "1"}], o.hidden ? "unhide" : "hide"); };
+  $("lnkQ").oninput = function () {
+    var q = normAddr(this.value);
+    if (q.length < 3) { $("lnkRes").innerHTML = ""; return; }
+    var res = S.sales.filter(function (x) { return x.state === o.state && x._link !== o && x._q.indexOf(q) > -1 && (days(o.onMarket, x.date) || 0) >= -120; }).slice(0, 8);
+    $("lnkRes").innerHTML = res.map(function (x) { return '<div class="mini"><div class="g"><b>' + esc(x.address) + " · " + fmtD(x.date) + "</b><div>" + mshort(x.price) + " · " + x.units + " units" + (x._link ? " · now on " + esc(x._link.name) : "") + '</div></div><button class="btn sm" data-lk="' + x.id + '">Link</button></div>'; }).join("") || '<div class="small muted">No DC sales match.</div>';
+    $("lnkRes").querySelectorAll("[data-lk]").forEach(function (b) { b.onclick = function () { saveOps([{t: "set", k: "s/" + b.dataset.lk, f: "link", v: o.id}], "link"); }; });
+  };
+}
+function startEdit(el, o) {
+  if (el.querySelector("input,select,textarea")) return;
+  var f = el.dataset.f, def = LFIELDS.find(function (x) { return x[0] === f; }), cur = o[f] == null ? "" : o[f], inp;
+  if (def[2] === "select") { inp = document.createElement("select"); inp.innerHTML = def[3].map(function (v) { return '<option value="' + esc(v) + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + (v || "(automatic)") + "</option>"; }).join(""); }
+  else if (def[2] === "text") { inp = document.createElement("textarea"); inp.value = cur; }
+  else { inp = document.createElement("input"); inp.value = def[2] === "date" ? cur : cur; if (def[2] === "date") inp.type = "date"; if (def[2] === "num") inp.inputMode = "decimal"; }
+  el.innerHTML = ""; el.appendChild(inp); inp.focus();
+  var done = false;
+  var commit = function (save) {
+    if (done) return; done = true;
+    var v = inp.value.trim();
+    if (def[2] === "num") { v = v === "" ? "" : parseNum(v); if (v === null) { toast("That isn't a number", true); return openListing(o.id, true); } }
+    if (def[2] === "url" && v && !/^https?:\/\//i.test(v)) { toast("Links must start with http:// or https://", true); return openListing(o.id, true); }
+    var raw = S.raw.listings.find(function (r) { return r.id === o.id; }) || {};
+    var orig = raw[f] == null ? "" : raw[f];
+    if (!save || String(v) === String(cur)) return openListing(o.id, true);
+    saveOps([{t: "set", k: "l/" + o.id, f: f, v: String(v) === String(orig) ? null : v === "" ? "" : v}], "edit " + f);
+  };
+  inp.onkeydown = function (e) { if (e.key === "Enter" && def[2] !== "text") commit(true); if (e.key === "Escape") commit(false); };
+  inp.onblur = function () { commit(true); };
+  if (def[2] === "select") inp.onchange = function () { commit(true); };
+}
+async function saveOps(ops, what) {
+  $("syncDot").className = "busy";
+  try {
+    var j = await apiPost("/marketiq/edit", {ops: ops});
+    S.raw.overlay = j.overlay; if (j.sha) S.manifest["overlay.json"] = j.sha;
+    $("syncDot").className = ""; derive(); render(true);
+    toast("Saved");
+  } catch (e) { $("syncDot").className = "err"; toast("Could not save: " + e.message, true); if (S.drawer) render(true); }
+}
+function openSale(id, keep) {
+  var s = S.saleById[id]; if (!s) return;
+  S.drawer = {kind: "s", id: id};
+  $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(s.name || s.address) + '</div><div class="dr-s">' + esc(s.address) + ", " + esc(s.city || "") + " " + s.state + "</div>" +
+    '<div class="dr-pills"><span class="pill purple">CoStar sale</span><span class="pill gray">' + s.units + " units</span>" + (s.portfolio || s.multiN ? '<span class="pill orange">' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + "</span>" : "") + "</div>";
+  var o = s._link, h = "";
+  h += '<div class="dr-sec"><div class="h">Sale</div><div class="cmpbox"><div><div class=l>Price</div><div class="v num">' + mshort(s.price) + '</div><div class="s">' + (s._ppu ? mshort(s._ppu) + " / unit" : "") + "</div></div><div><div class=l>Date</div><div class=\"v\" style=\"font-size:16px\">" + fmtD(s.date) + '</div><div class="s">' + (s.daysOnMkt ? s.daysOnMkt + " days on market (CoStar)" : "") + "</div></div><div><div class=l>Cap rate</div><div class=\"v num\">" + (s.cap ? s.cap.toFixed(2) + "%" : "–") + '</div><div class="s">' + (s.capPF ? "pro forma " + s.capPF.toFixed(2) + "%" : "actual, CoStar") + "</div></div></div>" +
+    (s.multiN ? '<div class="small muted" style="margin-top:6px">One of ' + s.multiN + " buildings in this CoStar sale; the price is CoStar's allocation (all buildings: " + mshort(s.multiTotal) + ").</div>" : "") + "</div>";
+  h += '<div class="dr-sec"><div class="h">Matched listing</div>';
+  if (o) h += '<div class="mini"><div class="g"><b>' + esc(o.name) + "</b><div>On market " + fmtD(o.onMarket) + (o._ask ? " · ask " + mshort(o._ask) : "") + " · " + esc(o.firm || o.brokerCo || "") + '</div></div><button class="btn sm" onclick="openListing(\'' + o.id + "')\">Open</button></div>" +
+    '<div class="small muted" style="margin-top:6px">' + (s._how === "manual" ? "Linked by hand." : "Matched automatically by address and date.") + (o._ask && s.price ? " Closed " + spr(s.price / o._ask - 1) + " vs. ask, " + days(o.onMarket, s.date) + " days after going on the market." : "") + "</div>";
+  else h += '<div class="small muted">' + (s._how === "none" ? "Marked as not matching any listing." : s._how === "resale" ? "A later resale of <a href=\"#\" onclick=\"openListing('" + s._resaleOf.id + "');return false\">" + esc(s._resaleOf.name) + "</a> (listed " + fmtD(s._resaleOf.onMarket) + "), which already has an earlier sale." : "No listing matched. Search below to link one.") + "</div>";
+  if (s._remkt) h += '<div class="warn">Re-marketed: CoStar shows ' + esc(s.brokerCo) + " marketing it for " + s.daysOnMkt + " days before the sale, well after this listing went out. Left out of asked-vs-closed figures.</div>";
+  if (s.note) h += '<div class="warn">' + esc(s.note) + "</div>";
+  h += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' + (o || s._how === "none" ? "" : "") +
+    (s._how === "auto" || s._how === "resale" ? '<button class="btn sm danger" id="slNone">Not a match</button>' : "") + (s._how === "manual" || s._how === "none" ? '<button class="btn sm" id="slAuto">Back to automatic</button>' : "") + "</div>" +
+    '<input class="inp" id="slQ" placeholder="Find a ' + s.state + ' listing to link: name or address" style="width:100%;margin-top:8px"><div class="srch-res" id="slRes"></div></div>';
+  h += '<div class="dr-sec"><div class="h">Details</div><div class="kv">' +
+    [["Buyer", s.buyer], ["Seller", s.seller], ["Listing broker", [s.brokerCo, s.brokerAgent].filter(Boolean).join(" · ")], ["CoStar asking", money(s.csAsking)], ["Building SF", n0(s.sf)], ["Year built", s.yearBuilt], ["Class", s.bldgClass], ["Affordable", s.affordable], ["CoStar comp", s.compId], ["Source", s.src === "topa" ? "TOPA Tracker comps" : s.src === "loanid" ? "LoanID CoStar export" : s.src]]
+      .map(function (x) { return '<div class="k">' + x[0] + '</div><div class="v">' + (x[1] ? esc(x[1]) : '<span class="muted">–</span>') + "</div>"; }).join("") + "</div>" +
+    (s.notes ? '<div class="small" style="margin-top:10px;line-height:1.5;color:var(--text2)">' + esc(s.notes) + "</div>" : "") + "</div>";
+  $("drB").innerHTML = h;
+  $("drawer").classList.add("open");
+  if (!keep && S.view === "sales") renderSales();
+  if ($("slNone")) $("slNone").onclick = function () { saveOps([{t: "set", k: "s/" + s.id, f: "link", v: "none"}], "unlink"); };
+  if ($("slAuto")) $("slAuto").onclick = function () { saveOps([{t: "set", k: "s/" + s.id, f: "link", v: null}], "auto"); };
+  $("slQ").oninput = function () {
+    var q = normAddr(this.value);
+    if (q.length < 3) { $("slRes").innerHTML = ""; return; }
+    var res = S.L.filter(function (x) { return !x.hidden && x.state === s.state && x !== o && x._q.indexOf(q) > -1; }).sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }).slice(0, 8);
+    $("slRes").innerHTML = res.map(function (x) { return '<div class="mini"><div class="g"><b>' + esc(x.name) + " · " + fmtD(x.onMarket) + "</b><div>" + esc(x.address) + (x._ask ? " · ask " + mshort(x._ask) : "") + '</div></div><button class="btn sm" data-lk="' + x.id + '">Link</button></div>'; }).join("") || '<div class="small muted">No listings match.</div>';
+    $("slRes").querySelectorAll("[data-lk]").forEach(function (b) { b.onclick = function () { saveOps([{t: "set", k: "s/" + s.id, f: "link", v: b.dataset.lk}], "link"); }; });
+  };
+}
+
+/* ================================================================ ADD / IMPORT */
+function openModal(html) { $("mbox").innerHTML = html; $("modal").classList.add("open"); }
+function closeModal() { $("modal").classList.remove("open"); }
+$("modal").addEventListener("mousedown", function (e) { if (e.target.id === "modal") closeModal(); });
+var FORM = [
+  ["name", "Engagement name", "", 1], ["address", "Address", "", 1], ["city", "City", "", 1], ["state", "State", "select", 1], ["units", "Units", "num"], ["yearBuilt", "Year built", "num"],
+  ["onMarket", "Date on market", "date", 1], ["asking", "Asking price (high / whisper)", "num"], ["broker", "Listing broker"], ["brokerCo", "Listing broker company", "firm"],
+  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["noi", "T-12 NOI", "num"]
+];
+function openAdd() {
+  var firms = Object.keys(S.firms).sort();
+  openModal('<div class="mh"><div><div class="t">Add a listing</div><div class="s">The same fields as the Salesforce External Listings report. Everyone sees it as soon as you save.</div></div><button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div>' +
+    '<div class="mb"><div class="form">' + FORM.map(function (f) {
+      var inp = f[2] === "select" ? '<select id="af_' + f[0] + '">' + STATES.map(function (s) { return "<option>" + s + "</option>"; }).join("") + "</select>"
+        : '<input id="af_' + f[0] + '"' + (f[2] === "date" ? ' type="date" value="' + today() + '"' : "") + (f[2] === "num" ? ' inputmode="decimal"' : "") + (f[2] === "firm" ? ' list="af_firms"' : "") + (f[2] === "url" ? ' placeholder="https://greysteel.app.box.com/..."' : "") + ">";
+      return '<label class="' + (f[0] === "om" ? "full" : "") + '"><span class="' + (f[3] ? "req" : "") + '">' + f[1] + "</span>" + inp + "</label>";
+    }).join("") + '</div><datalist id="af_firms">' + firms.map(function (f) { return '<option value="' + esc(f) + '">'; }).join("") + '</datalist><div id="afWarn"></div></div>' +
+    '<div class="mf"><span class="small muted">Address is placed on the map automatically.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button><button class="btn sm primary" id="afSave">Save listing</button></div>');
+  var chk = function () {
+    var a = $("af_address").value, st = $("af_state").value, d = $("af_onMarket").value;
+    if (!a) { $("afWarn").innerHTML = ""; return; }
+    var probe = {state: st, _sk: streetKey(a), _hn: houseNums(a)};
+    var dup = S.L.filter(function (o) { return sameBldg(probe, o); }).sort(function (x, y) { return x.onMarket < y.onMarket ? 1 : -1; });
+    $("afWarn").innerHTML = dup.length ? '<div class="warn">This building is already listed ' + dup.length + " time" + (dup.length > 1 ? "s" : "") + ": " + dup.slice(0, 3).map(function (o) { return "<b>" + esc(o.name) + "</b> (" + fmtD(o.onMarket) + ", " + esc(o.firm || o.brokerCo || "") + ")"; }).join("; ") + ". Save anyway if this is a new marketing round.</div>" : "";
+  };
+  $("af_address").oninput = chk; $("af_state").onchange = chk;
+  $("afSave").onclick = async function () {
+    var v = {};
+    for (var i = 0; i < FORM.length; i++) {
+      var f = FORM[i], x = $("af_" + f[0]).value.trim();
+      if (f[3] && !x) { toast(f[1] + " is required", true); $("af_" + f[0]).focus(); return; }
+      if (f[2] === "num" && x) { var n = parseNum(x); if (n == null) { toast(f[1] + " must be a number", true); return; } x = n; }
+      if (f[2] === "url" && x && !/^https?:\/\//i.test(x)) { toast("The OM link must start with https://", true); return; }
+      if (x !== "") v[f[0]] = x;
+    }
+    this.disabled = true; this.textContent = "Saving…";
+    try { await addListings([v], "Add listing: " + v.name, "listings:add"); closeModal(); toast("Listing added"); setView("new"); }
+    catch (e) { toast("Could not save: " + e.message, true); this.disabled = false; this.textContent = "Save listing"; }
+  };
+}
+var FIRM_MAP = [["berkadia", "Berkadia"], ["cbre", "CBRE"], ["colliers", "Colliers"], ["cushman", "Cushman & Wakefield"], ["keller williams", "Keller Williams"], ["matthews", "Matthews"],
+  ["newmark", "Newmark"], ["one south", "One South"], ["private investor", "Private Investor"], ["sperry van ness", "SVN"], ["northmarq", "Northmarq"], ["marcus & millichap", "Marcus & Millichap"]];
+function firmOf(co) { var lo = String(co || "").toLowerCase(); for (var i = 0; i < FIRM_MAP.length; i++) if (lo.indexOf(FIRM_MAP[i][0]) > -1) return FIRM_MAP[i][1]; return String(co || "").trim(); }
+/* id = sha1("name|address|city|state|onMarket|broker|brokerCo")[:10], as tools/build_listings.py makes it */
+async function listingId(v) { return (await sha1hex([v.name, v.address, v.city, v.state, v.onMarket, v.broker, v.brokerCo].map(function (x) { return x == null ? "" : String(x); }).join("|"))).slice(0, 10); }
+function rowsText(key, rows, head) {
+  var pre = head ? JSON.stringify(head).slice(1, -1) : "";
+  return "{" + (pre ? pre + "," : "") + JSON.stringify(key) + ":[\n" + rows.map(function (r) { return JSON.stringify(r); }).join(",\n") + "\n]}\n";
+}
+async function geocodeRows(rows) {
+  var todo = rows.filter(function (r) { return !r.geo && r.address; });
+  for (var i = 0; i < todo.length; i += 10) {
+    var chunk = todo.slice(i, i + 10);
+    try {
+      var j = await apiPost("/marketiq/geocode", {items: chunk.map(function (r) { return {k: r.id, a: firstStreet(r.address), c: r.city, s: r.state}; })});
+      chunk.forEach(function (r) { var g = j.results[r.id]; if (g) { r.geo = [Math.round(g.lat * 1e6) / 1e6, Math.round(g.lng * 1e6) / 1e6]; r.geoQ = "worker"; } });
+    } catch (e) {}
+  }
+}
+function firstStreet(a) {
+  var s = String(a || "").trim();
+  s = s.replace(/^(\d+)[a-zA-Z]?\s*-\s*\d+[a-zA-Z]?\b/, "$1");
+  var m = /^(\d+)(?:\s*,\s*\d+)+(?:\s*(?:&|and)\s*\d+)?\s+(.*)$/.exec(s); if (m) s = m[1] + " " + m[2];
+  m = /^(\d+)\s*(?:&|and)\s*\d+\s+(.*)$/.exec(s); if (m) s = m[1] + " " + m[2];
+  return s.split(/,|\b(?:apt|unit|ste|suite)\b/i)[0].trim();
+}
+/* rows: plain field objects. Adds ids, firm, source; geocodes; commits listings.json + imports.json on the copies they were read from. */
+async function addListings(vals, message, event, src) {
+  var stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z"), rows = [];
+  for (var i = 0; i < vals.length; i++) {
+    var v = vals[i], r = {id: await listingId(v)};
+    ["name", "address", "city", "state", "units", "yearBuilt", "onMarket", "asking", "broker", "brokerCo"].forEach(function (k) { if (v[k] != null && v[k] !== "") r[k] = v[k]; });
+    r.firm = firmOf(v.brokerCo);
+    ["clientContact", "clientCo", "om", "noi"].forEach(function (k) { if (v[k] != null && v[k] !== "") r[k] = v[k]; });
+    r.src = src || "manual"; r.addedBy = S.me.email; r.addedAt = stamp;
+    rows.push(r);
+  }
+  await geocodeRows(rows);
+  for (var attempt = 0; attempt < 3; attempt++) {
+    var have = {}; S.raw.listings.forEach(function (r) { have[r.id] = 1; });
+    var fresh = rows.filter(function (r) { return !have[r.id]; });
+    if (!fresh.length) throw new Error("already in the list");
+    var all = fresh.concat(S.raw.listings).sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : a.onMarket > b.onMarket ? -1 : String(b.name).localeCompare(String(a.name)); });
+    var imps = S.raw.imports.concat([{at: stamp, by: S.me.email, kind: src ? "salesforce" : "manual", label: message, added: fresh.length}]);
+    try {
+      var j = await apiPost("/marketiq/commit", {message: message, event: event, files: [
+        {path: "listings.json", content: utf8b64(rowsText("listings", all)), base: S.manifest["listings.json"] || null},
+        {path: "imports.json", content: utf8b64(JSON.stringify({imports: imps}, null, 1) + "\n"), base: S.manifest["imports.json"] || null}]});
+      Object.assign(S.manifest, j.files); S.raw.listings = all; S.raw.imports = imps;
+      derive(); render(true);
+      return fresh.length;
+    } catch (e) {
+      if (e.status !== 409) throw e;
+      var m = await apiGet("/marketiq/manifest?fresh=1"); S.manifest = m.files || {};   /* someone saved first: reload and try again */
+      S.raw.listings = ((await loadFile("listings.json")) || {}).listings || [];
+      S.raw.imports = ((await loadFile("imports.json")) || {}).imports || [];
+    }
+  }
+  throw new Error("too many people saving at once - try again");
+}
+/* Salesforce CSV import (same report as the seed) */
+function parseCsv(text) {
+  var rows = [], row = [], cell = "", q = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+var SF_COLS = [["name", /engagement name|^listing name|^property name/i], ["address", /^address$/i], ["city", /^city$/i], ["state", /^state/i], ["units", /^units$/i], ["yearBuilt", /^year built/i],
+  ["onMarket", /date on market/i], ["asking", /^asking price/i], ["broker", /^listing broker$/i], ["brokerCo", /^listing broker company/i], ["clientContact", /^client contact/i], ["clientCo", /^client company/i], ["om", /link to om/i], ["noi", /noi/i]];
+function importCsv(file) {
+  var fr = new FileReader();
+  fr.onload = async function () {
+    try {
+      var buf = new Uint8Array(fr.result), text;
+      try { text = new TextDecoder("utf-8", {fatal: true}).decode(buf); } catch (e) { text = new TextDecoder("windows-1252").decode(buf); }
+      text = text.replace(/^﻿/, "");
+      var aoa = parseCsv(text), hdr = (aoa[0] || []).map(function (h) { return h.trim(); }), map = {};
+      SF_COLS.forEach(function (c) { var i = hdr.findIndex(function (h) { return c[1].test(h); }); if (i > -1) map[c[0]] = i; });
+      if (map.address == null || map.onMarket == null) throw new Error("this doesn't look like the External Listings report (no Address / Date On Market columns)");
+      var have = {}; S.raw.listings.forEach(function (r) { have[r.id] = 1; });
+      var vals = [];
+      for (var i = 1; i < aoa.length; i++) {
+        var r = aoa[i]; if (!r.some(function (c) { return String(c).trim(); })) continue;
+        var v = {};
+        Object.keys(map).forEach(function (k) { v[k] = String(r[map[k]] == null ? "" : r[map[k]]).replace(/ /g, " ").replace(/\s+/g, " ").trim(); });
+        v.onMarket = typedDate(v.onMarket);
+        if (!v.onMarket || v.onMarket < "2024-02-05") continue;
+        v.state = v.state.toUpperCase();
+        ["units", "yearBuilt", "asking", "noi"].forEach(function (k) { var n = parseNum(v[k]); v[k] = n || (k === "noi" && n === 0 ? null : null); if (n) v[k] = n; });
+        if (v.om && !/^https?:/i.test(v.om)) v.om = "";
+        var idv = Object.assign({}, v); v._id = await listingId(idv);
+        if (String(v.name).toLowerCase() === "listing" || !v.name) v.name = v.address;
+        v._dup = !!have[v._id];
+        if (!v._dup) { var probe = {state: v.state, _sk: streetKey(v.address), _hn: houseNums(v.address)}; v._near = S.L.find(function (o) { return sameBldg(probe, o) && Math.abs(days(o.onMarket, v.onMarket)) <= 3; }); }
+        vals.push(v);
+      }
+      var fresh = vals.filter(function (v) { return !v._dup; });
+      openModal('<div class="mh"><div><div class="t">Import Salesforce listings</div><div class="s">' + esc(file.name) + " · " + vals.length + " rows on or after 2/5/2024 · <b>" + fresh.length + " new</b> · " + (vals.length - fresh.length) + ' already here</div></div><button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div>' +
+        '<div class="mb">' + (fresh.length ? '<table class="ptable"><thead><tr><th></th><th>Name</th><th>Address</th><th>St</th><th>Units</th><th>On market</th><th>Firm</th><th></th></tr></thead><tbody>' +
+        fresh.map(function (v, i) { return "<tr><td><input type=checkbox data-i=\"" + i + "\"" + (v._near ? "" : " checked") + "></td><td>" + esc(v.name) + "</td><td>" + esc(v.address) + "</td><td>" + esc(v.state) + "</td><td>" + n0(v.units) + "</td><td>" + fmtDs(v.onMarket) + "</td><td>" + esc(firmOf(v.brokerCo)) + "</td><td>" + (v._near ? '<span class="pill orange" title="Same building listed within 3 days - probably the same listing with an edited field">possible duplicate</span>' : "") + "</td></tr>"; }).join("") + "</tbody></table>"
+        : '<div class="muted">Every row in this file is already here.</div>') + "</div>" +
+        '<div class="mf"><span class="small muted">Rows already here are matched on name, address, city, state, date, broker and company.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button>' + (fresh.length ? '<button class="btn sm primary" id="impGo">Add selected</button>' : "") + "</div>");
+      if ($("impGo")) $("impGo").onclick = async function () {
+        var pick = Array.from(document.querySelectorAll("#mbox input[data-i]:checked")).map(function (c) { return fresh[+c.dataset.i]; });
+        if (!pick.length) { toast("Nothing selected", true); return; }
+        this.disabled = true; this.textContent = "Adding " + pick.length + "…";
+        try {
+          var n = await addListings(pick.map(function (v) { var o = Object.assign({}, v); delete o._id; delete o._dup; delete o._near; return o; }), "Salesforce import: " + file.name + " (" + pick.length + " new)", "listings:import", "salesforce:" + today());
+          closeModal(); toast(n + " listings added"); setView("new");
+        } catch (e) { toast("Could not import: " + e.message, true); this.disabled = false; this.textContent = "Add selected"; }
+      };
+    } catch (e) { toast("Couldn't read that file: " + e.message, true); }
+  };
+  fr.readAsArrayBuffer(file);
+}
+/* CoStar sales import (any state) */
+var COSTAR_MAP = [
+  ["address", /^(property address|address|street address)$/i], ["name", /^(property name|building name)$/i], ["date", /^(sale date|close date|sold date)$/i],
+  ["price", /^(sale price|price|sold price)$/i], ["units", /^(number of units|# of units|units|no\.? of units|total units)$/i], ["sf", /^(rba|building sf|bldg sf|gross sf|sf)$/i],
+  ["yearBuilt", /^(year built|yr built)$/i], ["bldgClass", /^(building class|class)$/i], ["cap", /^(actual cap rate|cap rate)$/i],
+  ["buyer", /^(buyer \(true\) company|buyer true company|buyer company|true buyer company|buyer \(recorded\) company|recorded buyer|buyer)$/i],
+  ["seller", /^(seller \(true\) company|seller true company|seller company|true seller company|seller \(recorded\) company|recorded seller|seller)$/i],
+  ["brokerCo", /^(listing broker company|listing broker)$/i], ["csAsking", /^asking price$/i], ["daysOnMkt", /^(days on market|market time)$/i],
+  ["notes", /^(comments|sale notes|transaction notes)$/i], ["compId", /^(comp id|comp #|sale comp id)$/i], ["city", /^(city|property city)$/i], ["state", /^(state|property state)$/i],
+  ["lat", /^latitude$/i], ["lng", /^longitude$/i]
+];
+function xlDate(v) {
+  if (v == null || v === "") return "";
+  if (v instanceof Date) return v.getFullYear() + "-" + String(v.getMonth() + 1).padStart(2, "0") + "-" + String(v.getDate()).padStart(2, "0");
+  if (typeof v === "number") { var d = new Date(Math.round((v - 25569) * DAY)); return d.toISOString().slice(0, 10); }
+  return typedDate(v);
+}
+function importCostar(file) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    try {
+      var wb = XLSX.read(new Uint8Array(fr.result), {type: "array", cellDates: true});
+      var aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: true, defval: ""});
+      var hi = aoa.findIndex(function (r) { return r.some(function (c) { return /address/i.test(String(c)); }) && r.some(function (c) { return /sale|price/i.test(String(c)); }); });
+      if (hi < 0) throw new Error("couldn't find a header row with Address and Sale Price");
+      var hdr = aoa[hi].map(function (h) { return String(h).trim(); }), map = {};
+      COSTAR_MAP.forEach(function (m) { var i = hdr.findIndex(function (h) { return m[1].test(h); }); if (i > -1) map[m[0]] = i; });
+      if (map.address == null || map.date == null) throw new Error("no Property Address / Sale Date column");
+      var have = {}; S.raw.sales.forEach(function (s) { have[(s.compId || "") + "|" + streetKey(s.address) + "|" + s.date] = 1; have["|" + streetKey(s.address) + "|" + s.date] = 1; });
+      var rows = aoa.slice(hi + 1).filter(function (r) { return r[map.address]; }).map(function (r) {
+        var c = {};
+        Object.keys(map).forEach(function (k) {
+          var v = r[map[k]];
+          if (k === "date") v = xlDate(v);
+          else if (["price", "units", "sf", "yearBuilt", "lat", "lng", "cap", "csAsking", "daysOnMkt"].indexOf(k) > -1) v = parseNum(v);
+          else v = String(v == null ? "" : v).trim();
+          if (v !== "" && v != null) c[k] = v;
+        });
+        var pm = c.address && /\s*\((Part of an? [^)]*)\)\s*$/i.exec(c.address); if (pm) { c.portfolio = pm[1]; c.address = c.address.slice(0, pm.index); }
+        if (c.cap != null && c.cap < 1) c.cap = Math.round(c.cap * 10000) / 100;
+        c.state = String(c.state || "DC").toUpperCase().slice(0, 2);
+        if (typeof c.lat === "number" && typeof c.lng === "number") c.geo = [c.lat, c.lng];
+        delete c.lat; delete c.lng;
+        c._dup = !!(have[(c.compId || "") + "|" + streetKey(c.address) + "|" + c.date] || have["|" + streetKey(c.address) + "|" + c.date]);
+        return c;
+      }).filter(function (c) { return c.date && c.units >= 5; });
+      var fresh = rows.filter(function (c) { return !c._dup; });
+      openModal('<div class="mh"><div><div class="t">Import CoStar sales</div><div class="s">' + esc(file.name) + " · " + rows.length + " sales of 5+ units · <b>" + fresh.length + ' new</b></div><div class="s small">' + Object.keys(map).map(function (k) { return esc(k) + " ← " + esc(hdr[map[k]]); }).join(", ") + '</div></div><button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div>' +
+        '<div class="mb">' + (fresh.length ? '<table class="ptable"><thead><tr><th>Address</th><th>St</th><th>Sold</th><th>Price</th><th>Units</th><th>Buyer</th></tr></thead><tbody>' + fresh.slice(0, 300).map(function (c) { return "<tr><td>" + esc(c.address) + "</td><td>" + esc(c.state) + "</td><td>" + fmtDs(c.date) + "</td><td>" + mshort(c.price) + "</td><td>" + n0(c.units) + "</td><td>" + esc(c.buyer || "") + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="muted">Every sale in this file is already here.</div>') + "</div>" +
+        '<div class="mf"><span class="small muted">Sales are matched to listings automatically after import.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button>' + (fresh.length ? '<button class="btn sm primary" id="cImpGo">Add ' + fresh.length + " sales</button>" : "") + "</div>");
+      if ($("cImpGo")) $("cImpGo").onclick = async function () {
+        this.disabled = true; this.textContent = "Adding…";
+        try { await addSales(fresh, file.name); closeModal(); toast(fresh.length + " sales added"); }
+        catch (e) { toast("Could not import: " + e.message, true); this.disabled = false; }
+      };
+    } catch (e) { toast("Couldn't read that file: " + e.message, true); }
+  };
+  fr.readAsArrayBuffer(file);
+}
+async function addSales(rows, fname) {
+  var stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z"), out = [];
+  for (var i = 0; i < rows.length; i++) {
+    var c = Object.assign({}, rows[i]); delete c._dup;
+    c.id = c.compId ? "c" + String(c.compId).split(".")[0] : "u" + (await sha1hex([c.address, c.date, c.price].join("|"))).slice(0, 11);
+    if (c.price && c.units) c.ppu = Math.round(c.price / c.units);
+    c.src = "costar:" + today(); c.addedBy = S.me.email;
+    out.push(c);
+  }
+  var noGeo = out.filter(function (c) { return !c.geo; });
+  await geocodeRows(noGeo.map(function (c) { c.city = c.city || ""; return c; }));
+  for (var attempt = 0; attempt < 3; attempt++) {
+    var have = {}; S.raw.sales.forEach(function (s) { have[s.id] = 1; });
+    var fresh = out.filter(function (c) { return !have[c.id]; });
+    if (!fresh.length) throw new Error("already here");
+    var all = fresh.concat(S.raw.sales).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    var imps = S.raw.imports.concat([{at: stamp, by: S.me.email, kind: "sales", label: "CoStar import: " + fname, added: fresh.length}]);
+    try {
+      var j = await apiPost("/marketiq/commit", {message: "CoStar import: " + fname + " (" + fresh.length + " sales)", event: "listings:sales_import", files: [
+        {path: "sales.json", content: utf8b64(rowsText("sales", all)), base: S.manifest["sales.json"] || null},
+        {path: "imports.json", content: utf8b64(JSON.stringify({imports: imps}, null, 1) + "\n"), base: S.manifest["imports.json"] || null}]});
+      Object.assign(S.manifest, j.files); S.raw.sales = all; S.raw.imports = imps; derive(); render(true);
+      return;
+    } catch (e) {
+      if (e.status !== 409) throw e;
+      var m = await apiGet("/marketiq/manifest?fresh=1"); S.manifest = m.files || {};
+      S.raw.sales = ((await loadFile("sales.json")) || {}).sales || [];
+      S.raw.imports = ((await loadFile("imports.json")) || {}).imports || [];
+    }
+  }
+  throw new Error("too many people saving at once - try again");
+}
+
+/* ================================================================ wire */
+function wire() {
+  document.querySelectorAll(".tab").forEach(function (b) { b.onclick = function () { setView(b.dataset.view); }; });
+  $("addBtn").onclick = openAdd; $("nlAdd").onclick = openAdd;
+  $("nlImport").onclick = function () { $("csvFile").click(); };
+  $("csvFile").onchange = function () { if (this.files[0]) importCsv(this.files[0]); this.value = ""; };
+  $("sImport").onclick = function () { $("compFile").click(); };
+  $("compFile").onchange = function () { if (this.files[0]) importCostar(this.files[0]); this.value = ""; };
+  $("gq").oninput = function () { clearTimeout(wire._q); var v = this.value; wire._q = setTimeout(function () { S.tf.q = v; $("tq").value = v; S.tf.page = 0; if (S.view !== "table") setView("table"); else renderTable(); }, 200); };
+  $("nlPer").onclick = function (e) { var b = e.target.closest("button"); if (b) { S.nl.per = +b.dataset.v; renderNew(); } };
+  $("nlSt").onclick = function (e) { var b = e.target.closest("button"); if (b) { S.nl.st = b.dataset.v; renderNew(); } };
+  $("nlWeeks").onclick = function (e) { var c = e.target.closest(".nc"); if (c) openListing(c.dataset.id); };
+  $("dMonths").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; S.dmonths = +b.dataset.v; document.querySelectorAll("#dMonths button").forEach(function (x) { x.classList.toggle("on", x === b); }); renderDash(); };
+  $("vDash").addEventListener("click", function (e) {
+    var tr = e.target.closest("#dAvc tr[data-id]"); if (tr) return openListing(tr.dataset.id);
+    tr = e.target.closest("#dFirms tr[data-firm]"); if (tr) { S.tf = Object.assign(S.tf, {firm: tr.dataset.firm, page: 0}); $("tFirm").innerHTML = ""; setView("table"); return; }
+    tr = e.target.closest("#dStates tr[data-st]"); if (tr) { S.mf.states = {}; S.mf.states[tr.dataset.st] = 1; lsSet("miq_mf", S.mf); S._fitted = 0; setView("map"); }
+  });
+  $("actRefresh").onclick = loadActivity;
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if ($("modal").classList.contains("open")) closeModal(); else if (S.drawer) closeDrawer(); } });
+  wireMap(); wireTable(); wireSales();
+  window.addEventListener("resize", function () { clearTimeout(wire._r); wire._r = setTimeout(function () { if (S.view === "dash") renderDash(); if (S.view === "new") renderNew(); if (_map) _map.invalidateSize(); }, 150); });
+}
+
+/* ---------------------------------------------------------------- sign-in */
+(function () {
+  function tokenGet() { try { return localStorage.getItem(TKEY); } catch (e) { return null; } }
+  function tokenSet(t) { try { t ? localStorage.setItem(TKEY, t) : localStorage.removeItem(TKEY); } catch (e) {} }
+  var gate = $("authGate");
+  function msg(m, ok) { var el = $("agMsg"); el.textContent = m || ""; el.className = "ag-msg" + (ok ? " ok" : ""); }
+  function showGate(m) { gate.classList.remove("hidden", "gone"); $("agBtn").disabled = false; msg(m || "", !m); }
+  function hideGate() { gate.classList.add("hidden"); setTimeout(function () { gate.classList.add("gone"); }, 400); }
+  $("agBtn").onclick = function () { $("agBtn").disabled = true; msg("Redirecting to Microsoft…", true); location.href = API + "/login?return=" + encodeURIComponent(location.origin + location.pathname); };
+  $("signOutBtn").onclick = function () { tokenSet(null); location.href = location.origin + location.pathname; };
+  var chip = $("userChip"), menu = $("userMenu");
+  chip.onclick = function (e) { e.stopPropagation(); menu.classList.toggle("open"); };
+  document.addEventListener("click", function (e) { if (!e.target.closest("#userWrap")) menu.classList.remove("open"); });
+  var returned = false, m = /[#&]auth=([^&]+)/.exec(location.hash || "");
+  if (m) { tokenSet(decodeURIComponent(m[1])); returned = true; try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
+  if (returned) msg("Signing you in…", true);
+  var t = tokenGet();
+  (t ? fetch(API + "/me", {headers: {Authorization: "Bearer " + t}, cache: "no-store"}).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }) : Promise.resolve(null)).then(function (a) {
+    if (!a || !a.ok) { tokenSet(null); showGate(returned ? "Sign-in did not complete. Please try again." : ""); return; }
+    S.me = a;
+    var full = a.name || a.email, parts = full.indexOf(",") > -1 ? full.split(",").reverse() : full.split(/\s+/);
+    $("ucAv").textContent = ((parts[0] || "").trim().charAt(0) + ((parts[parts.length - 1] || "").trim().charAt(0) || "")).toUpperCase();
+    $("ucName").textContent = (a.given || parts[0] || "").trim(); $("umName").textContent = full; $("umEmail").textContent = a.email;
+    $("userWrap").hidden = false; hideGate();
+    wire();
+    boot().catch(function (e) {
+      var hint = /manifest fetch failed \((403|404)\)/.test(e.message) ? "The sign-in Worker's GitHub token cannot read the private repo mrare-cmd/marketiq-data yet. Add that repo to the token's repository access in GitHub settings." : e.message;
+      $("boot").innerHTML = '<div style="max-width:520px;text-align:center;line-height:1.6"><b>Could not load the listings.</b><br><span class="small">' + esc(hint) + "</span><br><button class=\"btn sm\" onclick=\"location.reload()\" style=\"margin-top:10px\">Try again</button></div>";
+    });
+  });
+})();
+</script>
+<script>
+/* ---- presence: who is on the tools right now, and for how long ----
+   While this page is visible and someone has used the mouse or keyboard in
+   the last five minutes, it checks in with the sign-in Worker about once a
+   minute. Nothing is sent from a hidden tab, a locked screen or an idle page,
+   or before sign-in. Admins see the result in GreyHub's analytics. The same
+   block is on every site behind this sign-in; only SITE differs. */
+(function(){
+  var SITE = "marketiq";
+  var API = "https://hap-update.mrareshide.workers.dev";
+  var IDLE = 5 * 60 * 1000, EVERY = 60 * 1000;
+  var lastInput = Date.now(), lastSent = 0, refused = null;
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"].forEach(function(t){
+    window.addEventListener(t, function(){ lastInput = Date.now(); }, { passive:true, capture:true });
+  });
+  function checkIn(){
+    if (document.visibilityState !== "visible") return;
+    var now = Date.now();
+    if (now - lastInput > IDLE || now - lastSent < EVERY - 5000) return;
+    var t = null;
+    try { t = localStorage.getItem("hap_session"); } catch (e) {}
+    if (!t || t === refused) return;           /* signed out, or this token has expired */
+    lastSent = now;
+    fetch(API + "/presence", {
+      method:"POST", keepalive:true,
+      headers:{ Authorization:"Bearer " + t, "Content-Type":"application/json" },
+      body:JSON.stringify({ site:SITE })
+    }).then(function(r){ if (r.status === 401) refused = t; }).catch(function(){});
+  }
+  setInterval(checkIn, 15000);
+  document.addEventListener("visibilitychange", checkIn);
+  setTimeout(checkIn, 4000);
+})();
+</script>
+</body>
+</html>
