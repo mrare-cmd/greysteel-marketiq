@@ -733,7 +733,7 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v9</span>
+    <span id="verBadge" title="Page version">v10</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1591,15 +1591,20 @@ function drawData() {
   }
   _map.getSource("draw").setData({type: "FeatureCollection", features: f});
 }
+/* MapLibre's Popup.addTo() removes and rebuilds an open popup, so only touch it when the pointer reaches a different dot */
 function popShow(kind, id, lngLat) {
   if (_draw) return;
   var key = kind + id;
   if (!_pop) _pop = new maplibregl.Popup({closeButton: false, closeOnClick: false, offset: 16, maxWidth: "330px", className: "gpop"});
-  if (_popId !== key) { var r = kind === "l" ? S.byId[id] : S.saleById[id]; if (!r) return; _pop.setHTML(kind === "l" ? lTip(r) : sTip(r)); _popId = key; }
-  _pop.setLngLat(lngLat).addTo(_map);
+  if (_popId === key && _pop.isOpen()) return;
+  var r = kind === "l" ? S.byId[id] : S.saleById[id]; if (!r) return;
+  _pop.setHTML(kind === "l" ? lTip(r) : sTip(r)); _popId = key;
+  _pop.setLngLat(lngLat);
+  if (!_pop.isOpen()) _pop.addTo(_map);
 }
 function popHide() { if (_pop) _pop.remove(); _popId = null; }
 function setHover(id) {
+  if ((id || null) === _hoverId) return;
   _hoverId = id || null;
   if (_mapReady) _map.setFilter("listings-halo", ["==", ["get", "id"], _hoverId || ""]);
 }
