@@ -289,6 +289,50 @@ select.inp{padding-right:4px}
 #toast.on{opacity:1;transform:translateX(-50%)}
 #toast.err{background:var(--red)}
 
+/* ---------- v2: filter bar, shelf life, zebra rows ---------- */
+.mvw{position:absolute;inset:0;display:flex;flex-direction:column}
+.mvw .mv{position:relative;inset:auto;flex:1;min-height:0;grid-template-columns:400px minmax(0,1fr)}
+.mv-n select{height:28px}
+.fbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.fbar.sticky{position:sticky;top:0;z-index:60;box-shadow:0 1px 3px rgba(60,64,67,.08)}
+.fbar .fg{display:inline-flex;align-items:center;gap:4px}
+.fbar .fl{font-size:12px;color:var(--text2);white-space:nowrap}
+.fbar .inp{height:30px}
+.fbar .inp.n{width:56px}.fbar .inp.n2{width:70px}.fbar .fq{width:200px}.fbar .fsel{max-width:200px}
+.fbar .inp.on{border-color:#a8c7fa;background:var(--blue-light);color:var(--blue-dark);font-weight:500}
+.fbar .chip{height:30px}
+.shelf{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 6px 0 13px;border-radius:17px;background:linear-gradient(120deg,#188038,#1a73e8 70%,#5b5bd6);color:#fff;font-size:12.5px;font-weight:600;box-shadow:0 2px 10px rgba(26,115,232,.3);cursor:help;letter-spacing:.01em}
+.shelf input{width:50px;height:24px;border:none;border-radius:12px;text-align:center;font-weight:700;font-size:13px;color:var(--text);outline:none;cursor:text}
+.shelf em{font-style:normal;font-weight:400;opacity:.92;margin-right:7px}
+.ms{position:relative}
+.ms .msb{display:inline-flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap}
+.ms .msb b{font-weight:500}
+.ms .msp{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:700;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg);padding:6px;min-width:220px}
+.ms.open .msp{display:block}
+.msi{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12.5px;user-select:none}
+.msi:hover{background:var(--bg)}
+.msi i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.msi span{margin-left:auto;color:var(--text3);font-variant-numeric:tabular-nums}
+.msi input{pointer-events:none;margin:0}
+.clearall{height:30px;padding:0 12px;border-radius:15px;font-size:12.5px;font-weight:500;border:1px solid var(--border);background:var(--white);color:var(--text3);white-space:nowrap}
+.clearall.on{background:var(--red);border-color:var(--red);color:#fff}
+.subbar{display:flex;align-items:center;gap:14px;padding:7px 16px;background:var(--bg);border-bottom:1px solid var(--border2);font-size:12.5px;color:var(--text2);flex-shrink:0}
+.subbar b{color:var(--text);font-weight:500}
+.subbar label{display:inline-flex;align-items:center;gap:5px}
+/* rows: opaque, alternating shades (opaque cells also keep text crisp while a table scrolls) */
+.tblwrap,#mvList{background:#fff}
+.tbl td{padding:8px 10px;font-size:13px}
+.tbl tbody tr td{background:#fff}
+.tbl tbody tr:nth-child(even) td{background:#f1f5fb}
+.tbl tbody tr.hl-yellow td{background:#fef7e0}.tbl tbody tr.hl-green td{background:#e6f4ea}.tbl tbody tr.hl-blue td{background:#e8f0fe}
+.tbl tbody tr.hl-red td{background:#fce8e6}.tbl tbody tr.hl-purple td{background:#f3e8fd}.tbl tbody tr.hl-orange td{background:#feefe3}
+.tbl tbody tr:hover td{background:#e3edfd}
+.tbl tbody tr.sel td{background:#d2e3fc!important}
+.tbl tbody tr.lk td:first-child{box-shadow:inset 3px 0 0 #188038}
+.pill.xl{background:#188038;color:#fff}
+.lc:nth-child(even){background:#f6f8fb}
+.lc:hover{background:#e8f0fe}
+
 @media (max-width:1100px){
   .g-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}
   .g-2,.g-2e{grid-template-columns:minmax(0,1fr)}
@@ -325,7 +369,7 @@ select.inp{padding-right:4px}
     <div class="mark">M</div>
     <span class="brand-name">Greysteel</span><span class="brand-sep">|</span>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v1</span>
+    <span id="verBadge" title="Page version">v2</span>
   </div>
   <nav class="tabs">
     <button class="tab active" data-view="map"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -352,84 +396,63 @@ select.inp{padding-right:4px}
 
 <main>
   <!-- ======================= MAP ======================= -->
-  <section class="view active" id="vMap"><div class="mv">
-    <div class="mv-side">
-      <div class="mv-f">
-        <div class="r"><input class="mv-q" id="mq" placeholder="Filter by name, address, broker, client" autocomplete="off"><select class="inp" id="msort" title="Sort">
+  <section class="view active" id="vMap"><div class="mvw">
+    <div class="fbar" id="fb_map"></div>
+    <div class="mv">
+      <div class="mv-side">
+        <div class="mv-n"><span><b id="mN">0</b> listings</span><span id="mUnits"></span><select class="inp ml-auto" id="msort" title="Sort">
           <option value="date">Newest on market</option><option value="units">Most units</option><option value="ask">Highest asking</option><option value="ppu">Highest $/unit</option><option value="name">Name A-Z</option></select></div>
-        <div class="r" id="mStates"></div>
-        <div class="r" id="mStatus"></div>
-        <div class="r"><span class="lbl">Units</span><input class="inp" id="mumin" placeholder="min" style="width:62px" inputmode="numeric"><input class="inp" id="mumax" placeholder="max" style="width:62px" inputmode="numeric">
-          <span class="lbl" style="min-width:0;margin-left:6px">Listed</span><select class="inp" id="mper"><option value="">Any time</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="180">Last 6 months</option><option value="365">Last 12 months</option></select></div>
-        <div class="r"><span class="lbl">Firm</span><select class="inp" id="mfirm" style="flex:1"></select></div>
+        <div id="mvList"></div>
       </div>
-      <div class="mv-n"><span><b id="mN">0</b> listings</span><span id="mUnits"></span><button class="btn ghost sm ml-auto" id="mClear">Clear filters</button></div>
-      <div id="mvList"></div>
-    </div>
-    <div class="mv-map">
-      <div id="map"></div>
-      <div class="map-layers" id="mLayers"></div>
-      <div class="geo-box" id="geoBox"><span id="geoKind"></span><span id="geoRadWrap"><input id="geoRad" inputmode="decimal" title="Radius in miles"> mi</span><span><b id="geoN">0</b> inside</span><button class="btn sm" id="geoClear">Clear area</button></div>
-      <div class="map-legend" id="mLegend"></div>
+      <div class="mv-map">
+        <div id="map"></div>
+        <div class="map-layers" id="mLayers"></div>
+        <div class="geo-box" id="geoBox"><span id="geoKind"></span><span id="geoRadWrap"><input id="geoRad" inputmode="decimal" title="Radius in miles"> mi</span><span><b id="geoN">0</b> inside</span><button class="btn sm" id="geoClear">Clear area</button></div>
+        <div class="map-legend" id="mLegend"></div>
+      </div>
     </div>
   </div></section>
 
   <!-- ======================= DASHBOARD ======================= -->
-  <section class="view" id="vDash"><div class="wrap">
+  <section class="view" id="vDash"><div class="fbar sticky" id="fb_dash"></div><div class="wrap">
     <div class="grid g-kpi" id="kpis"></div>
     <div class="grid g-2 mt">
       <div class="card"><div class="card-h"><div><div class="card-t">New listings by month</div><div class="card-s">Date on market, by state</div></div><div class="seg ml-auto" id="dMonths"><button data-v="12">12 mo</button><button data-v="24" class="on">24 mo</button><button data-v="34">All</button></div></div>
         <div class="card-b"><div class="legend" id="dLeg"></div><div class="chart mt" id="dChart"></div></div></div>
-      <div class="card"><div class="card-h"><div><div class="card-t">By state</div><div class="card-s">Every listing since Feb 2024</div></div></div><div class="card-b" style="padding:0"><table class="tbl" id="dStates"></table></div></div>
+      <div class="card"><div class="card-h"><div><div class="card-t">By state</div><div class="card-s">Listings matching the filters</div></div></div><div class="card-b" style="padding:0"><table class="tbl" id="dStates"></table></div></div>
     </div>
     <div class="grid g-2e mt">
       <div class="card"><div class="card-h"><div><div class="card-t">Asked vs. closed</div><div class="card-s" id="dAvcS"></div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dAvc"></table></div></div>
-      <div class="card"><div class="card-h"><div><div class="card-t">Listing brokers</div><div class="card-s">Listings in the last 12 months</div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dFirms"></table></div></div>
+      <div class="card"><div class="card-h"><div><div class="card-t">Listing brokers</div><div class="card-s">Listings matching the filters</div></div></div><div class="tblwrap" style="max-height:420px"><table class="tbl" id="dFirms"></table></div></div>
     </div>
     <div class="card mt"><div class="card-h"><div><div class="card-t">Recent changes</div><div class="card-s">Edits, new listings and imports by the team</div></div><button class="btn sm ml-auto" id="actRefresh">Refresh</button></div><div class="card-b" id="activity"><span class="muted small">Loading…</span></div></div>
   </div></section>
 
   <!-- ======================= NEW LISTINGS ======================= -->
-  <section class="view" id="vNew"><div class="wrap">
+  <section class="view" id="vNew"><div class="fbar sticky" id="fb_new"></div><div class="wrap">
     <div class="nl-hd">
       <div><div class="nl-t">New Listings</div><div class="nl-s" id="nlSub"></div></div>
       <div class="seg ml-auto" id="nlPer"><button data-v="7">This week</button><button data-v="14" class="on">2 weeks</button><button data-v="30">30 days</button><button data-v="90">90 days</button></div>
-      <div class="seg" id="nlSt"></div>
       <button class="btn sm" id="nlImport" title="Add the new rows from a Salesforce External Listings export"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import Salesforce CSV</button>
       <button class="btn primary sm" id="nlAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</button>
     </div>
     <div class="grid g-kpi" id="nlKpis"></div>
-    <div class="card mt"><div class="card-h"><div><div class="card-t">Weekly new listings</div><div class="card-s">Last 16 weeks, by state</div></div></div><div class="card-b"><div class="chart" id="nlChart"></div></div></div>
+    <div class="card mt"><div class="card-h"><div><div class="card-t">Weekly new listings</div><div class="card-s">Last 16 weeks, by state, matching the filters</div></div></div><div class="card-b"><div class="chart" id="nlChart"></div></div></div>
     <div id="nlWeeks"></div>
   </div></section>
 
   <!-- ======================= LISTINGS TABLE ======================= -->
   <section class="view" id="vTable"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
-    <div class="toolbar">
-      <input class="inp" id="tq" placeholder="Search" style="width:200px">
-      <div id="tStates" style="display:flex;gap:4px"></div>
-      <select class="inp" id="tStatus"><option value="">Any status</option></select>
-      <span class="lbl">Listed</span><input class="inp" id="tFrom" type="date" style="width:132px"><span class="lbl">to</span><input class="inp" id="tTo" type="date" style="width:132px">
-      <select class="inp" id="tFirm" style="max-width:180px"></select>
-      <label class="lbl"><input type="checkbox" id="tAsk"> Asking only</label>
-      <label class="lbl"><input type="checkbox" id="tHid"> Show hidden</label>
-      <span class="ml-auto lbl" id="tCount"></span>
-      <button class="btn sm" id="tCsv">Export CSV</button>
-    </div>
+    <div class="fbar" id="fb_table"></div>
+    <div class="subbar"><span id="tCount"></span><label class="ml-auto"><input type="checkbox" id="tHid"> Show hidden</label><button class="btn sm" id="tCsv">Export CSV</button></div>
     <div class="tblwrap" style="flex:1"><table class="tbl" id="tbl"></table></div>
     <div class="pager" id="tPager"></div>
   </div></section>
 
   <!-- ======================= CLOSINGS ======================= -->
   <section class="view" id="vSales"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
-    <div class="toolbar">
-      <input class="inp" id="sq" placeholder="Search address, buyer, seller, broker" style="width:240px">
-      <div class="seg" id="sLink"><button data-v="linked" class="on">Matched to a listing</button><button data-v="">All sales</button><button data-v="unlinked">Not matched</button></div>
-      <select class="inp" id="sYears"><option value="2024">Since 2024</option><option value="2022">Since 2022</option><option value="2018">Since 2018</option></select>
-      <span class="lbl">Units</span><input class="inp" id="sumin" placeholder="min" style="width:60px" inputmode="numeric">
-      <span class="ml-auto lbl" id="sCount"></span>
-      <button class="btn sm" id="sImport" title="Add sales from a CoStar sale comps export (.xlsx or .csv)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CoStar sales</button>
-    </div>
+    <div class="fbar" id="fb_sales"></div>
+    <div class="subbar"><span id="sCount"></span><span class="small">Bold asking and days = from our external listing · grey <b>CS</b> = from CoStar</span><button class="btn sm ml-auto" id="sImport" title="Add sales from a CoStar sale comps export (.xlsx or .csv)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CoStar sales</button></div>
     <div class="tblwrap" style="flex:1"><table class="tbl" id="stbl"></table></div>
     <div class="pager" id="sPager"></div>
   </div></section>
@@ -462,12 +485,11 @@ var TKEY = "hap_session";
 var DAY = 864e5;
 var STATES = ["DC", "MD", "VA", "PA", "WV"];
 var ST_COLOR = {DC: "#1a73e8", MD: "#fa7b17", VA: "#9334e6", PA: "#129eaf", WV: "#80868b"};
-var ACTIVE_DAYS = 180;   /* no closing found and older than this = "Aged" */
 var STATUS = [
-  {k: "Active", c: "#188038", pill: "green", d: "On the market, listed in the last " + ACTIVE_DAYS + " days"},
+  {k: "Active", c: "#188038", pill: "green", d: "Listed within the shelf life, no closing found"},
   {k: "Under Contract", c: "#1a73e8", pill: "blue", d: "Set by hand"},
   {k: "Closed", c: "#f9ab00", pill: "yellow", d: "Matched to a CoStar sale, or set by hand"},
-  {k: "Aged", c: "#9aa0a6", pill: "gray", d: "Listed over " + ACTIVE_DAYS + " days ago, no closing found"},
+  {k: "Aged", c: "#9aa0a6", pill: "gray", d: "Older than the shelf life, no closing found"},
   {k: "Relisted", c: "#e37400", pill: "orange", d: "The building was listed again later; see the newer listing"},
   {k: "Off Market", c: "#5f6368", pill: "dark", d: "Withdrawn, set by hand"}
 ];
@@ -584,13 +606,14 @@ async function apiPost(path, body) {
 }
 
 /* ---------------------------------------------------------------- state */
+var ST_DEFAULT = {map: {Active: 1, "Under Contract": 1}, table: {}};
 var S = {
   me: null, manifest: {}, raw: {listings: [], sales: [], overlay: {edits: {}, hl: {}}, imports: []},
   L: [], byId: {}, sales: [], saleById: {}, view: "map", drawer: null,
-  mf: lsGet("miq_mf", {states: {}, status: {Active: 1, "Under Contract": 1}, umin: "", umax: "", per: "", firm: "", sort: "date", q: "", layers: {listings: 1, sales: 0}}),
-  tf: {q: "", states: {}, status: "", from: "", to: "", firm: "", ask: false, hid: false, sort: {k: "onMarket", d: -1}, page: 0},
-  sf: {q: "", link: "linked", since: "2024", umin: "", sort: {k: "date", d: -1}, page: 0},
-  nl: {per: 14, st: ""}, dmonths: 24, geo: null
+  F: Object.assign(defaultF(), lsGet("miq_f", {})), st: lsGet("miq_st", JSON.parse(JSON.stringify(ST_DEFAULT))),
+  shelf: lsGet("miq_shelf", 180), layers: lsGet("miq_layers", {listings: 1, sales: 0}),
+  tsort: {k: "onMarket", d: -1}, ssort: {k: "date", d: -1}, tp: 0, sp: 0, showHidden: false,
+  nl: {per: 14}, dmonths: 24, geo: null
 };
 var FILES = ["listings.json", "sales.json", "overlay.json", "imports.json"];
 
@@ -635,7 +658,7 @@ async function poll() {
 
 /* ------------------------------------------------------------- derive ----
    listing status: a status set by hand wins; else Closed when a CoStar sale is
-   matched to it; else Active through ACTIVE_DAYS after the date on market, then Aged.
+   matched to it; else Active through the shelf life (S.shelf days, per person) after the date on market, then Aged.
    MATCH RULE (tools/match.py): same state; street + overlapping house numbers, or
    the same property name; sale dated 30 days before to 730 days after the date on
    market; the latest such listing on or before the sale wins. A sale's "link" edit
@@ -659,7 +682,8 @@ function derive() {
     o._sk = streetKey(o.address); o._hn = houseNums(o.address); o._nk = nameKey(o.name);
     o._q = normAddr([o.name, o.address, o.city, o.state, o.broker, o.brokerCo, o.firm, o.clientContact, o.clientCo, o.notes].join(" "));
     o._days = days(o.onMarket, t);
-    o._ppu = o.asking && o.units ? o.asking / o.units : null;
+    o.land = !!(o.land || o.units === 0);   /* 0 units = land / development (Mason, 2026-11-16) */
+    o._ppu = o.asking && o.units && !o.land ? o.asking / o.units : null;
     o._capAsk = o.asking && o.noi ? o.noi / o.asking : null;
     o._sales = [];
     return o;
@@ -724,7 +748,7 @@ function derive() {
   S.L.forEach(function (o) {
     o._prev = (bk[o.state + "|" + noQuad(o._sk)] || []).filter(function (x) { return x !== o && !x.hidden && sameBldg(o, x); });
     var later = o._prev.some(function (x) { return x.onMarket > o.onMarket; });
-    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : later ? "Relisted" : o._days != null && o._days <= ACTIVE_DAYS ? "Active" : "Aged";
+    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : later ? "Relisted" : o._days != null && o._days <= S.shelf ? "Active" : "Aged";
   });
   S.firms = {};
   S.L.forEach(function (o) { var f = o.firm || o.brokerCo || ""; if (f) S.firms[f] = (S.firms[f] || 0) + 1; });
@@ -751,35 +775,169 @@ function render(soft) {
   if (S.drawer) S.drawer.kind === "l" ? openListing(S.drawer.id, true) : openSale(S.drawer.id, true);
 }
 
-/* ================================================================ MAP */
-var _map, _lyrL, _lyrS, _shapes = [], _mkById = {};
-function mfPass(o, f, skipGeo) {
-  if (o.hidden) return false;
-  var st = Object.keys(f.states).filter(function (k) { return f.states[k]; });
-  if (st.length && st.indexOf(o.state) < 0) return false;
-  var ss = Object.keys(f.status).filter(function (k) { return f.status[k]; });
-  if (ss.length && ss.indexOf(o._status) < 0) return false;
-  var umin = parseNum(f.umin), umax = parseNum(f.umax);
-  if (umin != null && !(o.units >= umin)) return false;
-  if (umax != null && !(o.units <= umax)) return false;
-  if (f.per && !(o._days != null && o._days <= +f.per)) return false;
-  if (f.firm && (o.firm || o.brokerCo) !== f.firm) return false;
-  if (f.q) { var q = normAddr(f.q); if (o._q.indexOf(q) < 0) return false; }
-  if (!skipGeo && _shapes.length) { if (!o.geo || !inShapes(o.geo)) return false; }
+/* ================================================================ FILTERS
+   One set of filters shared by every tab and kept per person (localStorage miq_f), shown as a bar
+   across the top of each tab. The firm and broker lists only offer values that survive the other
+   filters, with live counts (like the PBS8 database). Status is per tab: the map starts on what is
+   on the market, the table on everything. Shelf life (miq_shelf) decides Active vs Aged. */
+var FB_VIEWS = {map: "l", dash: "l", new: "l", table: "l", sales: "s"};
+function defaultF() { return {q: "", states: {}, within: "", umin: "", umax: "", pmin: "", pmax: "", ppumin: "", ppumax: "", type: "", firm: "", broker: "", link: ""}; }
+function saveF() { lsSet("miq_f", S.F); lsSet("miq_st", S.st); }
+function amt(v) {   /* "2.5m", "750k", "$1,200,000" */
+  var s = String(v == null ? "" : v).trim().toLowerCase().replace(/[$,\s]/g, ""); if (!s) return null;
+  var m = /^(\d*\.?\d+)([km]?)$/.exec(s); if (!m) return null;
+  return +m[1] * (m[2] === "m" ? 1e6 : m[2] === "k" ? 1e3 : 1);
+}
+function firstCo(co) { return String(co || "").split("|")[0].trim(); }
+/* a row's filterable values: listings (kind "l") and sales (kind "s"); a sale tied to a listing uses the listing's firm and broker */
+function fv(r, kind) {
+  if (kind === "l") return {state: r.state, date: r.onMarket, units: r.land ? null : r.units, price: r._ask, ppu: r._ppu, firm: r.firm || firmOf(r.brokerCo), broker: r.broker, land: !!r.land, q: r._q, status: r._status};
+  var o = r._link;
+  return {state: r.state, date: r.date, units: r.units, price: r.price, ppu: r._ppu, firm: o ? (o.firm || firmOf(o.brokerCo)) : firmOf(firstCo(r.brokerCo)), broker: o ? o.broker : r.brokerAgent, q: r._q + (o ? " " + o._q : ""), linked: !!o};
+}
+function inRange(v, lo, hi) { if (lo == null && hi == null) return true; if (v == null || isNaN(v)) return false; return (lo == null || v >= lo) && (hi == null || v <= hi); }
+function pass(r, kind, view, skip) {
+  var F = S.F, v = fv(r, kind);
+  if (kind === "l" && r.hidden && !(view === "table" && S.showHidden)) return false;
+  if (skip !== "state") { var st = Object.keys(F.states).filter(function (k) { return F.states[k]; }); if (st.length && st.indexOf(v.state) < 0) return false; }
+  if (skip !== "status" && kind === "l" && S.st[view]) { var ss = Object.keys(S.st[view]).filter(function (k) { return S.st[view][k]; }); if (ss.length && ss.indexOf(v.status) < 0) return false; }
+  var w = parseNum(F.within);
+  if (w != null && view !== "new") { var d = days(v.date, today()); if (d == null || d > w) return false; }
+  if (!inRange(v.units, parseNum(F.umin), parseNum(F.umax))) return false;
+  if (!inRange(v.price, amt(F.pmin), amt(F.pmax))) return false;
+  if (!inRange(v.ppu, amt(F.ppumin), amt(F.ppumax))) return false;
+  if (kind === "l" && F.type === "land" && !v.land) return false;
+  if (kind === "l" && F.type === "mf" && v.land) return false;
+  if (skip !== "firm" && F.firm && v.firm !== F.firm) return false;
+  if (skip !== "broker" && F.broker && v.broker !== F.broker) return false;
+  if (kind === "s" && F.link === "yes" && !v.linked) return false;
+  if (kind === "s" && F.link === "no" && v.linked) return false;
+  if (F.q) { var q = normAddr(F.q); if (v.q.indexOf(q) < 0) return false; }
   return true;
 }
+function applies(f, view) {
+  var kind = FB_VIEWS[view];
+  if (f === "within") return view !== "new";
+  if (f === "type") return kind === "l";
+  if (f === "link") return kind === "s";
+  return true;
+}
+function activeCount(view) {
+  var F = S.F, n = 0;
+  Object.keys(defaultF()).forEach(function (k) { if (k !== "states" && F[k] && applies(k, view)) n++; });
+  if (Object.keys(F.states).some(function (k) { return F.states[k]; })) n++;
+  if (S.st[view] && JSON.stringify(S.st[view]) !== JSON.stringify(ST_DEFAULT[view])) n++;
+  if (view === "map" && _shapes.length) n++;
+  return n;
+}
+function clearF(view) {
+  var keep = {};
+  Object.keys(S.F).forEach(function (k) { if (!applies(k, view)) keep[k] = S.F[k]; });   /* a tab's Clear leaves filters it doesn't show alone */
+  S.F = Object.assign(defaultF(), keep);
+  if (S.st[view]) S.st[view] = JSON.parse(JSON.stringify(ST_DEFAULT[view]));
+  if (view === "map" && _map) { _shapes.forEach(function (s) { _map.removeLayer(s); }); _shapes = []; }
+  $("gq").value = "";
+  saveF(); S.tp = 0; S.sp = 0; render(true);
+}
+function buildBar(view) {
+  var kind = FB_VIEWS[view], el = $("fb_" + view);
+  var h = "";
+  if (kind === "l") h += '<label class="shelf" title="Shelf life: how many days a listing counts as on the market after its date on market, when no closing is found. Older listings show as Aged."><span>Shelf life</span><input data-shelf inputmode="numeric"><em>days</em></label>';
+  h += '<input class="inp fq" data-f="q" placeholder="' + (kind === "s" ? "Search address, buyer, seller, broker" : "Search name, address, broker, client") + '">';
+  h += '<span class="fg" data-states></span>';
+  if (ST_DEFAULT[view]) h += '<div class="ms" data-ms><button class="inp msb"></button><div class="msp"></div></div>';
+  if (view !== "new") h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Sold" : "Listed") + ' within</span><input class="inp n" data-f="within" placeholder="any" inputmode="numeric"><span class="fl">days</span></span>';
+  h += '<span class="fg"><span class="fl">Units</span><input class="inp n" data-f="umin" placeholder="min" inputmode="numeric"><span class="fl">–</span><input class="inp n" data-f="umax" placeholder="max" inputmode="numeric"></span>';
+  h += '<span class="fg"><span class="fl">' + (kind === "s" ? "Price" : "Asking") + '</span><input class="inp n2" data-f="pmin" placeholder="min" title="e.g. 2m or 750k"><span class="fl">–</span><input class="inp n2" data-f="pmax" placeholder="max" title="e.g. 2m or 750k"></span>';
+  h += '<span class="fg"><span class="fl">$/unit</span><input class="inp n2" data-f="ppumin" placeholder="min" title="e.g. 150k"><span class="fl">–</span><input class="inp n2" data-f="ppumax" placeholder="max" title="e.g. 300k"></span>';
+  if (kind === "l") h += '<select class="inp" data-f="type"><option value="">All types</option><option value="mf">Multifamily</option><option value="land">Land / development</option></select>';
+  h += '<select class="inp fsel" data-f="firm" title="Listing broker firm - only firms left by the other filters"></select><select class="inp fsel" data-f="broker" title="Listing broker - only brokers left by the other filters"></select>';
+  if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">External listing</option><option value="no">No listing</option></select>';
+  h += '<button class="clearall" data-clear>Clear</button>';
+  el.innerHTML = h;
+}
+function syncBar(view) {
+  var el = $("fb_" + view); if (!el || !el.firstChild) return;
+  var kind = FB_VIEWS[view], F = S.F, rows = kind === "l" ? S.L : S.sales;
+  el.querySelectorAll("[data-f]").forEach(function (i) {
+    if (i.tagName === "SELECT") { if (i.dataset.f !== "firm" && i.dataset.f !== "broker") i.value = F[i.dataset.f] || ""; }
+    else if (document.activeElement !== i) i.value = F[i.dataset.f] || "";
+    i.classList.toggle("on", !!F[i.dataset.f]);
+  });
+  var sh = el.querySelector("[data-shelf]"); if (sh && document.activeElement !== sh) sh.value = S.shelf;
+  var cs = {}; rows.forEach(function (r) { if (pass(r, kind, view, "state")) cs[r.state] = (cs[r.state] || 0) + 1; });
+  el.querySelector("[data-states]").innerHTML = STATES.filter(function (s) { return rows.some(function (r) { return r.state === s; }); }).map(function (s) {
+    return '<button class="chip' + (F.states[s] ? " on" : "") + '" data-st="' + s + '"><i style="background:' + ST_COLOR[s] + '"></i>' + s + ' <span class="muted">' + (cs[s] || 0) + "</span></button>";
+  }).join("");
+  var ms = el.querySelector("[data-ms]");
+  if (ms) {
+    var m = S.st[view] || {}, on = STATUS.filter(function (s) { return m[s.k]; }), cst = {};
+    rows.forEach(function (r) { if (pass(r, kind, view, "status")) cst[r._status] = (cst[r._status] || 0) + 1; });
+    var b = ms.querySelector(".msb");
+    b.innerHTML = "Status: <b>" + (on.length ? (on.length > 2 ? on.length + " selected" : on.map(function (s) { return s.k; }).join(", ")) : "All") + "</b> ▾";
+    b.classList.toggle("on", on.length > 0);
+    ms.querySelector(".msp").innerHTML = STATUS.map(function (s) {
+      return '<div class="msi" data-sk="' + s.k + '" title="' + esc(statusDesc(s.k)) + '"><input type="checkbox"' + (m[s.k] ? " checked" : "") + '><i style="background:' + s.c + '"></i>' + s.k + "<span>" + (cst[s.k] || 0) + "</span></div>";
+    }).join("") + '<div class="msi" data-sk="" style="justify-content:center;color:var(--blue)">Show all</div>';
+  }
+  ["firm", "broker"].forEach(function (k) {
+    var c = {};
+    rows.forEach(function (r) { if (pass(r, kind, view, k)) { var x = fv(r, kind)[k]; if (x) c[x] = (c[x] || 0) + 1; } });
+    var opts = Object.keys(c).sort(function (a, b) { return c[b] - c[a] || a.localeCompare(b); });
+    if (F[k] && !c[F[k]]) opts.unshift(F[k]);
+    var sel = el.querySelector('[data-f="' + k + '"]');
+    sel.innerHTML = '<option value="">' + (k === "firm" ? "Any firm" : "Any broker") + " (" + opts.length + ")</option>" +
+      opts.map(function (x) { return '<option value="' + esc(x) + '"' + (x === F[k] ? " selected" : "") + ">" + esc(x) + " (" + (c[x] || 0) + ")</option>"; }).join("");
+    sel.value = F[k] || "";
+  });
+  var n = activeCount(view), cb = el.querySelector("[data-clear]");
+  cb.textContent = n ? "Clear " + n : "Clear"; cb.classList.toggle("on", !!n);
+}
+function statusDesc(k) {
+  return {Active: "Listed within the " + S.shelf + "-day shelf life, no closing found", Aged: "Older than the " + S.shelf + "-day shelf life, no closing found"}[k] || ST[k].d;
+}
+function wireBars() {
+  Object.keys(FB_VIEWS).forEach(buildBar);
+  document.addEventListener("input", function (e) {
+    var i = e.target;
+    if (!i.matches) return;
+    if (i.matches(".fbar input[data-f]")) {
+      S.F[i.dataset.f] = i.value; saveF();
+      clearTimeout(wireBars._t); wireBars._t = setTimeout(function () { S.tp = 0; S.sp = 0; render(true); }, 220);
+    } else if (i.matches(".fbar [data-shelf]")) {
+      var v = parseInt(i.value, 10);
+      if (v > 0 && v < 5000) { clearTimeout(wireBars._s); wireBars._s = setTimeout(function () { S.shelf = v; lsSet("miq_shelf", v); derive(); render(true); }, 350); }
+    }
+  });
+  document.addEventListener("change", function (e) {
+    var i = e.target;
+    if (i.matches && i.matches(".fbar select[data-f]")) { S.F[i.dataset.f] = i.value; saveF(); S.tp = 0; S.sp = 0; render(true); }
+  });
+  document.addEventListener("click", function (e) {
+    var t = e.target, b;
+    if (!t.closest) return;
+    if ((b = t.closest(".fbar .chip[data-st]"))) { S.F.states[b.dataset.st] = !S.F.states[b.dataset.st]; saveF(); S.tp = 0; S.sp = 0; return render(true); }
+    if ((b = t.closest(".fbar [data-clear]"))) return clearF(S.view);
+    if ((b = t.closest(".fbar .msb"))) { b.parentNode.classList.toggle("open"); return; }
+    if ((b = t.closest(".fbar .msi"))) {
+      var m = S.st[S.view] = S.st[S.view] || {};
+      if (!b.dataset.sk) S.st[S.view] = {}; else m[b.dataset.sk] = !m[b.dataset.sk];
+      saveF(); S.tp = 0; S.sp = 0; return render(true);
+    }
+    if (!t.closest(".ms")) document.querySelectorAll(".ms.open").forEach(function (x) { x.classList.remove("open"); });
+  });
+}
+
+/* ================================================================ MAP */
+var _map, _lyrL, _lyrS, _shapes = [], _mkById = {};
 function chipsHtml(list, on, cls) {
   return list.map(function (x) { return '<button class="chip ' + cls + (on[x.k] ? " on" : "") + '" data-k="' + esc(x.k) + '">' + (x.c ? '<i style="background:' + x.c + '"></i>' : "") + esc(x.l || x.k) + (x.n != null ? ' <span class="muted">' + x.n + "</span>" : "") + "</button>"; }).join("");
-}
-function firmOptions(sel, cur) {
-  var f = Object.keys(S.firms).sort(function (a, b) { return S.firms[b] - S.firms[a] || a.localeCompare(b); });
-  sel.innerHTML = '<option value="">Any broker firm</option>' + f.map(function (x) { return '<option value="' + esc(x) + '"' + (x === cur ? " selected" : "") + ">" + esc(x) + " (" + S.firms[x] + ")</option>"; }).join("");
 }
 function initMap() {
   if (_map) return;
   _map = L.map("map", {zoomControl: false, preferCanvas: true, maxZoom: 18}).setView([39.2, -77.3], 7);
   L.control.zoom({position: "topleft"}).addTo(_map);
-  [ "World_Light_Gray_Base", "World_Light_Gray_Reference" ].forEach(function (n) {
+  ["World_Light_Gray_Base", "World_Light_Gray_Reference"].forEach(function (n) {
     var t = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/" + n + "/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 16, maxZoom: 18, attribution: n.indexOf("Base") > -1 ? "Tiles &copy; Esri" : ""});
     t.on("tileerror", function (e) { var el = e.tile, k = +(el.dataset.r || 0); if (k < 3) { el.dataset.r = k + 1; setTimeout(function () { el.src = el.src.replace(/[?&]_r=\d+$/, "") + (el.src.indexOf("?") < 0 ? "?" : "&") + "_r=" + (k + 1); }, 700 * (k + 1)); } });
     t.addTo(_map);
@@ -810,35 +968,25 @@ function inShapes(g) {
   });
 }
 function renderMap(soft) {
-  initMap();
-  var f = S.mf;
-  var all = visibleL();
-  /* filter controls */
-  var cnt = {}; all.forEach(function (o) { cnt[o.state] = (cnt[o.state] || 0) + 1; });
-  $("mStates").innerHTML = '<span class="lbl">State</span>' + chipsHtml(STATES.filter(function (s) { return cnt[s]; }).map(function (s) { return {k: s, c: ST_COLOR[s], n: cnt[s]}; }), f.states, "mst");
-  var sc = {}; all.forEach(function (o) { if (mfPass(o, Object.assign({}, f, {status: {}}), true)) sc[o._status] = (sc[o._status] || 0) + 1; });
-  $("mStatus").innerHTML = '<span class="lbl">Status</span>' + chipsHtml(STATUS.map(function (s) { return {k: s.k, c: s.c, n: sc[s.k] || 0}; }), f.status, "mss");
-  if (!soft || !$("mfirm").options.length) firmOptions($("mfirm"), f.firm);
-  $("mq").value = f.q; $("msort").value = f.sort; $("mumin").value = f.umin; $("mumax").value = f.umax; $("mper").value = f.per;
-  var rows = all.filter(function (o) { return mfPass(o, f); });
+  initMap(); syncBar("map");
+  var rows = S.L.filter(function (o) { return pass(o, "l", "map") && (!_shapes.length || (o.geo && inShapes(o.geo))); });
   var srt = {date: function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }, units: function (a, b) { return (b.units || 0) - (a.units || 0); },
-    ask: function (a, b) { return (b._ask || 0) - (a._ask || 0); }, ppu: function (a, b) { return (b._ppu || 0) - (a._ppu || 0); }, name: function (a, b) { return String(a.name).localeCompare(b.name); }}[f.sort];
+    ask: function (a, b) { return (b._ask || 0) - (a._ask || 0); }, ppu: function (a, b) { return (b._ppu || 0) - (a._ppu || 0); }, name: function (a, b) { return String(a.name).localeCompare(b.name); }}[$("msort").value] || function () { return 0; };
   rows.sort(srt);
   $("mN").textContent = rows.length.toLocaleString();
-  $("mUnits").textContent = n0(sum(rows.map(function (o) { return o.units; }))) + " units";
+  $("mUnits").textContent = n0(sum(rows.map(function (o) { return o.land ? 0 : o.units; }))) + " units";
   var pinned = rows.filter(function (o) { return o.geo; }).length;
   var html = rows.slice(0, 400).map(function (o) {
     var s = ST[o._status];
     return '<div class="lc' + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '" data-id="' + o.id + '"><div class="d" style="background:' + s.c + '"></div>' +
       '<div class="n">' + esc(o.name) + "</div>" +
-      '<div class="p">' + (o._sale ? mshort(o._sale.price) + "<small>closed " + fmtDs(o._sale.date) + "</small>" : o._ask ? mshort(o._ask) + "<small>asking</small>" : '<small>no ask</small>') + "</div>" +
+      '<div class="p">' + (o._sale ? mshort(o._sale.price) + "<small>closed " + fmtDs(o._sale.date) + "</small>" : o._ask ? mshort(o._ask) + "<small>asking</small>" : "<small>no ask</small>") + "</div>" +
       '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "") + ", " + o.state) + (o.geo ? "" : ' <span class="pill gray" title="Address could not be placed on the map">no pin</span>') + "</div><div></div>" +
-      '<div class="m"><span>' + (o.units ? n0(o.units) + " units" : "units n/a") + "</span><span>" + fmtD(o.onMarket) + "</span><span>" + esc(o.firm || o.brokerCo) + "</span></div></div>";
+      '<div class="m"><span>' + (o.land ? '<span class="pill orange">Land / dev.</span>' : o.units ? n0(o.units) + " units" : "units n/a") + "</span><span>" + fmtD(o.onMarket) + "</span><span>" + esc(o.firm || o.brokerCo) + "</span></div></div>";
   }).join("");
   if (rows.length > 400) html += '<div class="small muted" style="padding:12px 14px">Showing the first 400 of ' + rows.length + " - narrow the filters to see the rest.</div>";
   if (!rows.length) html = '<div class="small muted" style="padding:24px 14px;text-align:center">No listings match these filters.</div>';
   $("mvList").innerHTML = html;
-  /* geo box */
   var gb = $("geoBox");
   gb.classList.toggle("on", !!_shapes.length);
   if (_shapes.length) {
@@ -848,30 +996,29 @@ function renderMap(soft) {
     if (c.getRadius && document.activeElement !== $("geoRad")) $("geoRad").value = (c.getRadius() / 1609.34).toFixed(2).replace(/\.?0+$/, "");
     $("geoN").textContent = rows.length;
   }
-  /* layers */
-  $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#188038"}, {k: "sales", l: "CoStar sales (DC)", c: SALE_C}], f.layers, "mly");
-  $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (f.status[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(s.d) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
-    (f.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
+  $("mLayers").innerHTML = chipsHtml([{k: "listings", l: "Listings", c: "#188038"}, {k: "sales", l: "CoStar sales (DC)", c: SALE_C}], S.layers, "mly");
+  var sm = S.st.map || {};
+  $("mLegend").innerHTML = '<div class="t">Listing status</div>' + STATUS.map(function (s) { return '<div class="row' + (!Object.keys(sm).some(function (k) { return sm[k]; }) || sm[s.k] ? "" : " off") + '" data-k="' + s.k + '" title="' + esc(statusDesc(s.k)) + '"><i style="background:' + s.c + '"></i>' + s.k + "</div>"; }).join("") +
+    (S.layers.sales ? '<div class="row" style="cursor:default"><i style="background:' + SALE_C + '"></i>CoStar sale, no listing</div>' : "") +
     '<div class="small muted" style="margin-top:6px">' + pinned + " of " + rows.length + " on the map</div>";
   _lyrL.clearLayers(); _lyrS.clearLayers(); _mkById = {};
-  if (f.layers.listings) rows.forEach(function (o) {
+  if (S.layers.listings) rows.forEach(function (o) {
     if (!o.geo) return;
     var s = ST[o._status], sel = S.drawer && S.drawer.id === o.id;
-    var mk = L.circleMarker(o.geo, {radius: sel ? 9 : o.units >= 100 ? 7 : 5.5, color: sel ? "#202124" : "#fff", weight: sel ? 2.5 : 1.2, fillColor: s.c, fillOpacity: .92});
-    mk.bindTooltip('<b>' + esc(o.name) + "</b><br>" + esc(o.address) + ", " + esc(o.city) + " " + o.state + "<br>" + (o.units ? n0(o.units) + " units · " : "") + (o._ask ? mshort(o._ask) + " ask · " : "") + o._status +
+    var mk = L.circleMarker(o.geo, {radius: sel ? 8 : 6, color: sel ? "#202124" : "#fff", weight: sel ? 2.5 : 1.2, fillColor: s.c, fillOpacity: .92});
+    mk.bindTooltip("<b>" + esc(o.name) + "</b><br>" + esc(o.address) + ", " + esc(o.city) + " " + o.state + "<br>" + (o.land ? "Land / development · " : o.units ? n0(o.units) + " units · " : "") + (o._ask ? mshort(o._ask) + " ask · " : "") + o._status +
       (o._sale ? "<br>Closed " + fmtD(o._sale.date) + " at " + mshort(o._sale.price) + (o._spread != null ? " (" + (o._spread > 0 ? "+" : "") + (o._spread * 100).toFixed(1) + "% vs ask)" : "") : ""), {className: "lf-tip", direction: "top", offset: [0, -4]});
     mk.on("click", function () { openListing(o.id); });
     mk.addTo(_lyrL); _mkById[o.id] = mk;
   });
-  if (f.layers.sales) {
+  if (S.layers.sales) {
     var since = String(new Date().getFullYear() - 3);
     S.sales.forEach(function (s) {
-      if (!s.geo || s._link || s.date < since) return;
+      if (!s.geo || s._link || (!S.F.within && s.date < since)) return;
+      if (!pass(s, "s", "map")) return;
       if (_shapes.length && !inShapes(s.geo)) return;
-      var umin = parseNum(f.umin), umax = parseNum(f.umax);
-      if ((umin != null && !(s.units >= umin)) || (umax != null && !(s.units <= umax))) return;
-      var mk = L.circleMarker(s.geo, {radius: 4.5, color: "#fff", weight: 1, fillColor: SALE_C, fillOpacity: .8});
-      mk.bindTooltip("<b>" + esc(s.name || s.address) + "</b><br>" + esc(s.address) + "<br>Sold " + fmtD(s.date) + " · " + mshort(s.price) + " · " + s.units + " units<br><span style='color:#80868b'>CoStar sale, not matched to a listing</span>", {className: "lf-tip", direction: "top"});
+      var mk = L.circleMarker(s.geo, {radius: 6, color: "#fff", weight: 1.2, fillColor: SALE_C, fillOpacity: .8});
+      mk.bindTooltip("<b>" + esc(s.name || s.address) + "</b><br>" + esc(s.address) + "<br>Sold " + fmtD(s.date) + " · " + mshort(s.price) + " · " + s.units + " units<br><span style='color:#80868b'>CoStar sale, not tied to a listing</span>", {className: "lf-tip", direction: "top"});
       mk.on("click", function () { openSale(s.id); });
       mk.addTo(_lyrS);
     });
@@ -883,63 +1030,53 @@ function renderMap(soft) {
   setTimeout(function () { _map.invalidateSize(); }, 50);
 }
 function wireMap() {
-  var f = S.mf, save = function () { lsSet("miq_mf", S.mf); renderMap(true); };
+  $("msort").value = lsGet("miq_msort", "date");
+  $("msort").onchange = function () { lsSet("miq_msort", this.value); renderMap(true); };
   $("vMap").addEventListener("click", function (e) {
-    var b = e.target.closest(".chip.mst"); if (b) { f.states[b.dataset.k] = !f.states[b.dataset.k]; return save(); }
-    b = e.target.closest(".chip.mss"); if (b) { f.status[b.dataset.k] = !f.status[b.dataset.k]; return save(); }
-    b = e.target.closest(".chip.mly"); if (b) { f.layers[b.dataset.k] = !f.layers[b.dataset.k]; return save(); }
-    b = e.target.closest(".map-legend .row[data-k]"); if (b) { f.status[b.dataset.k] = !f.status[b.dataset.k]; return save(); }
+    var b = e.target.closest(".chip.mly"); if (b) { S.layers[b.dataset.k] = !S.layers[b.dataset.k]; lsSet("miq_layers", S.layers); return renderMap(true); }
+    b = e.target.closest(".map-legend .row[data-k]");
+    if (b) { var m = S.st.map = S.st.map || {}; if (!Object.keys(m).some(function (k) { return m[k]; })) STATUS.forEach(function (s) { m[s.k] = 1; }); m[b.dataset.k] = !m[b.dataset.k]; saveF(); return renderMap(true); }
     b = e.target.closest(".lc"); if (b) { openListing(b.dataset.id); var o = S.byId[b.dataset.id]; if (o && o.geo) _map.setView(o.geo, Math.max(_map.getZoom(), 14)); }
   });
-  $("mq").oninput = function () { f.q = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 180); };
-  $("msort").onchange = function () { f.sort = this.value; save(); };
-  $("mumin").oninput = function () { f.umin = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 250); };
-  $("mumax").oninput = function () { f.umax = this.value; clearTimeout(wireMap._t); wireMap._t = setTimeout(save, 250); };
-  $("mper").onchange = function () { f.per = this.value; save(); };
-  $("mfirm").onchange = function () { f.firm = this.value; save(); };
-  $("mClear").onclick = function () { S.mf = {states: {}, status: {}, umin: "", umax: "", per: "", firm: "", sort: "date", q: "", layers: f.layers}; f = S.mf; $("mfirm").value = ""; save(); };
 }
 
 /* ================================================================ DASHBOARD */
 function kpi(l, v, d) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num">' + v + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
 function renderDash() {
-  var all = visibleL(), t = today();
+  syncBar("dash");
+  var all = S.L.filter(function (o) { return pass(o, "l", "dash"); }), t = today();
   var act = all.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; });
   var n30 = all.filter(function (o) { return o._days != null && o._days >= 0 && o._days < 30; }), p30 = all.filter(function (o) { return o._days >= 30 && o._days < 60; });
   var closed = all.filter(function (o) { return o._sale; });
   var withSpr = closed.filter(function (o) { return o._spread != null; });
   var dd = n30.length - p30.length;
   $("kpis").innerHTML =
-    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.units; }))) + " units · listed in the last " + ACTIVE_DAYS + " days") +
+    kpi("On the market", act.length.toLocaleString(), n0(sum(act.map(function (o) { return o.land ? 0 : o.units; }))) + " units · " + S.shelf + "-day shelf life") +
     kpi("New in the last 30 days", n30.length, '<span class="delta ' + (dd >= 0 ? "up" : "down") + '">' + (dd >= 0 ? "+" : "") + dd + "</span> vs the 30 days before") +
-    kpi("Closed (DC, CoStar)", closed.length, "listings matched to a 5+ unit sale") +
+    kpi("Closed (CoStar)", closed.length, "listings matched to a 5+ unit sale") +
     kpi("Median closed vs. ask", withSpr.length ? spr(median(withSpr.map(function (o) { return o._spread; }))) : "–", withSpr.length + " closings with an asking price") +
     kpi("Median days to close", n0(median(closed.map(function (o) { return o._dtc; }))) || "–", "date on market to sale date");
-  /* monthly chart */
   var nM = S.dmonths, months = [], d0 = new Date(dnum(t));
   for (var i = nM - 1; i >= 0; i--) { var d = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - i, 1)); months.push(d.toISOString().slice(0, 7)); }
   if (nM >= 34) months = months.filter(function (m) { return m >= "2024-02"; });
   var by = {}; all.forEach(function (o) { var m = String(o.onMarket).slice(0, 7); (by[m] = by[m] || {})[o.state] = ((by[m] || {})[o.state] || 0) + 1; });
   var used = STATES.filter(function (s) { return all.some(function (o) { return o.state === s; }); });
   $("dLeg").innerHTML = used.map(function (s) { return '<span><i style="background:' + ST_COLOR[s] + '"></i>' + s + "</span>"; }).join("");
-  stackChart($("dChart"), months.map(function (m) { return {label: m, parts: used.map(function (s) { return {k: s, v: (by[m] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (m) { var d = new Date(m + "-01T00:00:00Z"); return d.toLocaleDateString("en-US", {month: "short", timeZone: "UTC"}) + (m.slice(5) === "01" ? " '" + m.slice(2, 4) : ""); }, 240);
-  /* states */
+  stackChart($("dChart"), months.map(function (m) { return {label: m, parts: used.map(function (s) { return {k: s, v: (by[m] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (m) { var dt = new Date(m + "-01T00:00:00Z"); return dt.toLocaleDateString("en-US", {month: "short", timeZone: "UTC"}) + (m.slice(5) === "01" ? " '" + m.slice(2, 4) : ""); }, 240);
   $("dStates").innerHTML = "<thead><tr><th>State</th><th class=r>Listings</th><th class=r>On market</th><th class=r>Med. units</th><th class=r>Med. ask $/unit</th><th class=r>Closed</th></tr></thead><tbody>" +
     used.map(function (s) {
       var r = all.filter(function (o) { return o.state === s; });
       return '<tr data-st="' + s + '"><td><span class="dot" style="background:' + ST_COLOR[s] + '"></span>' + s + '</td><td class="r num">' + r.length + '</td><td class="r num">' + r.filter(function (o) { return o._status === "Active" || o._status === "Under Contract"; }).length +
-        '</td><td class="r num">' + n0(median(r.map(function (o) { return o.units; }))) + '</td><td class="r num">' + money(median(r.map(function (o) { return o._ppu; }))) + '</td><td class="r num">' + r.filter(function (o) { return o._sale; }).length + "</td></tr>";
+        '</td><td class="r num">' + n0(median(r.map(function (o) { return o.land ? null : o.units; }))) + '</td><td class="r num">' + money(median(r.map(function (o) { return o._ppu; }))) + '</td><td class="r num">' + r.filter(function (o) { return o._sale; }).length + "</td></tr>";
     }).join("") + "</tbody>";
-  /* asked vs closed */
   var avc = closed.slice().sort(function (a, b) { return a._sale.date < b._sale.date ? 1 : -1; });
-  $("dAvcS").textContent = avc.length + " DC listings matched to a CoStar sale · median " + n0(median(closed.map(function (o) { return o._dtc; }))) + " days on market to close";
+  $("dAvcS").textContent = avc.length + " listings matched to a CoStar sale" + (avc.length ? " · median " + n0(median(closed.map(function (o) { return o._dtc; }))) + " days on market to close" : "");
   $("dAvc").innerHTML = "<thead><tr><th>Property</th><th class=r>Units</th><th class=r>Asking</th><th class=r>Closed</th><th class=r>vs. ask</th><th class=r>Days</th></tr></thead><tbody>" +
-    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? ' <span class="small muted" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || '<span class="muted">–</span>') + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
-  /* firms */
-  var yr = all.filter(function (o) { return o._days != null && o._days <= 365; }), fm = {};
-  yr.forEach(function (o) { var k = o.firm || o.brokerCo || "(none)"; var r = fm[k] = fm[k] || {n: 0, u: 0, act: 0, cl: 0, st: {}}; r.n++; r.u += o.units || 0; if (o._status === "Active" || o._status === "Under Contract") r.act++; if (o._sale) r.cl++; r.st[o.state] = 1; });
-  $("dFirms").innerHTML = "<thead><tr><th>Firm</th><th class=r>Listings</th><th class=r>Units</th><th class=r>On market</th><th>States</th></tr></thead><tbody>" +
-    Object.keys(fm).sort(function (a, b) { return fm[b].n - fm[a].n; }).map(function (k) { var r = fm[k]; return '<tr data-firm="' + esc(k) + '"><td>' + esc(k) + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + r.act + "</td><td>" + Object.keys(r.st).sort().join(", ") + "</td></tr>"; }).join("") + "</tbody>";
+    avc.map(function (o) { return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + '<div class="small muted">' + fmtDs(o.onMarket) + " → " + fmtDs(o._sale.date) + '</div></td><td class="r num">' + n0(o.units) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? ' <span class="small muted" title="Asking price from CoStar">CS</span>' : "") : '<span class="muted">–</span>') + '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._remkt ? '<span class="muted small" title="Re-marketed by another firm">re-mkt</span>' : '<span class="muted">–</span>')) + '</td><td class="r num">' + n0(o._dtc) + "</td></tr>"; }).join("") + "</tbody>";
+  var fm = {};
+  all.forEach(function (o) { var k = o.firm || o.brokerCo || "(none)"; var r = fm[k] = fm[k] || {n: 0, u: 0, act: 0, cl: 0, st: {}}; r.n++; r.u += o.land ? 0 : o.units || 0; if (o._status === "Active" || o._status === "Under Contract") r.act++; if (o._sale) r.cl++; r.st[o.state] = 1; });
+  $("dFirms").innerHTML = "<thead><tr><th>Firm</th><th class=r>Listings</th><th class=r>Units</th><th class=r>On market</th><th class=r>Closed</th><th>States</th></tr></thead><tbody>" +
+    Object.keys(fm).sort(function (a, b) { return fm[b].n - fm[a].n; }).map(function (k) { var r = fm[k]; return '<tr data-firm="' + esc(k) + '"><td>' + esc(k) + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + r.act + '</td><td class="r num">' + r.cl + "</td><td>" + Object.keys(r.st).sort().join(", ") + "</td></tr>"; }).join("") + "</tbody>";
   loadActivity();
 }
 function stackChart(el, data, fmt, H) {
@@ -981,78 +1118,69 @@ async function loadActivity() {
 /* ================================================================ NEW LISTINGS */
 function weekStart(iso) { var t = dnum(iso), d = new Date(t).getUTCDay(); return new Date(t - d * DAY).toISOString().slice(0, 10); }   /* Sunday */
 function renderNew() {
-  var per = S.nl.per, t = today(), all = visibleL();
+  syncBar("new");
+  var per = S.nl.per, t = today(), all = S.L.filter(function (o) { return pass(o, "l", "new"); });
   var used = STATES.filter(function (s) { return all.some(function (o) { return o.state === s; }); });
-  $("nlSt").innerHTML = '<button data-v=""' + (S.nl.st ? "" : ' class="on"') + ">All</button>" + used.map(function (s) { return '<button data-v="' + s + '"' + (S.nl.st === s ? ' class="on"' : "") + ">" + s + "</button>"; }).join("");
   document.querySelectorAll("#nlPer button").forEach(function (b) { b.classList.toggle("on", +b.dataset.v === per); });
-  var stF = function (o) { return !S.nl.st || o.state === S.nl.st; };
-  var cur = all.filter(function (o) { return stF(o) && o._days != null && o._days >= 0 && o._days < per; });
-  var prev = all.filter(function (o) { return stF(o) && o._days >= per && o._days < per * 2; });
-  var late = all.filter(function (o) { return stF(o) && o.addedAt && days(o.addedAt.slice(0, 10), t) < per && !(o._days < per); });
-  $("nlSub").textContent = "Listings whose date on market falls in the " + (per === 7 ? "last 7 days" : "last " + per + " days") + " (" + fmtD(shift(t, -per + 1)) + " – " + fmtD(t) + ")" + (S.nl.st ? " · " + S.nl.st : "");
+  var cur = all.filter(function (o) { return o._days != null && o._days >= 0 && o._days < per; });
+  var prev = all.filter(function (o) { return o._days >= per && o._days < per * 2; });
+  var late = all.filter(function (o) { return o.addedAt && days(o.addedAt.slice(0, 10), t) < per && !(o._days < per); });
+  $("nlSub").textContent = "Listings whose date on market falls in the " + (per === 7 ? "last 7 days" : "last " + per + " days") + " (" + fmtD(shift(t, -per + 1)) + " – " + fmtD(t) + ")" + (activeCount("new") ? " · filtered" : "");
   var d = cur.length - prev.length, withAsk = cur.filter(function (o) { return o._ask; });
+  var fc = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) fc[k] = (fc[k] || 0) + 1; });
+  var top = Object.keys(fc).sort(function (a, b) { return fc[b] - fc[a]; })[0];
   $("nlKpis").innerHTML =
     kpi("New listings", cur.length, '<span class="delta ' + (d >= 0 ? "up" : "down") + '">' + (d >= 0 ? "+" : "") + d + "</span> vs the " + per + " days before") +
-    kpi("Units", n0(sum(cur.map(function (o) { return o.units; }))) || "0", "median " + (n0(median(cur.map(function (o) { return o.units; }))) || "–") + " per listing") +
+    kpi("Units", n0(sum(cur.map(function (o) { return o.land ? 0 : o.units; }))) || "0", "median " + (n0(median(cur.map(function (o) { return o.land ? null : o.units; }))) || "–") + " per listing" + (cur.some(function (o) { return o.land; }) ? " · " + cur.filter(function (o) { return o.land; }).length + " land" : "")) +
     kpi("With an asking price", withAsk.length, withAsk.length ? "median " + money(median(withAsk.map(function (o) { return o._ppu; }))) + " / unit" : "") +
-    kpi("Busiest firm", (function () { var c = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) c[k] = (c[k] || 0) + 1; }); var k = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0]; return k ? '<span style="font-size:20px">' + esc(k) + "</span>" : "–"; })(), (function () { var c = {}; cur.forEach(function (o) { var k = o.firm || o.brokerCo; if (k) c[k] = (c[k] || 0) + 1; }); var k = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0]; return k ? c[k] + " listings" : ""; })()) +
+    kpi("Busiest firm", top ? '<span style="font-size:20px">' + esc(top) + "</span>" : "–", top ? fc[top] + " listings" : "") +
     kpi("By state", '<span style="font-size:18px">' + (used.map(function (s) { var n = cur.filter(function (o) { return o.state === s; }).length; return n ? '<span style="color:' + ST_COLOR[s] + '">' + s + "</span> " + n : ""; }).filter(Boolean).join(" · ") || "–") + "</span>", "");
-  /* weekly chart, 16 weeks */
   var wk = weekStart(t), weeks = [];
   for (var i = 15; i >= 0; i--) weeks.push(shift(wk, -7 * i));
-  var by = {}; all.forEach(function (o) { if (!stF(o) || !o.onMarket) return; var w = weekStart(o.onMarket); (by[w] = by[w] || {})[o.state] = ((by[w] || {})[o.state] || 0) + 1; });
+  var by = {}; all.forEach(function (o) { if (!o.onMarket) return; var w = weekStart(o.onMarket); (by[w] = by[w] || {})[o.state] = ((by[w] || {})[o.state] || 0) + 1; });
   stackChart($("nlChart"), weeks.map(function (w) { return {label: w, parts: used.map(function (s) { return {k: s, v: (by[w] || {})[s] || 0, c: ST_COLOR[s]}; })}; }), function (w, long) { return long ? "Week of " + fmtD(w) : fmtDs(w).replace(/\/\d+$/, ""); }, 170);
-  /* cards grouped by week */
   var groups = {};
   cur.forEach(function (o) { var w = weekStart(o.onMarket); (groups[w] = groups[w] || []).push(o); });
   var html = Object.keys(groups).sort().reverse().map(function (w) {
     var g = groups[w].sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : a.onMarket > b.onMarket ? -1 : (b.units || 0) - (a.units || 0); });
-    return '<div class="wk"><div class="wk-h"><b>Week of ' + fmtD(w) + "</b><span>" + g.length + " listing" + (g.length > 1 ? "s" : "") + " · " + n0(sum(g.map(function (o) { return o.units; }))) + " units</span></div><div class=\"nlg\">" + g.map(ncard).join("") + "</div></div>";
+    return '<div class="wk"><div class="wk-h"><b>Week of ' + fmtD(w) + "</b><span>" + g.length + " listing" + (g.length > 1 ? "s" : "") + " · " + n0(sum(g.map(function (o) { return o.land ? 0 : o.units; }))) + " units</span></div><div class=\"nlg\">" + g.map(ncard).join("") + "</div></div>";
   }).join("");
   if (late.length) html += '<div class="wk"><div class="wk-h"><b>Added recently with an older date on market</b><span>' + late.length + '</span></div><div class="nlg">' + late.map(ncard).join("") + "</div></div>";
-  if (!cur.length && !late.length) html = '<div class="card mt" style="padding:28px;text-align:center;color:var(--text2)">No listings went on the market in this period. Use <b>Add listing</b> or <b>Import Salesforce CSV</b> to add new ones.</div>';
+  if (!cur.length && !late.length) html = '<div class="card mt" style="padding:28px;text-align:center;color:var(--text2)">No listings match in this period. Widen the filters, or use <b>Add listing</b> / <b>Import Salesforce CSV</b>.</div>';
   $("nlWeeks").innerHTML = html;
 }
 function ncard(o) {
   var s = ST[o._status];
   return '<div class="nc" data-id="' + o.id + '"><div class="top"><span class="st" style="background:' + (ST_COLOR[o.state] || "#80868b") + '">' + esc(o.state) + '</span><span class="n">' + esc(o.name) + '</span><span class="pill ' + s.pill + '">' + o._status + "</span></div>" +
     '<div class="a">' + esc(o.address + (o.city ? ", " + o.city : "")) + "</div>" +
-    '<div class="f"><span><b>' + (o.units ? n0(o.units) : "–") + "</b> units</span>" + (o.yearBuilt ? "<span>built <b>" + o.yearBuilt + "</b></span>" : "") + "<span>" + (o._ask ? "<b>" + mshort(o._ask) + "</b> ask" + (o._ppu ? " · " + mshort(o._ppu) + "/u" : "") : "no ask yet") + "</span></div>" +
+    '<div class="f">' + (o.land ? '<span class="pill orange">Land / development</span>' : "<span><b>" + (o.units ? n0(o.units) : "–") + "</b> units</span>") + (o.yearBuilt ? "<span>built <b>" + o.yearBuilt + "</b></span>" : "") + "<span>" + (o._ask ? "<b>" + mshort(o._ask) + "</b> ask" + (o._ppu ? " · " + mshort(o._ppu) + "/u" : "") : "no ask yet") + "</span></div>" +
     '<div class="br">' + esc([o.broker, o.firm || o.brokerCo].filter(Boolean).join(" · ")) + " · on market " + fmtDs(o.onMarket) + (o.om ? ' · <a href="' + esc(o.om) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "") + "</div></div>";
 }
 
 /* ================================================================ LISTINGS TABLE */
 var TCOLS = [
   {k: "name", l: "Property"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "St"},
-  {k: "units", l: "Units", r: 1, f: n0}, {k: "yearBuilt", l: "Built", r: 1}, {k: "onMarket", l: "On market", f: fmtDs}, {k: "_days", l: "Days", r: 1, f: n0},
+  {k: "units", l: "Units", r: 1}, {k: "yearBuilt", l: "Built", r: 1}, {k: "onMarket", l: "On market", f: fmtDs}, {k: "_days", l: "Days", r: 1, f: n0},
   {k: "_ask", l: "Asking", r: 1, f: mshort}, {k: "_ppu", l: "$/unit", r: 1, f: mshort}, {k: "noi", l: "T-12 NOI", r: 1, f: mshort}, {k: "_capAsk", l: "Cap @ ask", r: 1, f: function (v) { return pct(v, 2); }},
   {k: "broker", l: "Broker"}, {k: "firm", l: "Firm"}, {k: "clientContact", l: "Client"}, {k: "clientCo", l: "Client company"},
   {k: "_status", l: "Status"}, {k: "_salePrice", l: "Closed at", r: 1, f: mshort}, {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days to close", r: 1, f: n0}, {k: "om", l: "OM"}
 ];
-function tRows() {
-  var f = S.tf, q = normAddr(f.q || $("gq").value);
-  var st = Object.keys(f.states).filter(function (k) { return f.states[k]; });
-  return S.L.filter(function (o) {
-    if (o.hidden && !f.hid) return false;
-    if (st.length && st.indexOf(o.state) < 0) return false;
-    if (f.status && o._status !== f.status) return false;
-    if (f.from && !(o.onMarket >= f.from)) return false;
-    if (f.to && !(o.onMarket <= f.to)) return false;
-    if (f.firm && (o.firm || o.brokerCo) !== f.firm) return false;
-    if (f.ask && !o._ask) return false;
-    if (q && o._q.indexOf(q) < 0) return false;
-    return true;
-  }).map(function (o) { o._salePrice = o._sale ? o._sale.price : null; return o; });
+function tRows() { return S.L.filter(function (o) { return pass(o, "l", "table"); }).map(function (o) { o._salePrice = o._sale ? o._sale.price : null; return o; }); }
+function sortRows(rows, srt) {
+  var k = srt.k, d = srt.d;
+  rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * d; });
+}
+function pagerHtml(n, page) {
+  var PG = 200, pages = Math.max(1, Math.ceil(n / PG));
+  return n > PG ? '<button class="btn sm" data-p="-1"' + (page ? "" : " disabled") + '>Previous</button><span>Page ' + (page + 1) + " of " + pages + '</span><button class="btn sm" data-p="1"' + (page < pages - 1 ? "" : " disabled") + ">Next</button>" : "";
 }
 function renderTable() {
-  var f = S.tf, rows = tRows(), k = f.sort.k, d = f.sort.d;
-  rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * d; });
-  $("tStates").innerHTML = STATES.filter(function (s) { return S.L.some(function (o) { return o.state === s; }); }).map(function (s) { return '<button class="chip tst' + (f.states[s] ? " on" : "") + '" data-k="' + s + '"><i style="background:' + ST_COLOR[s] + '"></i>' + s + "</button>"; }).join("");
-  if (!$("tStatus").options[1]) $("tStatus").innerHTML += STATUS.map(function (s) { return '<option value="' + s.k + '">' + s.k + "</option>"; }).join("");
-  if (!$("tFirm").options.length) firmOptions($("tFirm"), f.firm);
-  var PG = 200, pages = Math.max(1, Math.ceil(rows.length / PG)); if (f.page >= pages) f.page = 0;
-  var pr = rows.slice(f.page * PG, f.page * PG + PG);
-  $("tCount").textContent = rows.length.toLocaleString() + " listings · " + n0(sum(rows.map(function (o) { return o.units; }))) + " units";
+  syncBar("table");
+  var rows = tRows(), k = S.tsort.k, d = S.tsort.d;
+  sortRows(rows, S.tsort);
+  var PG = 200; if (S.tp * PG >= rows.length) S.tp = 0;
+  var pr = rows.slice(S.tp * PG, S.tp * PG + PG);
+  $("tCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> listings · " + n0(sum(rows.map(function (o) { return o.land ? 0 : o.units; }))) + " units";
   $("tbl").innerHTML = "<thead><tr>" + TCOLS.map(function (c) { return '<th data-k="' + c.k + '"' + (c.r ? ' class="r"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (o) {
       return '<tr data-id="' + o.id + '" class="' + (o._hl ? "hl-" + o._hl : "") + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TCOLS.map(function (c) {
@@ -1060,97 +1188,88 @@ function renderTable() {
         if (c.k === "_status") h = '<span class="pill ' + ST[v].pill + '">' + v + "</span>";
         else if (c.k === "om") h = v ? '<a href="' + esc(v) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "";
         else if (c.k === "state") h = '<span class="dot" style="background:' + (ST_COLOR[v] || "#999") + '"></span>' + esc(v);
+        else if (c.k === "units") h = o.land ? '<span class="pill orange" title="0 units: land / development">Land</span>' : n0(v);
         else if (c.k === "_ask" && o._askSrc) h = mshort(v) + ' <span class="small muted" title="Asking price from CoStar">CS</span>';
         else if (c.h) h = c.h(v);
         else h = esc(c.f ? c.f(v) : v == null ? "" : v);
         return "<td" + (c.r ? ' class="r num"' : "") + (c.k === "name" || c.k === "address" ? ' title="' + esc(v) + '"' : "") + ">" + h + "</td>";
       }).join("") + "</tr>";
     }).join("") + "</tbody>";
-  $("tPager").innerHTML = rows.length > PG ? '<button class="btn sm" data-p="-1"' + (f.page ? "" : " disabled") + '>Previous</button><span>Page ' + (f.page + 1) + " of " + pages + '</span><button class="btn sm" data-p="1"' + (f.page < pages - 1 ? "" : " disabled") + ">Next</button>" : "";
+  $("tPager").innerHTML = pagerHtml(rows.length, S.tp);
 }
 function wireTable() {
-  var f = S.tf, go = function () { f.page = 0; renderTable(); };
-  $("tq").oninput = function () { f.q = this.value; clearTimeout(wireTable._t); wireTable._t = setTimeout(go, 180); };
-  $("tStatus").onchange = function () { f.status = this.value; go(); };
-  $("tFrom").onchange = function () { f.from = this.value; go(); };
-  $("tTo").onchange = function () { f.to = this.value; go(); };
-  $("tFirm").onchange = function () { f.firm = this.value; go(); };
-  $("tAsk").onchange = function () { f.ask = this.checked; go(); };
-  $("tHid").onchange = function () { f.hid = this.checked; go(); };
+  $("tHid").onchange = function () { S.showHidden = this.checked; S.tp = 0; renderTable(); };
   $("vTable").addEventListener("click", function (e) {
-    var b = e.target.closest(".chip.tst"); if (b) { f.states[b.dataset.k] = !f.states[b.dataset.k]; return go(); }
-    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; f.sort = {k: k, d: f.sort.k === k ? -f.sort.d : (/^(name|address|city|state|broker|firm|client|_status|om)/.test(k) ? 1 : -1)}; return renderTable(); }
-    var p = e.target.closest("[data-p]"); if (p) { f.page += +p.dataset.p; return renderTable(); }
-    var tr = e.target.closest("tr[data-id]"); if (tr) openListing(tr.dataset.id);
+    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; S.tsort = {k: k, d: S.tsort.k === k ? -S.tsort.d : (/^(name|address|city|state|broker|firm|client|_status|om)/.test(k) ? 1 : -1)}; return renderTable(); }
+    var p = e.target.closest(".pager [data-p]"); if (p) { S.tp += +p.dataset.p; return renderTable(); }
+    var tr = e.target.closest("tbody tr[data-id]"); if (tr) openListing(tr.dataset.id);
   });
   $("tCsv").onclick = function () {
-    var rows = tRows(), cols = TCOLS.filter(function (c) { return c.k !== "om"; }).concat([{k: "om", l: "Link to OM"}, {k: "notes", l: "Notes"}]);
+    var rows = tRows(), cols = TCOLS.filter(function (c) { return c.k !== "om"; }).concat([{k: "land", l: "Land / development"}, {k: "om", l: "Link to OM"}, {k: "notes", l: "Notes"}]);
     var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var csv = [cols.map(function (c) { return q(c.l); }).join(",")].concat(rows.map(function (o) { return cols.map(function (c) { var v = o[c.k]; if (c.k === "_spread" || c.k === "_capAsk") v = v == null ? "" : (v * 100).toFixed(2) + "%"; else if (typeof v === "number") v = Math.round(v * 100) / 100; return q(v); }).join(","); })).join("\r\n");
+    var csv = [cols.map(function (c) { return q(c.l); }).join(",")].concat(rows.map(function (o) { return cols.map(function (c) { var v = o[c.k]; if (c.k === "_spread" || c.k === "_capAsk") v = v == null ? "" : (v * 100).toFixed(2) + "%"; else if (c.k === "land") v = o.land ? "Yes" : ""; else if (typeof v === "number") v = Math.round(v * 100) / 100; return q(v); }).join(","); })).join("\r\n");
     var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], {type: "text/csv"})); a.download = BRAND + " listings " + today() + ".csv"; a.click();
   };
 }
 
-/* ================================================================ CLOSINGS (CoStar sales) */
+/* ================================================================ CLOSINGS (CoStar sales)
+   The Listing column says whether the sale is tied to one of our external listings. Asking, vs. ask
+   and days to close come from that listing (bold); for other sales CoStar's own asking price and days
+   on market are shown in grey with "CS". */
 var SCOLS = [
-  {k: "date", l: "Sold", f: fmtDs}, {k: "address", l: "Address"}, {k: "name", l: "Property"}, {k: "units", l: "Units", r: 1, f: n0}, {k: "price", l: "Price", r: 1, f: mshort},
-  {k: "_ppu", l: "$/unit", r: 1, f: mshort}, {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"},
-  {k: "_lname", l: "Our listing"}, {k: "_lon", l: "On market", f: fmtDs}, {k: "_lask", l: "Asking", r: 1, f: mshort}, {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days", r: 1, f: n0}
+  {k: "_tag", l: "Listing", t: "External listing = this sale closed one of our tracked listings"}, {k: "date", l: "Sold"}, {k: "address", l: "Address"}, {k: "units", l: "Units", r: 1},
+  {k: "price", l: "Price", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Bold: our listing's asking price. Grey CS: CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
+  {k: "_dtc2", l: "Days to close", r: 1, t: "Bold: date on market of our listing to sale. Grey CS: CoStar days on market"}, {k: "_ppu", l: "$/unit", r: 1},
+  {k: "name", l: "Property"}, {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
 ];
 function sRows() {
-  var f = S.sf, q = normAddr(f.q), umin = parseNum(f.umin);
-  return S.sales.filter(function (s) {
-    if (f.link === "linked" && !s._link) return false;
-    if (f.link === "unlinked" && s._link) return false;
-    if (s.date < f.since) return false;
-    if (umin != null && !(s.units >= umin)) return false;
-    if (q && s._q.indexOf(q) < 0 && !(s._link && s._link._q.indexOf(q) > -1)) return false;
-    return true;
-  }).map(function (s) {
+  return S.sales.filter(function (s) { return pass(s, "s", "sales"); }).map(function (s) {
     var o = s._link;
-    s._lname = o ? o.name : ""; s._lon = o ? o.onMarket : ""; s._lask = o ? o._ask : null;
-    s._spread = o && o._ask && s.price && !s._remkt ? (o._sales.length > 1 ? o._spread : s.price / o._ask - 1) : null;
-    s._dtc = o ? days(o.onMarket, s.date) : null;
+    s._tag = o ? 2 : s._how === "resale" ? 1 : 0;
+    if (o) { s._ask2 = o._ask || null; s._askCS = !!o._askSrc; s._dtc2 = days(o.onMarket, s.date); s._dtcCS = false; }
+    else { s._ask2 = s.csAsking || null; s._askCS = !!s.csAsking; s._dtc2 = s.daysOnMkt || null; s._dtcCS = !!s.daysOnMkt; }
+    s._spr2 = s._ask2 && s.price && !s._remkt ? (o && o._sales.length > 1 ? o._spread : s.price / s._ask2 - 1) : null;
     return s;
   });
 }
 function renderSales() {
-  var f = S.sf, rows = sRows(), k = f.sort.k, d = f.sort.d;
-  rows.sort(function (a, b) { var x = a[k], y = b[k]; if (x == null || x === "") return 1; if (y == null || y === "") return -1; return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * d; });
-  document.querySelectorAll("#sLink button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === f.link); });
-  var PG = 200, pages = Math.max(1, Math.ceil(rows.length / PG)); if (f.page >= pages) f.page = 0;
-  var pr = rows.slice(f.page * PG, f.page * PG + PG);
-  var vol = sum(rows.map(function (s) { return s.price; }));
-  $("sCount").textContent = rows.length.toLocaleString() + " sales · " + mshort(vol) + " · " + n0(sum(rows.map(function (s) { return s.units; }))) + " units";
-  $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '"' + (c.r ? ' class="r"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+  syncBar("sales");
+  var rows = sRows(), k = S.ssort.k, d = S.ssort.d;
+  sortRows(rows, S.ssort);
+  var PG = 200; if (S.sp * PG >= rows.length) S.sp = 0;
+  var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link; }).length;
+  $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> sales · " + mshort(sum(rows.map(function (s) { return s.price; }))) + " · " + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to an external listing";
+  $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '"' + (c.r ? ' class="r"' : "") + (c.t ? ' title="' + esc(c.t) + '"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (s) {
-      return '<tr data-id="' + s.id + '"' + (S.drawer && S.drawer.id === s.id ? ' class="sel"' : "") + ">" + SCOLS.map(function (c) {
+      var o = s._link;
+      return '<tr data-id="' + s.id + '" class="' + (o ? "lk" : "") + (S.drawer && S.drawer.id === s.id ? " sel" : "") + '">' + SCOLS.map(function (c) {
         var v = s[c.k], h;
-        if (c.k === "_lname") h = s._link ? esc(v) + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "") : s._how === "none" ? '<span class="muted">not a match</span>' : s._how === "resale" ? '<span class="muted">resale of ' + esc(s._resaleOf.name) + "</span>" : "";
+        if (c.k === "_tag") h = o ? '<span class="pill xl" title="' + esc(o.name + " · on market " + fmtD(o.onMarket) + " · " + (o.firm || o.brokerCo || "")) + '">External listing</span>' + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "")
+          : s._how === "resale" ? '<span class="pill gray" title="Later resale of ' + esc(s._resaleOf.name) + '">Resale</span>' : s._how === "none" ? '<span class="muted small">not a match</span>' : '<span class="muted">—</span>';
+        else if (c.k === "date") h = fmtDs(v);
         else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "");
-        else if (c.h) h = c.h(v);
-        else h = esc(c.f ? c.f(v) : v == null ? "" : v);
+        else if (c.k === "units") h = n0(v);
+        else if (c.k === "price" || c.k === "_ppu") h = mshort(v);
+        else if (c.k === "_ask2") h = v == null ? "" : (o && !s._askCS ? "<b>" + mshort(v) + "</b>" : '<span class="muted">' + mshort(v) + '</span> <span class="small muted" title="Asking price from CoStar">CS</span>');
+        else if (c.k === "_spr2") h = o ? (spr(v) || (s._remkt ? '<span class="muted small">re-mkt</span>' : "")) : v != null ? '<span class="muted">' + (v > 0 ? "+" : "") + (v * 100).toFixed(1) + "%</span>" : "";
+        else if (c.k === "_dtc2") h = v == null ? "" : o ? "<b>" + n0(v) + "</b>" : '<span class="muted" title="CoStar days on market">' + n0(v) + ' <span class="small">CS</span></span>';
+        else h = esc(v == null ? "" : v);
         return "<td" + (c.r ? ' class="r num"' : "") + ">" + h + "</td>";
       }).join("") + "</tr>";
     }).join("") + "</tbody>";
-  $("sPager").innerHTML = rows.length > PG ? '<button class="btn sm" data-p="-1"' + (f.page ? "" : " disabled") + '>Previous</button><span>Page ' + (f.page + 1) + " of " + pages + '</span><button class="btn sm" data-p="1"' + (f.page < pages - 1 ? "" : " disabled") + ">Next</button>" : "";
+  $("sPager").innerHTML = pagerHtml(rows.length, S.sp);
 }
 function wireSales() {
-  var f = S.sf, go = function () { f.page = 0; renderSales(); };
-  $("sq").oninput = function () { f.q = this.value; clearTimeout(wireSales._t); wireSales._t = setTimeout(go, 180); };
-  $("sYears").onchange = function () { f.since = this.value; go(); };
-  $("sumin").oninput = function () { f.umin = this.value; clearTimeout(wireSales._t); wireSales._t = setTimeout(go, 250); };
   $("vSales").addEventListener("click", function (e) {
-    var b = e.target.closest("#sLink button"); if (b) { f.link = b.dataset.v; return go(); }
-    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; f.sort = {k: k, d: f.sort.k === k ? -f.sort.d : (/^(address|name|buyer|seller|brokerCo|_lname)$/.test(k) ? 1 : -1)}; return renderSales(); }
-    var p = e.target.closest("[data-p]"); if (p) { f.page += +p.dataset.p; return renderSales(); }
-    var tr = e.target.closest("tr[data-id]"); if (tr) openSale(tr.dataset.id);
+    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; S.ssort = {k: k, d: S.ssort.k === k ? -S.ssort.d : (/^(address|name|buyer|seller|brokerCo)$/.test(k) ? 1 : -1)}; return renderSales(); }
+    var p = e.target.closest(".pager [data-p]"); if (p) { S.sp += +p.dataset.p; return renderSales(); }
+    var tr = e.target.closest("tbody tr[data-id]"); if (tr) openSale(tr.dataset.id);
   });
 }
 
 /* ================================================================ DRAWER */
 var LFIELDS = [
-  ["name", "Engagement name"], ["address", "Address"], ["city", "City"], ["state", "State", "select", STATES], ["units", "Units", "num"], ["yearBuilt", "Year built", "num"],
+  ["name", "Engagement name"], ["address", "Address"], ["city", "City"], ["state", "State", "select", STATES], ["units", "Units (0 = land / development)", "num"], ["yearBuilt", "Year built", "num"],
   ["onMarket", "Date on market", "date"], ["asking", "Asking (high / whisper)", "num"], ["noi", "T-12 NOI", "num"], ["broker", "Listing broker"], ["brokerCo", "Broker company"],
   ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["status", "Status (by hand)", "select", [""].concat(STATUS.map(function (s) { return s.k; }))], ["notes", "Notes", "text"]
 ];
@@ -1168,7 +1287,7 @@ function openListing(id, keep) {
   S.drawer = {kind: "l", id: id};
   var s = ST[o._status];
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(o.address) + (o.city ? ", " + esc(o.city) : "") + ", " + o.state + "</div>" +
-    '<div class="dr-pills"><span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
+    '<div class="dr-pills"><span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
     (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
   var h = "";
   /* pricing */
@@ -1298,7 +1417,7 @@ function openModal(html) { $("mbox").innerHTML = html; $("modal").classList.add(
 function closeModal() { $("modal").classList.remove("open"); }
 $("modal").addEventListener("mousedown", function (e) { if (e.target.id === "modal") closeModal(); });
 var FORM = [
-  ["name", "Engagement name", "", 1], ["address", "Address", "", 1], ["city", "City", "", 1], ["state", "State", "select", 1], ["units", "Units", "num"], ["yearBuilt", "Year built", "num"],
+  ["name", "Engagement name", "", 1], ["address", "Address", "", 1], ["city", "City", "", 1], ["state", "State", "select", 1], ["units", "Units (0 = land / development)", "num"], ["yearBuilt", "Year built", "num"],
   ["onMarket", "Date on market", "date", 1], ["asking", "Asking price (high / whisper)", "num"], ["broker", "Listing broker"], ["brokerCo", "Listing broker company", "firm"],
   ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["noi", "T-12 NOI", "num"]
 ];
@@ -1366,6 +1485,7 @@ async function addListings(vals, message, event, src) {
     var v = vals[i], r = {id: await listingId(v)};
     ["name", "address", "city", "state", "units", "yearBuilt", "onMarket", "asking", "broker", "brokerCo"].forEach(function (k) { if (v[k] != null && v[k] !== "") r[k] = v[k]; });
     r.firm = firmOf(v.brokerCo);
+    if (v.units === 0) r.land = 1;
     ["clientContact", "clientCo", "om", "noi"].forEach(function (k) { if (v[k] != null && v[k] !== "") r[k] = v[k]; });
     r.src = src || "manual"; r.addedBy = S.me.email; r.addedAt = stamp;
     rows.push(r);
@@ -1428,7 +1548,7 @@ function importCsv(file) {
         v.onMarket = typedDate(v.onMarket);
         if (!v.onMarket || v.onMarket < "2024-02-05") continue;
         v.state = v.state.toUpperCase();
-        ["units", "yearBuilt", "asking", "noi"].forEach(function (k) { var n = parseNum(v[k]); v[k] = n || (k === "noi" && n === 0 ? null : null); if (n) v[k] = n; });
+        ["units", "yearBuilt", "asking", "noi"].forEach(function (k) { var n = parseNum(v[k]); v[k] = k === "units" ? n : n || null; });
         if (v.om && !/^https?:/i.test(v.om)) v.om = "";
         var idv = Object.assign({}, v); v._id = await listingId(idv);
         if (String(v.name).toLowerCase() === "listing" || !v.name) v.name = v.address;
@@ -1555,19 +1675,19 @@ function wire() {
   $("csvFile").onchange = function () { if (this.files[0]) importCsv(this.files[0]); this.value = ""; };
   $("sImport").onclick = function () { $("compFile").click(); };
   $("compFile").onchange = function () { if (this.files[0]) importCostar(this.files[0]); this.value = ""; };
-  $("gq").oninput = function () { clearTimeout(wire._q); var v = this.value; wire._q = setTimeout(function () { S.tf.q = v; $("tq").value = v; S.tf.page = 0; if (S.view !== "table") setView("table"); else renderTable(); }, 200); };
+  $("gq").value = S.F.q || "";
+  $("gq").oninput = function () { clearTimeout(wire._q); var v = this.value; wire._q = setTimeout(function () { S.F.q = v; saveF(); S.tp = 0; if (S.view === "map" || S.view === "table") render(true); else setView("table"); }, 200); };
   $("nlPer").onclick = function (e) { var b = e.target.closest("button"); if (b) { S.nl.per = +b.dataset.v; renderNew(); } };
-  $("nlSt").onclick = function (e) { var b = e.target.closest("button"); if (b) { S.nl.st = b.dataset.v; renderNew(); } };
   $("nlWeeks").onclick = function (e) { var c = e.target.closest(".nc"); if (c) openListing(c.dataset.id); };
   $("dMonths").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; S.dmonths = +b.dataset.v; document.querySelectorAll("#dMonths button").forEach(function (x) { x.classList.toggle("on", x === b); }); renderDash(); };
   $("vDash").addEventListener("click", function (e) {
     var tr = e.target.closest("#dAvc tr[data-id]"); if (tr) return openListing(tr.dataset.id);
-    tr = e.target.closest("#dFirms tr[data-firm]"); if (tr) { S.tf = Object.assign(S.tf, {firm: tr.dataset.firm, page: 0}); $("tFirm").innerHTML = ""; setView("table"); return; }
-    tr = e.target.closest("#dStates tr[data-st]"); if (tr) { S.mf.states = {}; S.mf.states[tr.dataset.st] = 1; lsSet("miq_mf", S.mf); S._fitted = 0; setView("map"); }
+    tr = e.target.closest("#dFirms tr[data-firm]"); if (tr) { S.F.firm = tr.dataset.firm === "(none)" ? "" : tr.dataset.firm; S.F.broker = ""; saveF(); S.tp = 0; setView("table"); return; }
+    tr = e.target.closest("#dStates tr[data-st]"); if (tr) { S.F.states = {}; S.F.states[tr.dataset.st] = 1; saveF(); S._fitted = 0; setView("map"); }
   });
   $("actRefresh").onclick = loadActivity;
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") { if ($("modal").classList.contains("open")) closeModal(); else if (S.drawer) closeDrawer(); } });
-  wireMap(); wireTable(); wireSales();
+  wireBars(); wireMap(); wireTable(); wireSales();
   window.addEventListener("resize", function () { clearTimeout(wire._r); wire._r = setTimeout(function () { if (S.view === "dash") renderDash(); if (S.view === "new") renderNew(); if (_map) _map.invalidateSize(); }, 150); });
 }
 
