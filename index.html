@@ -935,7 +935,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v40</span>
+    <span id="verBadge" title="Page version">v41</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1282,7 +1282,7 @@ async function boot() {
   S.manifest = m.files || {};
   var got = await Promise.all(FILES.map(loadFile));
   S.raw.listings = (got[0] && got[0].listings) || [];
-  S.raw.sales = (got[1] && got[1].sales) || [];
+  S.raw.sales = (got[1] && got[1].sales) || []; S.raw.salesSrc = (got[1] && got[1].sources) || null;
   S.raw.overlay = got[2] || {edits: {}, hl: {}};
   S.raw.imports = (got[3] && got[3].imports) || [];
   derive();
@@ -1304,7 +1304,7 @@ async function poll() {
     for (var i = 0; i < changed.length; i++) {
       var f = changed[i], j = await loadFile(f);
       if (f === "listings.json") S.raw.listings = (j && j.listings) || [];
-      if (f === "sales.json") S.raw.sales = (j && j.sales) || [];
+      if (f === "sales.json") { S.raw.sales = (j && j.sales) || []; S.raw.salesSrc = (j && j.sources) || null; }
       if (f === "overlay.json") S.raw.overlay = j || {edits: {}, hl: {}};
       if (f === "imports.json") S.raw.imports = (j && j.imports) || [];
     }
@@ -3511,16 +3511,17 @@ async function addSales(rows, fname) {
     if (!fresh.length) throw new Error("already here");
     var all = fresh.concat(S.raw.sales).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
     var imps = S.raw.imports.concat([{at: stamp, by: S.me.email, kind: "sales", label: "CoStar import: " + fname, added: fresh.length}]);
+    var srcNext = Object.assign({}, S.raw.salesSrc || {}), sk = "costar:" + today(); srcNext[sk] = (srcNext[sk] || 0) + fresh.length;
     try {
       var j = await apiPost("/marketiq/commit", {message: "CoStar import: " + fname + " (" + fresh.length + " sales)", event: "listings:sales_import", files: [
-        {path: "sales.json", content: utf8b64(rowsText("sales", all)), base: S.manifest["sales.json"] || null},
+        {path: "sales.json", content: utf8b64(rowsText("sales", all, {sources: srcNext})), base: S.manifest["sales.json"] || null},
         {path: "imports.json", content: utf8b64(JSON.stringify({imports: imps}, null, 1) + "\n"), base: S.manifest["imports.json"] || null}]});
-      Object.assign(S.manifest, j.files); S.raw.sales = all; S.raw.imports = imps; derive(); render(true);
+      Object.assign(S.manifest, j.files); S.raw.sales = all; S.raw.salesSrc = srcNext; S.raw.imports = imps; derive(); render(true);
       return;
     } catch (e) {
       if (e.status !== 409) throw e;
       var m = await apiGet("/marketiq/manifest?fresh=1"); S.manifest = m.files || {};
-      S.raw.sales = ((await loadFile("sales.json")) || {}).sales || [];
+      var sj = (await loadFile("sales.json")) || {}; S.raw.sales = sj.sales || []; S.raw.salesSrc = sj.sources || null;
       S.raw.imports = ((await loadFile("imports.json")) || {}).imports || [];
     }
   }
