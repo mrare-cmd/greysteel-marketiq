@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v20</span>
+    <span id="verBadge" title="Page version">v21</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2422,7 +2422,7 @@ function propSecHtml(o) {
   var tile = function (l, v, s) { return '<div><div class="l">' + l + '</div><div class="v num">' + (v || "–") + '</div><div class="s">' + (s || "") + "</div></div>"; };
   var h = hd + ' <span class="hs">from ' + detSrcName(d) + "</span></div>";
   h += '<div class="ptiles">' + tile("Occupancy", occTxt(d), d.kind === "gs" && d.rr ? "rent roll " + fmtDs(d.rr.asof) : d.occ != null ? "per the OM" : "not stated") +
-    tile("Avg rent", d.rent ? money(d.rent) : "", d.rent ? "in place / month" : "") + tile("Class", d.cls ? esc(d.cls) : "", d.aff ? esc(d.aff_type || "Affordable") : "") +
+    tile("Avg rent", d.rent ? money(d.rent) : "", d.ach ? "market " + money(d.ach) : d.rent ? "in place / month" : "") + tile("Class", d.cls ? esc(d.cls) : "", d.aff ? esc(d.aff_type || "Affordable") : "") +
     tile("Built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") + "</div>";
   h += '<div class="kv pkv">';
   if (mix) h += '<div class="k">Unit mix</div><div class="v">' + mix.map(function (r) { return "<span class=mixc><b>" + n0(r.n) + "</b> " + esc(r.t) + (r.sf ? " <i>" + n0(r.sf) + " sf</i>" : "") + "</span>"; }).join("") + "</div>";
@@ -2452,6 +2452,28 @@ function closeRec() {
 }
 function recTile(l, v, s, cls) { return '<div class="rt-t' + (cls ? " " + cls : "") + '"><div class="l">' + l + '</div><div class="v num">' + (v == null || v === "" ? "–" : v) + '</div><div class="s">' + (s || "") + "</div></div>"; }
 function boxA(id, label, folder) { return id && /^\d+$/.test(String(id)) ? '<a href="' + (folder ? BOXD : BOXF) + id + '" target="_blank" rel="noopener">' + esc(label) + " ↗</a>" : ""; }
+/* unit mix table: only the columns that have data (no empty Avg SF / rent columns); Greysteel rows come from the
+   model's rent roll, which often leaves market rent blank, so the model's underwritten average (PD tab "Avg. Achievable
+   Rent", d.ach) is shown under it */
+function mixTable(mix, isGs, d) {
+  var wav = function (f, wf) { var w = 0, s = 0; mix.forEach(function (r) { var k = wf ? r[wf] : r.n; if (r[f] && k) { w += k; s += r[f] * k; } }); return w ? s / w : null; };
+  var tn = sum(mix.map(function (r) { return r.n; })), has = function (f) { return mix.some(function (r) { return r[f]; }); };
+  var cols = [["Units", function (r) { return n0(r.n); }, n0(tn)]];
+  if (isGs) cols.push(["Occupied", function (r) { return r.n ? Math.round(r.occ / r.n * 100) + "%" : ""; }, tn ? Math.round(sum(mix.map(function (r) { return r.occ; })) / tn * 100) + "%" : ""]);
+  else cols.push(["Share", function (r) { return tn ? Math.round(r.n / tn * 100) + "%" : ""; }, ""]);
+  if (has("sf")) cols.push(["Avg SF", function (r) { return n0(r.sf); }, n0(wav("sf"))]);
+  var ip = isGs ? "ctr" : "rent";
+  if (has(ip)) cols.push(["In-place rent", function (r) { return money(r[ip]); }, money(wav(ip, isGs ? "occ" : null))]);
+  if (has("mkt")) cols.push(["Market rent", function (r) { return money(r.mkt); }, money(wav("mkt"))]);
+  var h = '<table class="rc-tbl rc-mix"><thead><tr><th>Type</th>' + cols.map(function (c) { return "<th class=r>" + c[0] + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    mix.map(function (r) { return "<tr><td><b>" + esc(r.t) + "</b></td>" + cols.map(function (c) { return '<td class="r num">' + c[1](r) + "</td>"; }).join("") + "</tr>"; }).join("") +
+    "</tbody><tfoot><tr><td>Total</td>" + cols.map(function (c) { return '<td class="r num">' + c[2] + "</td>"; }).join("") + "</tr></tfoot></table>";
+  if (isGs) {
+    if (!has("mkt") && d.ach) h += '<div class="rc-note"><b>Underwritten market rent ' + money(d.ach) + "</b> average (the model's achievable rent; its rent roll has no market rents by unit type).</div>";
+    h += '<div class="rc-note">From the rent roll in Greysteel\'s model (' + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units.</div>";
+  } else if (d.unit_mix) h += '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>";
+  return h;
+}
 function renderRec(o, full, soft) {
   var d = full || o._det, ld = !full, isGs = d.kind === "gs";
   var st = ST[o._status], noi = d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
@@ -2468,7 +2490,7 @@ function renderRec(o, full, soft) {
   /* headline numbers */
   h += '<div class="rc-tiles">' +
     recTile("Occupancy", occTxt(d), isGs && d.rr ? "rent roll " + fmtDs(d.rr.asof) + " · " + d.rr.occ + " of " + (d.rr.n - (d.rr.nr || 0)) : d.occ != null ? "per the OM" : "not stated in the OM", "hero") +
-    recTile("Avg in-place rent", d.rent ? money(d.rent) : "", d.rent ? "per unit / month" : "") +
+    recTile("Avg in-place rent", d.rent ? money(d.rent) : "", d.ach ? "market " + money(d.ach) + " (model)" : d.rent ? "per unit / month" : "") +
     recTile("Units", units ? n0(units) : o.land ? "Land" : "", mix ? mix.length + " unit types" : "") +
     recTile("Year built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") +
     recTile("Asking", ask ? mshort(ask) : "", ask && units ? mshort(ask / units) + " / unit" : "no asking price") +
@@ -2477,25 +2499,8 @@ function renderRec(o, full, soft) {
   h += '<div class="rc-col">';
   /* unit mix */
   h += '<section class="rc-card"><h3>Unit mix</h3>';
-  if (mix && isGs) {
-    var T = {n: 0, occ: 0, sfw: 0, sfn: 0, mw: 0, mn: 0, cw: 0, cn: 0};
-    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Occupied</th><th class=r>Avg SF</th><th class=r>Market rent</th><th class=r>In-place rent</th></tr></thead><tbody>' +
-      mix.map(function (r) {
-        T.n += r.n; T.occ += r.occ; if (r.sf) { T.sfw += r.sf * r.n; T.sfn += r.n; } if (r.mkt) { T.mw += r.mkt * r.n; T.mn += r.n; } if (r.ctr) { T.cw += r.ctr * r.occ; T.cn += r.occ; }
-        return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + (r.n ? Math.round(r.occ / r.n * 100) + "%" : "") + '</td><td class="r num">' + n0(r.sf) + '</td><td class="r num">' + money(r.mkt) + '</td><td class="r num">' + money(r.ctr) + "</td></tr>";
-      }).join("") + '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(T.n) + '</td><td class="r num">' + (T.n ? Math.round(T.occ / T.n * 100) + "%" : "") + '</td><td class="r num">' + (T.sfn ? n0(T.sfw / T.sfn) : "") +
-      '</td><td class="r num">' + (T.mn ? money(T.mw / T.mn) : "") + '</td><td class="r num">' + (T.cn ? money(T.cw / T.cn) : "") + "</td></tr></tfoot></table>" +
-      '<div class="rc-note">From the rent roll in Greysteel\'s model (' + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units.</div>";
-  } else if (mix) {
-    var tn = sum(mix.map(function (r) { return r.n; })), mx = Math.max.apply(null, mix.map(function (r) { return r.n; }));
-    var hasR = mix.some(function (r) { return r.rent; }), hasM = mix.some(function (r) { return r.mkt; });
-    var wav = function (f) { var w = 0, s = 0; mix.forEach(function (r) { if (r[f]) { w += r.n; s += r[f] * r.n; } }); return w ? s / w : null; };
-    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Share</th><th class=r>Avg SF</th>' + (hasR ? "<th class=r>In-place rent</th>" : "") + (hasM ? "<th class=r>Market rent</th>" : "") + "<th></th></tr></thead><tbody>" +
-      mix.map(function (r) { return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + Math.round(r.n / tn * 100) + '%</td><td class="r num">' + n0(r.sf) + "</td>" +
-        (hasR ? '<td class="r num">' + money(r.rent) + "</td>" : "") + (hasM ? '<td class="r num">' + money(r.mkt) + "</td>" : "") + '<td class="rc-barc"><i style="width:' + (r.n / mx * 100).toFixed(1) + '%"></i></td></tr>'; }).join("") +
-      '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(tn) + '</td><td></td><td class="r num">' + n0(wav("sf")) + "</td>" + (hasR ? '<td class="r num">' + money(wav("rent")) + "</td>" : "") + (hasM ? '<td class="r num">' + money(wav("mkt")) + "</td>" : "") + "<td></td></tr></tfoot></table>" +
-      (d.unit_mix ? '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>" : "");
-  } else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated.</p>';
+  if (mix) h += mixTable(mix, isGs, d);
+  else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated.</p>';
   if (full && full.rent_note) h += '<div class="rc-note">Average rent: ' + esc(full.rent_note) + "</div>";
   if (full && full.occ_q && !isGs) h += '<div class="rc-note">Occupancy source: “…' + esc(full.occ_q.replace(/","/g, " · ").replace(/[\[\]"]/g, "")) + '…”</div>';
   h += "</section>";
