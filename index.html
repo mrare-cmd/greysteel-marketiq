@@ -284,6 +284,28 @@ select.inp{padding-right:4px}
 .form input:focus,.form select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.12)}
 .form .req::after{content:" *";color:var(--red)}
 .stseg{display:flex;gap:6px;flex-wrap:wrap}
+.inp.cselb{display:inline-flex;align-items:center;text-align:left;cursor:pointer;white-space:nowrap;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236e6e73' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.inp.cselb.open{background-color:rgba(255,255,255,.95);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
+.inp.cselb.on{background-color:rgba(0,113,227,.1);color:#0060c0;font-weight:550}
+.cselp{position:fixed;z-index:3000;padding:5px;border-radius:14px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+  box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(15,23,42,.18);animation:pop .22s var(--spring);transform-origin:top left;max-height:60vh;overflow:auto}
+.cselo{padding:8px 30px 8px 11px;border-radius:9px;font-size:13px;cursor:pointer;white-space:nowrap;position:relative}
+.cselo:hover{background:rgba(0,113,227,.08)}
+.cselo.on{color:#0060c0;font-weight:600}
+.cselo.on::after{content:"";position:absolute;right:11px;top:50%;width:5px;height:9px;border:solid #0071e3;border-width:0 2px 2px 0;transform:translateY(-65%) rotate(45deg)}
+.dr-qs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.dr-qs:empty{display:none}
+.ci-sum{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.ci-sum>div{background:var(--fill2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ci-sum b{font-family:var(--fd);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.ci-sum span{font-size:11.5px;color:var(--text2);line-height:1.3}
+.ci-sum .ok{background:rgba(52,199,89,.12)}
+.ci-sum .dup{background:rgba(255,159,10,.12)}
+.ci-map{margin:8px 0 12px}
+.ci-map summary{cursor:pointer;font-size:13px;font-weight:600;color:#0071e3;padding:4px 0}
+.ci-h{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;margin:6px 0}
+.ci-scroll{max-height:42vh;overflow:auto;border-radius:10px}
+@media (max-width:760px){.ci-sum{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stseg button{height:34px;min-width:52px;padding:0 12px;border:none;border-radius:10px;background:var(--fill);color:var(--text);font-weight:600;font-size:13px;cursor:pointer;transition:background .15s,color .15s,transform .25s}
 .stseg button:hover{background:rgba(0,113,227,.1)}
 .stseg button.on{background:#0071e3;color:#fff}
@@ -865,7 +887,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v36</span>
+    <span id="verBadge" title="Page version">v37</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -880,6 +902,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   </div>
   <div class="hdr-right">
     <span id="syncDot" title="Live: changes from teammates appear within ~20 seconds"><i></i><span>Live</span></span>
+    <button class="btn sm" id="csImpBtn" title="Add sales from a CoStar sale comps export (.xlsx or .csv, any column order)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>Import CoStar</button>
     <button class="btn primary sm" id="addBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</button>
     <div id="userWrap" hidden>
       <button id="userChip" aria-haspopup="true" aria-expanded="false"><span class="uc-av" id="ucAv"></span><span id="ucName"></span></button>
@@ -1578,6 +1601,7 @@ function syncBar(view) {
   });
   var n = activeCount(view), cb = el.querySelector("[data-clear]");
   cb.textContent = n ? "Clear " + n : "Clear"; cb.classList.toggle("on", !!n);
+  cselUp(el);
 }
 function statusDesc(k) {
   return {Active: "Listed within the " + S.shelf + "-day shelf life, no closing found", Dead: "Older than the " + S.shelf + "-day shelf life, no closing found"}[k] || ST[k].d;
@@ -1954,6 +1978,7 @@ function flyToListing(o) {
 function wireMap() {
   $("msort").value = lsGet("miq_msort", "date");
   $("msort").onchange = function () { lsSet("miq_msort", this.value); renderMap(true); };
+  cselUp($("msort").parentNode);
   $("vMap").addEventListener("click", function (e) {
     var b = e.target.closest(".chip.mly"); if (b) { S.layers[b.dataset.k] = !S.layers[b.dataset.k]; lsSet("miq_layers", S.layers); return renderMap(true); }
     b = e.target.closest(".map-legend .row[data-k]");
@@ -2653,7 +2678,10 @@ function openListing(id, keep) {
   var s = ST[o._status];
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(locLine(o)) + "</div>" +
     '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">' + mktLbl(o) + " " + mktVal(o, " · ") + "</span>" +
-    (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
+    (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>" +
+    '<div class="dr-qs">' + (o._status === "Dead" ? '<button class="btn sm" data-qs="Active">Not dead: mark Active</button>' : "") +
+    (o._status === "Active" ? '<button class="btn sm" data-qs="Dead">Mark Dead</button>' : "") +
+    (o.status ? '<button class="btn sm" data-qs="">Back to automatic status</button>' : "") + "</div>";
   var h = recBtnHtml(o);
   /* pricing */
   h += '<div class="dr-sec"><div class="h">Pricing</div><div class="cmpbox">' +
@@ -2694,6 +2722,7 @@ function openListing(id, keep) {
   if (!keep) { if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); }
   /* wire */
   if ($("recBtn")) $("recBtn").onclick = function () { openRec(o.id); };
+  $("drH").querySelectorAll("[data-qs]").forEach(function (b) { b.onclick = function () { saveOps([{t: "set", k: "l/" + o.id, f: "status", v: b.dataset.qs || null}], b.dataset.qs ? "status " + b.dataset.qs : "status automatic"); }; });
   $("drB").querySelectorAll(".v.ed").forEach(function (el) { el.onclick = function (e) { if (e.target.tagName === "A") return; startEdit(el, o); }; });
   $("pinGo").onclick = async function () {
     var q = $("pinQ").value.trim(); if (!q) return;
@@ -3012,61 +3041,160 @@ function importCsv(file) {
   fr.readAsArrayBuffer(file);
 }
 /* CoStar sales import (any state) */
-var COSTAR_MAP = [
-  ["address", /^(property address|address|street address)$/i], ["name", /^(property name|building name)$/i], ["date", /^(sale date|close date|sold date)$/i],
-  ["price", /^(sale price|price|sold price)$/i], ["units", /^(number of units|# of units|units|no\.? of units|total units)$/i], ["sf", /^(rba|building sf|bldg sf|gross sf|sf)$/i],
-  ["yearBuilt", /^(year built|yr built)$/i], ["bldgClass", /^(building class|class)$/i], ["cap", /^(actual cap rate|cap rate)$/i],
-  ["buyer", /^(buyer \(true\) company|buyer true company|buyer company|true buyer company|buyer \(recorded\) company|recorded buyer|buyer)$/i],
-  ["seller", /^(seller \(true\) company|seller true company|seller company|true seller company|seller \(recorded\) company|recorded seller|seller)$/i],
-  ["brokerCo", /^(listing broker company|listing broker)$/i], ["csAsking", /^asking price$/i], ["daysOnMkt", /^(days on market|market time)$/i],
-  ["notes", /^(comments|sale notes|transaction notes)$/i], ["compId", /^(comp id|comp #|sale comp id)$/i], ["city", /^(city|property city)$/i], ["state", /^(state|property state)$/i],
-  ["lat", /^latitude$/i], ["lng", /^longitude$/i]
-];
+/* CoStar sale comps import (v37). Columns are found by header name, in any order (the standard 279-column export, a
+   trimmed custom export, or a CSV). Mirrors tools/import_costar_xlsx.py: 5+ units only; Sale Status Under Contract /
+   Escrow / Pending rows become under-contract rows (no date or price); "(N Properties)" summary rows are skipped; the
+   same CoStar property twice within 14 days is one sale (the fuller record wins); a comp covering several buildings gets
+   per-building ids (c<comp>-<hash>, multiN / multiTotal). Duplicates of sales already in MarketIQ are shown, not added. */
+var COSTAR_COLS = {
+  address: ["property address", "address", "street address", "property street address"],
+  name: ["property name", "building name"], date: ["sale date", "close date", "sold date", "closing date"],
+  price: ["sale price", "sold price", "price", "total sale price"], units: ["number of units", "# of units", "no of units", "units", "total units", "unit count"],
+  status: ["sale status", "status"], compId: ["comp id", "comp #", "sale comp id", "compid"], propId: ["propertyid", "property id", "costar property id"],
+  city: ["property city", "city"], state: ["property state", "state"], zip: ["property zip code", "zip code", "zip", "postal code"],
+  sf: ["building sf", "rba", "bldg sf", "gross sf", "sf"], yearBuilt: ["year built", "yr built"], bldgClass: ["building class", "class"],
+  cap: ["actual cap rate", "cap rate"], buyer: ["buyer (true) company", "buyer true company", "true buyer company", "buyer company", "buyer (recorded) company", "recorded buyer", "buyer"],
+  seller: ["seller (true) company", "seller true company", "true seller company", "seller company", "seller (recorded) company", "recorded seller", "seller"],
+  brokerCo: ["listing broker company", "listing broker"], agentFirst: ["listing broker agent first name"], agentLast: ["listing broker agent last name"],
+  buyerBroker: ["buyers broker company", "buyer's broker company", "buyer broker company"], csAsking: ["asking price"], daysOnMkt: ["market time", "days on market"],
+  saleType: ["sale type"], portfolio: ["portfolio name", "multi-sale name", "multi sale name"], affordable: ["affordable type"], market: ["market"],
+  nonArms: ["non-arms length reasons", "non arms length reasons"], cond: ["sale condition", "sale conditions"],
+  notes: ["transaction notes", "comments", "sale notes"], lat: ["latitude"], lng: ["longitude"]
+};
+var COSTAR_LBL = {address: "Address", date: "Sale date", price: "Sale price", units: "Units", status: "Sale status", compId: "Comp ID", propId: "Property ID", state: "State", city: "City", buyer: "Buyer", seller: "Seller", brokerCo: "Listing broker", lat: "Latitude", lng: "Longitude"};
+function hkey(h) { return String(h == null ? "" : h).toLowerCase().replace(/[^a-z0-9#'()]+/g, " ").trim(); }
 function xlDate(v) {
   if (v == null || v === "") return "";
   if (v instanceof Date) return v.getFullYear() + "-" + String(v.getMonth() + 1).padStart(2, "0") + "-" + String(v.getDate()).padStart(2, "0");
   if (typeof v === "number") { var d = new Date(Math.round((v - 25569) * DAY)); return d.toISOString().slice(0, 10); }
-  return typedDate(v);
+  return parseMDate(v) || typedDate(v);
+}
+function parseCostar(aoa) {
+  var hi = aoa.slice(0, 30).findIndex(function (r) { var k = r.map(hkey); return k.some(function (c) { return /address/.test(c); }) && k.some(function (c) { return /sale|price|status/.test(c); }); });
+  if (hi < 0) throw new Error("no header row with an address and a sale column in the first 30 rows");
+  var hdr = aoa[hi].map(function (h) { return String(h).trim(); }), keys = hdr.map(hkey), map = {};
+  Object.keys(COSTAR_COLS).forEach(function (f) { for (var a = 0; a < COSTAR_COLS[f].length; a++) { var i = keys.indexOf(hkey(COSTAR_COLS[f][a])); if (i > -1) { map[f] = i; return; } } });
+  if (map.address == null) throw new Error("no Property Address column");
+  if (map.date == null && map.status == null) throw new Error("no Sale Date or Sale Status column");
+  var st = {read: 0, small: 0, summary: 0, nodate: 0}, rows = [];
+  aoa.slice(hi + 1).forEach(function (r) {
+    var get = function (f) { return map[f] == null ? "" : r[map[f]]; }, txt = function (f) { var v = get(f); return v == null ? "" : fixText(String(v)).trim(); };
+    var addr = txt("address"); if (!addr) return;
+    st.read++;
+    var portfolio = txt("portfolio"), pm = /\s*\((Part of an? [^)]*)\)\s*$/i.exec(addr);
+    if (pm) { portfolio = portfolio || pm[1]; addr = addr.slice(0, pm.index).trim(); }
+    if (/\(\d+ Propert(y|ies)\)\s*$/i.test(addr)) { st.summary++; return; }
+    var units = parseNum(get("units"));
+    if (!units || units < 5) { st.small++; return; }
+    var status = txt("status"), date = xlDate(get("date"));
+    var sold = status ? /sold/i.test(status) : !!date, pending = !sold && /contract|escrow|pending/i.test(status);
+    if (sold && !date) { st.nodate++; return; }
+    if (!sold && !pending) { st.nodate++; return; }
+    var price = sold ? parseNum(get("price")) : null, cap = parseNum(get("cap")), lat = parseNum(get("lat")), lng = parseNum(get("lng")), notes = txt("notes");
+    var c = {compId: txt("compId").split(".")[0], propId: txt("propId").split(".")[0], name: txt("name"), address: addr, city: txt("city"), state: (txt("state") || "DC").toUpperCase().slice(0, 2), zip: txt("zip"),
+      date: sold ? date : "", price: price, units: Math.round(units), ppu: price ? Math.round(price / units) : null, sf: parseNum(get("sf")), yearBuilt: parseNum(String(get("yearBuilt")).split(".")[0]),
+      bldgClass: txt("bldgClass"), buyer: txt("buyer"), seller: txt("seller"), brokerCo: txt("brokerCo"), brokerAgent: [txt("agentFirst"), txt("agentLast")].filter(Boolean).join(" "),
+      buyerBroker: txt("buyerBroker"), csAsking: parseNum(get("csAsking")), daysOnMkt: parseNum(get("daysOnMkt")), cap: cap != null && cap < 1 ? Math.round(cap * 10000) / 100 : cap,
+      saleType: txt("saleType"), portfolio: portfolio, affordable: txt("affordable"), market: txt("market"), nonArms: txt("nonArms"),
+      cond: txt("cond").split(",").map(function (x) { return x.trim(); }).filter(Boolean).join(", "), notes: notes.length > 600 ? notes.slice(0, 600) + "…" : notes,
+      geo: lat && lng ? [Math.round(lat * 1e6) / 1e6, Math.round(lng * 1e6) / 1e6] : null};
+    if (pending) { c.pending = 1; c.pendingStatus = status; }
+    Object.keys(c).forEach(function (k) { if (c[k] == null || c[k] === "") delete c[k]; });
+    rows.push(c);
+  });
+  return {hdr: hdr, map: map, st: st, rows: rows};
+}
+async function costarPlan(P) {
+  var rows = P.rows, inFile = [];
+  /* repeats inside the file: the same record twice, then CoStar's double records of one sale (same property within 14 days) */
+  var seen = {}, uniq = [];
+  rows.forEach(function (x) {
+    var k = x.pending ? "P|" + (x.propId || x.address) : [x.compId, x.address, x.date, x.price, x.units].join("|");
+    if (seen[k]) { inFile.push({c: x, why: "Repeated in this file"}); return; }
+    seen[k] = 1; uniq.push(x);
+  });
+  var full = function (x) { return (x.price ? 1 : 0) + (x.brokerCo ? 1 : 0) + (x.buyer ? 1 : 0) + (x.notes || "").length / 1e4; }, byProp = {}, drop = new Set();
+  uniq.forEach(function (x) { if (!x.pending && x.propId) (byProp[x.propId] = byProp[x.propId] || []).push(x); });
+  Object.keys(byProp).forEach(function (k) {
+    var g = byProp[k].sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    for (var i = 1; i < g.length; i++) { var a = g[i - 1], b = g[i]; if (drop.has(a) || drop.has(b)) continue;
+      if (days(a.date, b.date) <= 14 && a.compId !== b.compId) { var lose = full(a) >= full(b) ? b : a; drop.add(lose); inFile.push({c: lose, why: "CoStar recorded this sale twice (same property within 14 days)"}); } }
+  });
+  uniq = uniq.filter(function (x) { return !drop.has(x); });
+  /* ids, the same way as the Python importer */
+  var grp = {};
+  uniq.forEach(function (x) { if (!x.pending && x.compId) (grp[x.compId] = grp[x.compId] || []).push(x); });
+  for (var i = 0; i < uniq.length; i++) {
+    var x = uniq[i];
+    if (x.pending) x.id = "p" + (x.propId || (await sha1hex(x.address + "|" + x.state)).slice(0, 10));
+    else if (x.compId && grp[x.compId].length > 1) {
+      var g = grp[x.compId], tot = sum(g.map(function (y) { return y.price || 0; }));
+      x.id = "c" + x.compId + "-" + (await sha1hex([x.address, x.name || "", x.units, x.price == null ? "" : x.price].join("|"))).slice(0, 6); x.multiN = g.length; if (tot) x.multiTotal = tot;
+    } else x.id = x.compId ? "c" + x.compId : "u" + (await sha1hex([x.address, x.date, x.price == null ? "" : x.price].join("|"))).slice(0, 11);
+  }
+  /* against what MarketIQ already has: same id, the same CoStar property within 14 days, or the same building + date within 14 days */
+  var have = {}, byP = {}, bySt = {};
+  S.raw.sales.forEach(function (s) {
+    have[s.id] = s;
+    if (s.propId) (byP[s.propId] = byP[s.propId] || []).push(s);
+    var sk = streetCore(streetKey(s.address)); if (sk) (bySt[s.state + "|" + sk] = bySt[s.state + "|" + sk] || []).push(s);
+  });
+  var fresh = [], dups = [];
+  uniq.forEach(function (x) {
+    var hit = have[x.id], why = hit ? (x.pending ? "Already here as under contract" : "Already here (same CoStar comp)") : "";
+    if (!hit && !x.pending && x.propId) { hit = (byP[x.propId] || []).find(function (s) { return !s.pending && s.date && Math.abs(days(s.date, x.date)) <= 14; }); if (hit) why = "Already here (same CoStar property, sold " + fmtDs(hit.date) + ")"; }
+    if (!hit && !x.pending) {
+      var xp = addrParts(x.address);
+      hit = (bySt[x.state + "|" + streetCore(streetKey(x.address))] || []).find(function (s) { return !s.pending && s.date && Math.abs(days(s.date, x.date)) <= 14 && partsMatch(xp, addrParts(s.address)); });
+      if (hit) why = "Already here (" + hit.address + ", sold " + fmtDs(hit.date) + (hit.price ? " for " + mshort(hit.price) : "") + ")";
+    }
+    if (hit) dups.push({c: x, why: why}); else fresh.push(x);
+  });
+  return {fresh: fresh, dups: dups, inFile: inFile};
 }
 function importCostar(file) {
   var fr = new FileReader();
-  fr.onload = function () {
+  fr.onload = async function () {
+    var P, Q;
     try {
       var wb = XLSX.read(new Uint8Array(fr.result), {type: "array", cellDates: true});
       var aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1, raw: true, defval: ""});
-      var hi = aoa.findIndex(function (r) { return r.some(function (c) { return /address/i.test(String(c)); }) && r.some(function (c) { return /sale|price/i.test(String(c)); }); });
-      if (hi < 0) throw new Error("couldn't find a header row with Address and Sale Price");
-      var hdr = aoa[hi].map(function (h) { return String(h).trim(); }), map = {};
-      COSTAR_MAP.forEach(function (m) { var i = hdr.findIndex(function (h) { return m[1].test(h); }); if (i > -1) map[m[0]] = i; });
-      if (map.address == null || map.date == null) throw new Error("no Property Address / Sale Date column");
-      var have = {}; S.raw.sales.forEach(function (s) { have[(s.compId || "") + "|" + streetKey(s.address) + "|" + s.date] = 1; have["|" + streetKey(s.address) + "|" + s.date] = 1; });
-      var rows = aoa.slice(hi + 1).filter(function (r) { return r[map.address]; }).map(function (r) {
-        var c = {};
-        Object.keys(map).forEach(function (k) {
-          var v = r[map[k]];
-          if (k === "date") v = xlDate(v);
-          else if (["price", "units", "sf", "yearBuilt", "lat", "lng", "cap", "csAsking", "daysOnMkt"].indexOf(k) > -1) v = parseNum(v);
-          else v = fixText(String(v == null ? "" : v)).trim();
-          if (v !== "" && v != null) c[k] = v;
-        });
-        var pm = c.address && /\s*\((Part of an? [^)]*)\)\s*$/i.exec(c.address); if (pm) { c.portfolio = pm[1]; c.address = c.address.slice(0, pm.index); }
-        if (c.cap != null && c.cap < 1) c.cap = Math.round(c.cap * 10000) / 100;
-        c.state = String(c.state || "DC").toUpperCase().slice(0, 2);
-        if (typeof c.lat === "number" && typeof c.lng === "number") c.geo = [c.lat, c.lng];
-        delete c.lat; delete c.lng;
-        c._dup = !!(have[(c.compId || "") + "|" + streetKey(c.address) + "|" + c.date] || have["|" + streetKey(c.address) + "|" + c.date]);
-        return c;
-      }).filter(function (c) { return c.date && c.units >= 5; });
-      var fresh = rows.filter(function (c) { return !c._dup; });
-      openModal('<div class="mh"><div><div class="t">Import CoStar sales</div><div class="s">' + esc(file.name) + " · " + rows.length + " sales of 5+ units · <b>" + fresh.length + ' new</b></div><div class="s small">' + Object.keys(map).map(function (k) { return esc(k) + " ← " + esc(hdr[map[k]]); }).join(", ") + '</div></div><button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div>' +
-        '<div class="mb">' + (fresh.length ? '<table class="ptable"><thead><tr><th>Address</th><th>St</th><th>Sold</th><th>Price</th><th>Units</th><th>Buyer</th></tr></thead><tbody>' + fresh.slice(0, 300).map(function (c) { return "<tr><td>" + esc(c.address) + "</td><td>" + esc(c.state) + "</td><td>" + fmtDs(c.date) + "</td><td>" + mshort(c.price) + "</td><td>" + n0(c.units) + "</td><td>" + esc(c.buyer || "") + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="muted">Every sale in this file is already here.</div>') + "</div>" +
-        '<div class="mf"><span class="small muted">Sales are matched to listings automatically after import.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button>' + (fresh.length ? '<button class="btn sm primary" id="cImpGo">Add ' + fresh.length + " sales</button>" : "") + "</div>");
-      if ($("cImpGo")) $("cImpGo").onclick = async function () {
-        this.disabled = true; this.textContent = "Adding…";
-        try { await addSales(fresh, file.name); closeModal(); toast(fresh.length + " sales added"); }
-        catch (e) { toast("Could not import: " + e.message, true); this.disabled = false; }
-      };
-    } catch (e) { toast("Couldn't read that file: " + e.message, true); }
+      P = parseCostar(aoa); Q = await costarPlan(P);
+    } catch (e) { return toast("Couldn't read that file: " + e.message, true); }
+    var fresh = Q.fresh, sold = fresh.filter(function (c) { return !c.pending; }).length, uc = fresh.length - sold;
+    var need = ["address", "date", "price", "units", "status", "compId", "propId", "state", "city", "buyer", "brokerCo", "lat"];
+    var mapRows = need.map(function (f) { var i = P.map[f]; return "<tr><td>" + (COSTAR_LBL[f] || f) + "</td><td>" + (i == null ? '<span class="muted">not in this file</span>' : esc(P.hdr[i])) + "</td></tr>"; }).join("");
+    var other = Object.keys(P.map).filter(function (f) { return need.indexOf(f) < 0; }).length;
+    var skip = P.st.small + P.st.summary + P.st.nodate;
+    var row = function (c, i, chk) {
+      return "<tr>" + (i == null ? "<td></td>" : '<td><input type="checkbox" class="ciChk" data-i="' + i + '"' + (chk ? " checked" : "") + "></td>") + "<td>" + esc(c.name && c.name !== c.address ? c.name + " · " + c.address : c.address) + "</td><td>" + esc(c.state) + "</td><td>" +
+        (c.pending ? '<span class="pill blue">' + esc(c.pendingStatus || "Under contract") + "</span>" : fmtDs(c.date)) + "</td><td>" + mshort(c.price) + "</td><td>" + n0(c.units) + "</td><td>" + esc(c.buyer || "") + "</td></tr>";
+    };
+    var dupList = Q.dups.concat(Q.inFile);
+    openModal('<div class="mh"><div><div class="t">Import CoStar sales</div><div class="s">' + esc(file.name) + "</div></div>" +
+      '<button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div><div class="mb">' +
+      '<div class="ci-sum"><div><b>' + n0(P.st.read) + "</b><span>rows read</span></div><div class=\"ok\"><b>" + n0(fresh.length) + "</b><span>new" + (uc ? " (" + uc + " under contract)" : "") + "</span></div>" +
+      '<div class="dup"><b>' + n0(Q.dups.length) + "</b><span>already in MarketIQ</span></div><div class=\"dup\"><b>" + n0(Q.inFile.length) + "</b><span>repeats in the file</span></div>" +
+      "<div><b>" + n0(skip) + "</b><span>skipped (" + [P.st.small ? P.st.small + " under 5 units" : "", P.st.summary ? P.st.summary + " portfolio totals" : "", P.st.nodate ? P.st.nodate + " no sale date" : ""].filter(Boolean).join(", ") + ")</span></div></div>" +
+      '<details class="ci-map"><summary>Columns found (' + Object.keys(P.map).length + " of " + P.hdr.filter(Boolean).length + ")</summary><table class=\"ptable\"><tbody>" + mapRows + "</tbody></table>" +
+      (other ? '<div class="small muted">Plus ' + other + " more (building SF, year built, class, cap rate, seller, sale condition, notes…).</div>" : "") + "</details>" +
+      (fresh.length ? '<div class="ci-h">New sales <span class="small muted">uncheck any you don\'t want</span><label class="small" style="margin-left:auto"><input type="checkbox" id="ciAll" checked> all</label></div>' +
+        '<div class="ci-scroll"><table class="ptable"><thead><tr><th></th><th>Property</th><th>St</th><th>Sold</th><th>Price</th><th>Units</th><th>Buyer</th></tr></thead><tbody>' +
+        fresh.map(function (c, i) { return row(c, i, true); }).join("") + "</tbody></table></div>" : '<div class="muted" style="margin:14px 0">Nothing new: every sale in this file is already in MarketIQ.</div>') +
+      (dupList.length ? '<details class="ci-map"><summary>Duplicates not added (' + dupList.length + ")</summary><div class=\"ci-scroll\"><table class=\"ptable\"><thead><tr><th></th><th>Property</th><th>St</th><th>Sold</th><th>Price</th><th>Units</th><th>Why</th></tr></thead><tbody>" +
+        dupList.map(function (d) { return row(d.c, null).replace(/<td>[^<]*<\/td><\/tr>$/, "<td class=\"small\">" + esc(d.why) + "</td></tr>"); }).join("") + "</tbody></table></div></details>" : "") +
+      '</div><div class="mf"><span class="small muted">Sales are matched to listings automatically after import.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button>' +
+      (fresh.length ? '<button class="btn sm primary" id="cImpGo">Add ' + fresh.length + " sales</button>" : "") + "</div>");
+    var picked = function () { return fresh.filter(function (c, i) { var b = document.querySelector('.ciChk[data-i="' + i + '"]'); return b && b.checked; }); };
+    var upd = function () { var n = picked().length; if ($("cImpGo")) { $("cImpGo").textContent = "Add " + n + " sales"; $("cImpGo").disabled = !n; } };
+    document.querySelectorAll(".ciChk").forEach(function (b) { b.onchange = upd; });
+    if ($("ciAll")) $("ciAll").onchange = function () { var on = this.checked; document.querySelectorAll(".ciChk").forEach(function (b) { b.checked = on; }); upd(); };
+    if ($("cImpGo")) $("cImpGo").onclick = async function () {
+      var go = picked(); if (!go.length) return;
+      this.disabled = true; this.textContent = "Adding…";
+      try { await addSales(go, file.name); closeModal(); toast(go.length + " sales added"); }
+      catch (e) { toast("Could not import: " + e.message, true); this.disabled = false; upd(); }
+    };
   };
   fr.readAsArrayBuffer(file);
 }
@@ -3074,7 +3202,7 @@ async function addSales(rows, fname) {
   var stamp = new Date().toISOString().replace(/\.\d+Z$/, "Z"), out = [];
   for (var i = 0; i < rows.length; i++) {
     var c = Object.assign({}, rows[i]); delete c._dup;
-    c.id = c.compId ? "c" + String(c.compId).split(".")[0] : "u" + (await sha1hex([c.address, c.date, c.price].join("|"))).slice(0, 11);
+    c.id = c.id || (c.compId ? "c" + String(c.compId).split(".")[0] : "u" + (await sha1hex([c.address, c.date, c.price].join("|"))).slice(0, 11));
     if (c.price && c.units) c.ppu = Math.round(c.price / c.units);
     c.src = "costar:" + today(); c.addedBy = S.me.email;
     out.push(c);
@@ -3144,6 +3272,39 @@ document.addEventListener("keydown", function (e) {
   if (v && S.L.length) setView(v);
 });
 
+/* ================================================================ dropdowns
+   select.inp keeps its value and change events; a button + glass menu replaces the native popup (which can't be styled) */
+function cselUp(root) {
+  (root || document).querySelectorAll("select.inp").forEach(function (sel) {
+    if (sel._cs) return;
+    var b = document.createElement("button"); b.type = "button"; b.className = "inp cselb" + (sel.classList.contains("ml-auto") ? " ml-auto" : ""); b.title = sel.title || "";
+    sel.parentNode.insertBefore(b, sel.nextSibling); sel.style.display = "none"; sel._cs = b; b._sel = sel;
+    b.onclick = function (e) { e.stopPropagation(); cselOpen(b); };
+  });
+  cselSync(root);
+}
+function cselSync(root) { (root || document).querySelectorAll("select.inp").forEach(function (sel) { if (sel._cs) { var o = sel.options[sel.selectedIndex]; sel._cs.textContent = o ? o.text : ""; sel._cs.classList.toggle("on", !!sel.value && sel.closest(".fbar") != null); } }); }
+function cselClose() { var m = document.querySelector(".cselp"); if (m) m.remove(); document.querySelectorAll(".cselb.open").forEach(function (x) { x.classList.remove("open"); }); }
+function cselOpen(b) {
+  var was = b.classList.contains("open"); cselClose(); if (was) return;
+  var sel = b._sel, r = b.getBoundingClientRect(), m = document.createElement("div");
+  m.className = "cselp";
+  m.innerHTML = [].map.call(sel.options, function (o, i) { return '<div class="cselo' + (i === sel.selectedIndex ? " on" : "") + '" data-i="' + i + '">' + esc(o.text) + "</div>"; }).join("");
+  document.body.appendChild(m);
+  var w = Math.max(r.width, m.offsetWidth), left = Math.min(r.left, window.innerWidth - w - 8);
+  m.style.minWidth = r.width + "px"; m.style.left = Math.max(8, left) + "px"; m.style.top = (r.bottom + 6) + "px";
+  b.classList.add("open");
+  m.onclick = function (e) {
+    var o = e.target.closest(".cselo"); if (!o) return;
+    sel.selectedIndex = +o.dataset.i; cselClose(); cselSync(sel.parentNode);
+    sel.dispatchEvent(new Event("change", {bubbles: true}));
+  };
+}
+document.addEventListener("click", function (e) { if (!e.target.closest || !e.target.closest(".cselp")) cselClose(); });
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && document.querySelector(".cselp")) { e.stopPropagation(); cselClose(); } }, true);
+window.addEventListener("resize", cselClose);
+document.addEventListener("scroll", function (e) { if (!e.target.closest || !e.target.closest(".cselp")) cselClose(); }, true);
+
 /* ================================================================ wire */
 function wire() {
   document.querySelectorAll(".tab").forEach(function (b) { b.onclick = function () { setView(b.dataset.view); }; });
@@ -3151,6 +3312,7 @@ function wire() {
   $("nlImport").onclick = function () { $("csvFile").click(); };
   $("csvFile").onchange = function () { if (this.files[0]) importCsv(this.files[0]); this.value = ""; };
   $("sImport").onclick = function () { $("compFile").click(); };
+  $("csImpBtn").onclick = function () { $("compFile").click(); };
   $("compFile").onchange = function () { if (this.files[0]) importCostar(this.files[0]); this.value = ""; };
   $("gq").value = S.F.q || "";
   $("gq").oninput = function () { clearTimeout(wire._q); var v = this.value; wire._q = setTimeout(function () { S.F.q = v; saveF(); S.tp = 0; if (S.view === "map" || S.view === "table") render(true); else setView("table"); }, 200); };
