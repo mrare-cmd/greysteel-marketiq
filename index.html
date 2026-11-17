@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v31</span>
+    <span id="verBadge" title="Page version">v32</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1878,6 +1878,9 @@ function sTip(s) {
 function renderMap(soft) {
   initMap(); syncBar("map");
   var rows = S.L.filter(function (o) { return pass(o, "l", "map") && (!_shapes.length || (o.geo && inShapes(o.geo))); });
+  /* one dot per building: a listing that has a newer listing of the same building on the map steps aside (its card lists the others) */
+  var onMap = {}; rows.forEach(function (o) { onMap[o.id] = 1; });
+  rows = rows.filter(function (o) { return !o._prev.some(function (x) { return onMap[x.id] && (x.onMarket > o.onMarket || (x.onMarket === o.onMarket && x.id > o.id)); }); });
   var srt = {date: function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }, units: function (a, b) { return (b.units || 0) - (a.units || 0); },
     ask: function (a, b) { return (b._ask || 0) - (a._ask || 0); }, ppu: function (a, b) { return (b._ppu || 0) - (a._ppu || 0); }, name: function (a, b) { return String(a.name).localeCompare(b.name); }}[$("msort").value] || function () { return 0; };
   rows.sort(srt);
