@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v30</span>
+    <span id="verBadge" title="Page version">v31</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1154,6 +1154,11 @@ function sameBldg(a, b) {
 }
 
 /* Greysteel's own listings (gs:1) */
+function mktLbl(o) { return o._status === "Dead" ? "Last on market" : o._status === "Closed" || o._status === "Relisted" ? "Listed" : "On market"; }
+function mktVal(o, sep) {
+  var d = o._days != null && o._days >= 0 ? n0(o._days) + " days" : "";
+  return fmtD(o.onMarket) + (o._status === "Dead" || !d ? "" : sep + d + (o._status === "Closed" || o._status === "Relisted" ? " ago" : ""));
+}
 function gsBadge(o) { return o && o.gs ? ' <span class="pill gsb" title="Greysteel listing">Greysteel</span>' : ""; }
 function locLine(o) { return [o.address, o.city, o.state].filter(Boolean).join(", ") || (o.gs ? "No address in the Salesforce report" : "No address"); }
 
@@ -1859,7 +1864,7 @@ function lTip(o) {
     ttRow("Purchase price", o._sale ? "<b>" + mshort(o._sale.price) + "</b> \u00b7 " + fmtD(o._sale.date) + (o._spread != null ? " \u00b7 " + spr(o._spread) + " vs ask" : "") : "") +
     (o._sale ? ttRow("Cap @ close", o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "", "capk") : "") +
     ttRow("Listing broker", esc([o.broker, o.firm || o.brokerCo].filter(Boolean).join(" \u00b7 "))) +
-    ttRow(o._status === "Dead" ? "Last on market" : "On market", fmtD(o.onMarket) + (o._status !== "Dead" && o._days != null && o._days >= 0 ? " \u00b7 " + n0(o._days) + " days" : "")) +
+    ttRow(mktLbl(o), mktVal(o, " \u00b7 ")) +
     (prev.length ? ttRow("Other listings", prev.slice(0, 3).map(function (x) { return fmtDs(x.onMarket) + (x.firm || x.brokerCo ? " (" + esc(x.firm || x.brokerCo) + ")" : ""); }).join(", ") + (prev.length > 3 ? " +" + (prev.length - 3) : "")) : "") +
     "</div></div>";
 }
@@ -2471,7 +2476,7 @@ function propSecHtml(o) {
   if (ut.own.length || ut.res.length) h += '<div class="k">Utilities</div><div class="v">' + (ut.own.length ? "Owner pays " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "Residents pay " + ut.res.join(", ") : "") + "</div>";
   if (d.egi || d.noi || d.printed_noi) h += '<div class="k">' + esc(d.kind === "gs" ? "Underwritten T-12" : "T-12") + '</div><div class="v">' + [d.egi ? "EGI " + mshort(d.egi) : "", d.total_pu ? "OpEx " + money(d.total_pu) + "/unit" : "", (d.noi || d.printed_noi) ? "NOI " + mshort(d.noi || d.printed_noi) : ""].filter(Boolean).join(" · ") +
     (d.period ? '<div class="small muted">' + esc(d.period) + "</div>" : "") + "</div>";
-  if (d.no_data) h += '<div class="k">T-12</div><div class="v small muted">' + esc(d.no_data) + "</div>";
+  if (d.no_data && !(d.egi || d.noi || d.printed_noi)) h += '<div class="k">T-12</div><div class="v small muted">None found for this listing</div>';
   return h + "</div></div>";
 }
 
@@ -2605,7 +2610,7 @@ function renderRec(o, full, soft) {
         full.lines.map(function (x) { return "<tr><td>" + esc(x.l) + '</td><td class="muted">' + esc(OPX_L[x.c] || x.c || "") + '</td><td class="r num">' + money(x.a) + "</td></tr>"; }).join("") + "</tbody></table></details>";
     }
     if (full && full.om_x) h += '<div class="rc-note">Checked against the OM: ' + esc(full.om_x) + "</div>";
-  } else h += '<p class="rc-p muted">' + esc(d.no_data || "No operating statement.") + "</p>";
+  } else h += '<p class="rc-p muted">No historical operating statement was found for this listing.</p>' + (d.no_data ? '<details class="rc-lines"><summary>Why</summary><p class="rc-p muted" style="font-size:12.5px">' + esc(String(d.no_data).length > 700 ? String(d.no_data).slice(0, 700) + "…" : d.no_data) + "</p></details>" : "");
   h += "</section>";
   /* notes */
   if (full && (full.notes || (full.flags && full.flags.length))) {
@@ -2632,7 +2637,7 @@ function openListing(id, keep) {
   S.drawer = {kind: "l", id: id};
   var s = ST[o._status];
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(locLine(o)) + "</div>" +
-    '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">' + (o._status === "Dead" ? "Last on market " : "On market ") + fmtD(o.onMarket) + (o._status !== "Dead" && o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
+    '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">' + mktLbl(o) + " " + mktVal(o, " · ") + "</span>" +
     (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
   var h = recBtnHtml(o);
   /* pricing */
