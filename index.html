@@ -751,6 +751,10 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .gpop.maplibregl-popup-anchor-top .maplibregl-popup-content,.gpop.maplibregl-popup-anchor-top-left .maplibregl-popup-content,.gpop.maplibregl-popup-anchor-top-right .maplibregl-popup-content{transform-origin:50% 0}
 .gpop.maplibregl-popup-anchor-left .maplibregl-popup-content{transform-origin:0 50%}
 .gpop.maplibregl-popup-anchor-right .maplibregl-popup-content{transform-origin:100% 50%}
+.gpop.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content{transform-origin:0 100%}
+.gpop.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content{transform-origin:100% 100%}
+.gpop.maplibregl-popup-anchor-top-left .maplibregl-popup-content{transform-origin:0 0}
+.gpop.maplibregl-popup-anchor-top-right .maplibregl-popup-content{transform-origin:100% 0}
 @keyframes popIn{from{opacity:0;transform:scale(.97)}}
 .gpop .maplibregl-popup-content{padding:0;background:rgba(255,255,255,.86);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:18px;box-shadow:var(--lift-hi)}
 .gpop .maplibregl-popup-tip{display:none}
@@ -949,7 +953,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v43</span>
+    <span id="verBadge" title="Page version">v44</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1915,13 +1919,39 @@ function drawData() {
   _map.getSource("draw").setData({type: "FeatureCollection", features: f});
 }
 /* MapLibre's Popup.addTo() removes and rebuilds an open popup, so only touch it when the pointer reaches a different dot */
+/* the hover card opens on the side of the dot with room: it is measured, and each placement is scored against the floating
+   panels over the full-bleed map (header, filter bar, list, layer buttons, legend, map controls, side panel) */
+var _popMz = null;
+function popSize(html) {
+  if (!_popMz) { _popMz = document.createElement("div"); _popMz.className = "maplibregl-popup gpop"; _popMz.style.cssText = "position:fixed;left:-9999px;top:0;visibility:hidden;max-width:330px;transform:none"; _popMz.innerHTML = '<div class="maplibregl-popup-content" style="animation:none"></div>'; document.body.appendChild(_popMz); }
+  var c = _popMz.firstChild; c.innerHTML = html;
+  return {w: c.offsetWidth, h: c.offsetHeight};
+}
+function popAnchor(html, lngLat) {
+  var sz = popSize(html), w = sz.w, h = sz.h, mr = _map.getContainer().getBoundingClientRect(), pt = _map.project(lngLat), x = mr.left + pt.x, y = mr.top + pt.y, o = 16, c = 11;
+  var obs = ["header", "#fb_map", "#vMap .mv-side", "#mLayers", "#geoBox", "#mLegend", "#vMap .maplibregl-ctrl-top-right", "#drawer.open"].map(function (s) { return document.querySelector(s); })
+    .filter(function (el) { if (!el) return false; var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden"; })
+    .map(function (el) { var r = el.getBoundingClientRect(); return [r.left - 6, r.top - 6, r.right + 6, r.bottom + 6]; });
+  var box = {bottom: [x - w / 2, y - o - h], top: [x - w / 2, y + o], "bottom-left": [x + c, y - c - h], "bottom-right": [x - c - w, y - c - h], "top-left": [x + c, y + c], "top-right": [x - c - w, y + c], left: [x + o, y - h / 2], right: [x - o - w, y - h / 2]};
+  var ov = function (a, b) { return Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1])); };
+  var best = "bottom", bs = Infinity;
+  Object.keys(box).forEach(function (k) {
+    var r = [box[k][0], box[k][1], box[k][0] + w, box[k][1] + h], s = 0;
+    obs.forEach(function (b) { s += ov(r, b); });
+    s += (w * h - ov(r, [mr.left + 4, mr.top + 4, mr.right - 4, mr.bottom - 4])) * 2;   /* off the map counts double */
+    if (s < bs - 1) { bs = s; best = k; }
+  });
+  return best;
+}
 function popShow(kind, id, lngLat) {
   if (_draw) return;
   var key = kind + id;
-  if (!_pop) _pop = new maplibregl.Popup({closeButton: false, closeOnClick: false, offset: 16, maxWidth: "330px", className: "gpop"});
-  if (_popId === key && _pop.isOpen()) return;
+  if (_popId === key && _pop && _pop.isOpen()) return;
   var r = kind === "l" ? S.byId[id] : S.saleById[id]; if (!r) return;
-  _pop.setHTML(kind === "l" ? lTip(r) : sTip(r)); _popId = key;
+  var html = kind === "l" ? lTip(r) : sTip(r), a = popAnchor(html, lngLat);
+  if (_pop && _pop._anc !== a) { _pop.remove(); _pop = null; }
+  if (!_pop) { _pop = new maplibregl.Popup({closeButton: false, closeOnClick: false, offset: 16, maxWidth: "330px", className: "gpop", anchor: a}); _pop._anc = a; }
+  _pop.setHTML(html); _popId = key;
   _pop.setLngLat(lngLat);
   if (!_pop.isOpen()) _pop.addTo(_map);
 }
