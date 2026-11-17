@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v27</span>
+    <span id="verBadge" title="Page version">v28</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2633,7 +2633,7 @@ function openListing(id, keep) {
   if (o._uc) h += '<div class="mini"><div class="g"><b>Under contract per CoStar</b><div>' + (o._uc.csAsking ? "asking " + mshort(o._uc.csAsking) + " · " : "") + (o._uc.daysOnMkt ? o._uc.daysOnMkt + " days on market · " : "") + esc(o._uc.address) + '</div></div><span class="pill blue">' + esc(o._uc.pendingStatus || "Under Contract") + '</span><button class="btn sm" onclick="openSale(\'' + o._uc.id + "')\">Open</button></div>";
   var resales = S.sales.filter(function (x) { return x._resaleOf === o; });
   if (resales.length) h += '<div class="small muted" style="margin-top:6px">Later resale' + (resales.length > 1 ? "s" : "") + " of the building, not counted as this listing's outcome: " + resales.map(function (x) { return '<a href="#" onclick="openSale(\'' + x.id + '\');return false">' + fmtD(x.date) + " " + mshort(x.price) + "</a>"; }).join(", ") + "</div>";
-  h += '<div style="margin-top:8px;display:flex;gap:6px"><input class="inp" id="lnkQ" placeholder="Find a sale to link: address or buyer" style="flex:1"></div><div class="srch-res" id="lnkRes"></div></div>';
+  h += '<div style="margin-top:8px;display:flex;gap:6px"><input class="inp" id="lnkQ" placeholder="Search any CoStar sale: name, address, buyer, seller" style="flex:1"></div><div class="srch-res" id="lnkRes"></div></div>';
   var hSales = h; h = hTop;
   /* fields */
   h += '<div class="dr-sec"><div class="h">Details <span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400">click a value to edit · shared with the team</span></div><div class="kv">' +
@@ -2674,10 +2674,23 @@ function openListing(id, keep) {
   };
   $("hideBtn").onclick = function () { saveOps([{t: "set", k: "l/" + o.id, f: "hidden", v: o.hidden ? null : "1"}], o.hidden ? "unhide" : "hide"); };
   $("lnkQ").oninput = function () {
-    var q = normAddr(this.value);
-    if (q.length < 3) { $("lnkRes").innerHTML = ""; return; }
-    var res = S.sales.filter(function (x) { return x.state === o.state && x._link !== o && x._q.indexOf(q) > -1 && (days(o.onMarket, x.date) || 0) >= -120; }).slice(0, 8);
-    $("lnkRes").innerHTML = res.map(function (x) { return '<div class="mini"><div class="g"><b>' + esc(x.address) + " · " + fmtD(x.date) + "</b><div>" + mshort(x.price) + " · " + x.units + " units" + (x._link ? " · now on " + esc(x._link.name) : "") + '</div></div><button class="btn sm" data-lk="' + x.id + '">Link</button></div>'; }).join("") || '<div class="small muted">No DC sales match.</div>';
+    /* any text against every CoStar sale (name, address, city, buyer, seller, brokers), every word must appear;
+       same state first, then the closings nearest the listing date */
+    var raw = this.value.toLowerCase().replace(/\s+/g, " ").trim();
+    if (raw.length < 2) { $("lnkRes").innerHTML = ""; return; }
+    var words = raw.split(" "), nq = normAddr(raw);
+    var res = S.sales.filter(function (x) {
+      if (x.pending || x._link === o) return false;
+      if (x._qr == null) x._qr = [x.name, x.address, x.city, x.state, x.buyer, x.seller, x.brokerCo, x.brokerAgent, x.portfolio].join(" ").toLowerCase();
+      return words.every(function (w) { return x._qr.indexOf(w) > -1; }) || (nq.length > 2 && x._q.indexOf(nq) > -1);
+    });
+    var near = function (x) { var d = days(o.onMarket, x.date); return d == null ? 1e6 : Math.abs(d); };
+    res.sort(function (x, y) { return (x.state === o.state ? 0 : 1) - (y.state === o.state ? 0 : 1) || near(x) - near(y); });
+    var more = res.length > 15; res = res.slice(0, 15);
+    $("lnkRes").innerHTML = res.map(function (x) {
+      return '<div class="mini"><div class="g"><b>' + esc(x.name && x.name !== x.address ? x.name + " · " + x.address : x.address) + "</b><div>" + esc([x.city, x.state].filter(Boolean).join(", ")) + " · " + fmtD(x.date) + " · " + mshort(x.price) + " · " + x.units + " units" +
+        (x.buyer ? " · buyer " + esc(x.buyer) : "") + (x._link ? " · now on " + esc(x._link.name) : "") + '</div></div><button class="btn sm" data-lk="' + x.id + '">Link</button></div>';
+    }).join("") + (more ? '<div class="small muted" style="margin-top:6px">Showing 15; type more to narrow it down.</div>' : "") || '<div class="small muted">No CoStar sales match.</div>';
     $("lnkRes").querySelectorAll("[data-lk]").forEach(function (b) { b.onclick = function () { saveOps([{t: "set", k: "s/" + b.dataset.lk, f: "link", v: o.id}], "link"); }; });
   };
 }
