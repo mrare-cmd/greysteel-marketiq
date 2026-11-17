@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v33</span>
+    <span id="verBadge" title="Page version">v34</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2185,7 +2185,7 @@ function renderTable() {
   $("tCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> listings · " + n0(sum(rows.map(function (o) { return o.land ? 0 : o.units; }))) + " units";
   $("tbl").innerHTML = "<thead><tr>" + TCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.cap ? ' title="Cap rate from the T-12 NOI on the listing"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (o) {
-      return '<tr data-id="' + o.id + '" class="' + (o._hl ? "hl-" + o._hl : "") + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TCOLS.map(function (c) {
+      return '<tr data-id="' + o.id + '" class="' + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TCOLS.map(function (c) {
         var v = o[c.k], h;
         if (c.k === "_status") h = '<span class="pill ' + ST[v].pill + '">' + v + "</span>";
         else if (c.k === "om") h = v ? '<a href="' + esc(v) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">OM</a>' : "";
@@ -2382,8 +2382,9 @@ function detPost(o) {
 /* a listing with no T-12 NOI of its own takes the record's (Greysteel's report has no NOI column; many external rows lack it) */
 function detNoi(o) {
   if (o.noi) return;
-  var d = o._det, n = d && (d.noi || d.printed_noi);
-  o._noiE = n ? n : null; o._noiSrc = o._noiE ? (d.kind === "gs" ? "model" : "om") : null;   /* a negative T-12 NOI shows; caps only from a positive one */
+  /* Greysteel records: the NOI our OM states (d.om_noi, read from the OM in Box) wins over the model's raw T-12 */
+  var d = o._det, n = d && ((d.kind === "gs" && d.om_noi) || d.noi || d.printed_noi);
+  o._noiE = n ? n : null; o._noiSrc = o._noiE ? (d.kind === "gs" ? (d.om_noi ? "om" : "model") : "om") : null;   /* a negative T-12 NOI shows; caps only from a positive one */
   var ask = o._ask || o.asking, pos = o._noiE > 0;
   o._capAsk = pos && ask ? o._noiE / ask : null;
   o._capClose = pos && o._sale && o._sale.price ? o._noiE / o._sale.price : null;
@@ -2479,6 +2480,7 @@ function propSecHtml(o) {
   if (ut.own.length || ut.res.length) h += '<div class="k">Utilities</div><div class="v">' + (ut.own.length ? "Owner pays " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "Residents pay " + ut.res.join(", ") : "") + "</div>";
   if (d.egi || d.noi || d.printed_noi) h += '<div class="k">' + esc(d.kind === "gs" ? "Underwritten T-12" : "T-12") + '</div><div class="v">' + [d.egi ? "EGI " + mshort(d.egi) : "", d.total_pu ? "OpEx " + money(d.total_pu) + "/unit" : "", (d.noi || d.printed_noi) ? "NOI " + mshort(d.noi || d.printed_noi) : ""].filter(Boolean).join(" · ") +
     (d.period ? '<div class="small muted">' + esc(d.period) + "</div>" : "") + "</div>";
+  if (d.kind === "gs" && d.om_noi) h += '<div class="k">NOI per our OM</div><div class="v">' + money(d.om_noi) + (d.om_pf_noi ? " in place · Year 1 pro forma " + money(d.om_pf_noi) : "") + '<div class="small muted">after reserves</div></div>';
   if (d.no_data && !(d.egi || d.noi || d.printed_noi)) h += '<div class="k">T-12</div><div class="v small muted">None found for this listing</div>';
   return h + "</div></div>";
 }
@@ -2543,7 +2545,7 @@ function mixTable(mix, isGs, d) {
 }
 function renderRec(o, full, soft) {
   var d = full || o._det, ld = !full, isGs = d.kind === "gs";
-  var st = ST[o._status], noi = d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
+  var st = ST[o._status], noi = (isGs && d.om_noi) || d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
   var mix = isGs ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
   var h = '<div class="rc-top"><button class="rc-back" onclick="closeRec()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back</button>' +
     '<div class="rc-tt"><div class="rc-n">' + esc(o.name) + '</div><div class="rc-a">' + esc(locLine(o)) + (d.county && String(d.county).toLowerCase() !== String(o.city || "").toLowerCase() ? " · " + esc(d.county) : "") + "</div></div>" +
@@ -2577,7 +2579,9 @@ function renderRec(o, full, soft) {
     recTile("Cap at asking", o._capAsk ? pct(o._capAsk, 2) : noi > 0 && ask ? pct(noi / ask, 2) : "", "T-12 NOI ÷ asking") +
     recTile("Closed", o._sale ? mshort(o._sale.price) : "", o._sale ? fmtD(o._sale.date) : "no matched CoStar sale") +
     recTile("vs. ask", spr(o._spread) || "", o._dtc != null ? o._dtc + " days to close" : "") + "</div>" +
-    (d.sf_noi ? '<div class="rc-note">Salesforce T-12 NOI ' + money(d.sf_noi) + (full && full.sf_noi_note ? ": " + esc(full.sf_noi_note) : "") + "</div>" : "") + "</section>";
+    (d.sf_noi ? '<div class="rc-note">Salesforce T-12 NOI ' + money(d.sf_noi) + (full && full.sf_noi_note ? ": " + esc(full.sf_noi_note) : "") + "</div>" : "") +
+    (isGs && d.om_noi ? '<div class="rc-note"><b>NOI from our OM: ' + money(d.om_noi) + "</b>" + (d.om_noi_label ? " (" + esc(d.om_noi_label) + ")" : "") + (d.om_pf_noi ? " · pro forma " + money(d.om_pf_noi) : "") +
+      (d.noi || d.printed_noi ? " · the model's raw T-12 NOI is " + money(d.noi || d.printed_noi) : "") + (d.om_box ? ' · <a href="' + BOXF + esc(d.om_box) + '" target="_blank" rel="noopener">OM ↗</a>' : "") + (d.om_note ? '<div class="rc-sub">' + esc(d.om_note) + "</div>" : "") + "</div>" : "") + "</section>";
   h += "</div>";
   /* property profile */
   var kv = function (k, v) { return v ? '<div class="k">' + k + '</div><div class="v">' + v + "</div>" : ""; };
@@ -2674,19 +2678,15 @@ function openListing(id, keep) {
   if (o._prev.length) h += '<div class="dr-sec"><div class="h">Other listings of this building</div>' + o._prev.slice().sort(function (a, b) { return a.onMarket < b.onMarket ? 1 : -1; }).map(function (x) {
     return '<div class="mini"><div class="g"><b>' + esc(x.name) + " · " + fmtD(x.onMarket) + "</b><div>" + esc([x.broker, x.firm || x.brokerCo].filter(Boolean).join(" · ")) + (x._ask ? " · ask " + mshort(x._ask) : "") + '</div></div><button class="btn sm" onclick="openListing(\'' + x.id + "')\">Open</button></div>";
   }).join("") + "</div>";
-  /* highlight + hide */
-  h += '<div class="dr-sec"><div class="h">Highlight</div><div class="hls">' + HL.map(function (c) { return '<button style="background:' + HL_C[c] + '" class="' + (o._hl === c ? "on" : "") + '" data-hl="' + c + '" title="' + c + '"></button>'; }).join("") +
-    '<button class="btn sm" data-hl="" style="width:auto;height:26px;border-radius:13px;border:1px solid var(--border)">None</button><span class="ml-auto"></span><button class="btn sm danger" id="hideBtn">' + (o.hidden ? "Unhide listing" : "Hide listing") + "</button></div></div>";
   h += '<div class="dr-sec"><div class="h">Map location</div><div style="display:flex;gap:6px"><input class="inp" id="pinQ" style="flex:1" placeholder="Street address, city, state" value="' + esc(o.geo ? "" : firstStreet(o.address) + (o.city ? ", " + o.city : "") + ", " + o.state) + '"><button class="btn sm" id="pinGo">' + (o.geo ? "Move pin" : "Set pin") + '</button></div><div class="small muted" style="margin-top:4px">' + (o.geo ? "On the map at " + o.geo[0].toFixed(5) + ", " + o.geo[1].toFixed(5) + (o._ed.geo ? " (set by " + esc(String(o._ed.geo.by).split("@")[0]) + ")" : "") : "Not on the map: the address wasn't found. Type one the geocoder knows.") + "</div></div>";
   h += hSales;
-  h += '<div class="dr-sec small muted">Source: ' + esc(o.src || "") + (o.addedBy && o.addedBy !== "seed" ? " · added by " + esc(o.addedBy) + (o.addedAt ? " " + fmtD(o.addedAt.slice(0, 10)) : "") : "") + (o.geo ? "" : " · not on the map (address not found)") + "</div>";
+  h += '<div class="dr-sec small muted" style="display:flex;align-items:center;gap:10px"><span style="flex:1">Source: ' + esc(o.src || "") + (o.addedBy && o.addedBy !== "seed" ? " · added by " + esc(o.addedBy) + (o.addedAt ? " " + fmtD(o.addedAt.slice(0, 10)) : "") : "") + (o.geo ? "" : " · not on the map (address not found)") + '</span><button class="btn sm danger" id="hideBtn">' + (o.hidden ? "Unhide listing" : "Hide listing") + "</button></div>";
   $("drB").innerHTML = h;
   $("drawer").classList.add("open");
   if (!keep) { if (S.view === "map") renderMap(true); else if (S.view === "table") renderTable(); }
   /* wire */
   if ($("recBtn")) $("recBtn").onclick = function () { openRec(o.id); };
   $("drB").querySelectorAll(".v.ed").forEach(function (el) { el.onclick = function (e) { if (e.target.tagName === "A") return; startEdit(el, o); }; });
-  $("drB").querySelectorAll("[data-hl]").forEach(function (b) { b.onclick = function () { saveOps([{t: "hl", k: "l/" + o.id, c: b.dataset.hl || null}], "highlight"); }; });
   $("pinGo").onclick = async function () {
     var q = $("pinQ").value.trim(); if (!q) return;
     var parts = q.split(",").map(function (x) { return x.trim(); }), st = (parts.length > 2 ? parts[parts.length - 1] : o.state).toUpperCase().slice(0, 2);
