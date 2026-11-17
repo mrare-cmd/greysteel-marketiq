@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v19</span>
+    <span id="verBadge" title="Page version">v20</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -986,7 +986,7 @@ var STATUS = [
   {k: "Active", c: "#34c759", pill: "green", d: "Listed within the shelf life, no closing found"},
   {k: "Under Contract", c: "#0a84ff", pill: "blue", d: "CoStar lists it under contract, or set by hand"},
   {k: "Closed", c: "#ff9f0a", pill: "yellow", d: "Matched to a CoStar sale, or set by hand"},
-  {k: "Aged", c: "#aeaeb2", pill: "gray", d: "Older than the shelf life, no closing found"},
+  {k: "Dead", c: "#aeaeb2", pill: "gray", d: "Older than the shelf life, no closing found"},
   {k: "Relisted", c: "#ff375f", pill: "orange", d: "The building was listed again later; see the newer listing"},
   {k: "Off Market", c: "#636366", pill: "dark", d: "Withdrawn, set by hand"}
 ];
@@ -1173,10 +1173,11 @@ async function apiPost(path, body) {
 
 /* ---------------------------------------------------------------- state */
 var ST_DEFAULT = {map: {Active: 1, "Under Contract": 1}, table: {}};
+function stMigrate(st) { Object.keys(st || {}).forEach(function (v) { if (st[v] && st[v].Aged) { st[v].Dead = st[v].Aged; delete st[v].Aged; } }); return st; }   /* "Aged" became "Dead" in v20 */
 var S = {
   me: null, manifest: {}, raw: {listings: [], sales: [], overlay: {edits: {}, hl: {}}, imports: []},
   L: [], byId: {}, sales: [], saleById: {}, view: "map", drawer: null,
-  F: Object.assign(defaultF(), lsGet("miq_f", {})), st: lsGet("miq_st", JSON.parse(JSON.stringify(ST_DEFAULT))),
+  F: Object.assign(defaultF(), lsGet("miq_f", {})), st: stMigrate(lsGet("miq_st", JSON.parse(JSON.stringify(ST_DEFAULT)))),
   shelf: lsGet("miq_shelf", 180), layers: lsGet("miq_layers", {listings: 1, sales: 0}),
   tsort: {k: "onMarket", d: -1}, ssort: {k: "date", d: -1}, tp: 0, sp: 0, showHidden: false,
   nl: {per: 14}, dmonths: 24, geo: null,
@@ -1226,7 +1227,7 @@ async function poll() {
 
 /* ------------------------------------------------------------- derive ----
    listing status: a status set by hand wins; else Closed when a CoStar sale is
-   matched to it; else Active through the shelf life (S.shelf days, per person) after the date on market, then Aged.
+   matched to it; else Active through the shelf life (S.shelf days, per person) after the date on market, then Dead.
    MATCH RULE (tools/match.py): same state; street + overlapping house numbers, or
    the same property name; sale dated 30 days before to 730 days after the date on
    market; the latest such listing on or before the sale wins. A sale's "link" edit
@@ -1369,7 +1370,8 @@ function derive() {
   S.L.forEach(function (o) {
     o._prev = (bk[o.state + "|" + streetCore(o._parts[0].sk)] || []).filter(function (x) { return x !== o && !x.hidden && sameBldg(o, x); });
     var later = o._prev.some(function (x) { return x.onMarket > o.onMarket; });
-    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : o._uc ? "Under Contract" : later ? "Relisted" : o._days != null && o._days <= S.shelf ? "Active" : "Aged";
+    if (o.status === "Aged") o.status = "Dead";
+    o._status = o.status && ST[o.status] ? o.status : o._sale ? "Closed" : o._uc ? "Under Contract" : later ? "Relisted" : o._days != null && o._days <= S.shelf ? "Active" : "Dead";
   });
   S.firms = {};
   S.L.forEach(function (o) { var f = o.firm || o.brokerCo || ""; if (f) S.firms[f] = (S.firms[f] || 0) + 1; });
@@ -1404,7 +1406,7 @@ function render(soft) {
    One set of filters shared by every tab and kept per person (localStorage miq_f), shown as a bar
    across the top of each tab. The firm and broker lists only offer values that survive the other
    filters, with live counts (like the PBS8 database). Status is per tab: the map starts on what is
-   on the market, the table on everything. Shelf life (miq_shelf) decides Active vs Aged. */
+   on the market, the table on everything. Shelf life (miq_shelf) decides Active vs Dead. */
 var FB_VIEWS = {map: "l", dash: "l", new: "l", table: "l", sales: "s"};
 function defaultF() { return {q: "", states: {}, within: "", umin: "", umax: "", pmin: "", pmax: "", ppumin: "", ppumax: "", type: "", src: "", firm: "", broker: "", link: ""}; }
 function saveF() { lsSet("miq_f", S.F); lsSet("miq_st", S.st); }
@@ -1476,7 +1478,7 @@ function clearF(view) {
 function buildBar(view) {
   var kind = FB_VIEWS[view], el = $("fb_" + view);
   var h = "";
-  if (kind === "l") h += '<label class="shelf" title="Shelf life: how many days a listing counts as on the market after its date on market, when no closing is found. Older listings show as Aged."><span>Shelf life</span><input data-shelf inputmode="numeric"><em>days</em></label>';
+  if (kind === "l") h += '<label class="shelf" title="Shelf life: how many days a listing counts as on the market after its date on market, when no closing is found. Older listings show as Dead."><span>Shelf life</span><input data-shelf inputmode="numeric"><em>days</em></label>';
   h += '<input class="inp fq" data-f="q" placeholder="' + (kind === "s" ? "Search address, buyer, seller, broker" : "Search name, address, broker, client") + '">';
   h += '<span class="fg" data-states></span>';
   if (ST_DEFAULT[view]) h += '<div class="ms" data-ms><button class="inp msb"></button><div class="msp"></div></div>';
@@ -1559,7 +1561,7 @@ function syncBar(view) {
   cb.textContent = n ? "Clear " + n : "Clear"; cb.classList.toggle("on", !!n);
 }
 function statusDesc(k) {
-  return {Active: "Listed within the " + S.shelf + "-day shelf life, no closing found", Aged: "Older than the " + S.shelf + "-day shelf life, no closing found"}[k] || ST[k].d;
+  return {Active: "Listed within the " + S.shelf + "-day shelf life, no closing found", Dead: "Older than the " + S.shelf + "-day shelf life, no closing found"}[k] || ST[k].d;
 }
 function wireBars() {
   Object.keys(FB_VIEWS).forEach(buildBar);
@@ -1943,7 +1945,7 @@ function wireMap() {
 /* ================================================================ DASHBOARD */
 function kpi(l, v, d, unit) { return '<div class="card kpi"><div class="k-l">' + l + '</div><div class="k-v num"><span class="k-n">' + v + "</span>" + (unit ? '<span class="k-u">' + unit + "</span>" : "") + '</div><div class="k-d">' + (d || "") + "</div></div>"; }
 /* The dashboard reads one period (S.dper days; 0 = all): "listed" figures use the date on market, "closed" figures the
-   CoStar sale date. "On the market now" is always today. Close rate = closed / (closed + aged) among the period's listings. */
+   CoStar sale date. "On the market now" is always today. Close rate = closed / (closed + dead) among the period's listings. */
 function perLabel() { return {30: "last 30 days", 90: "last 90 days", 182: "last 6 months", 365: "last 12 months", 730: "last 24 months"}[S.dper] || "all time"; }
 function inPer(iso, back) {
   if (!iso) return false;
@@ -1951,7 +1953,7 @@ function inPer(iso, back) {
   if (!S.dper) return !back;
   return back ? d >= S.dper && d < 2 * S.dper : d < S.dper;
 }
-var DOUT = [["Closed", "#ff9f0a"], ["Under Contract", "#0a84ff"], ["Active", "#34c759"], ["Relisted", "#ff375f"], ["Aged", "#aeaeb2"], ["Off Market", "#636366"]];
+var DOUT = [["Closed", "#ff9f0a"], ["Under Contract", "#0a84ff"], ["Active", "#34c759"], ["Relisted", "#ff375f"], ["Dead", "#aeaeb2"], ["Off Market", "#636366"]];
 function thS(k, l, srt, cls, tip) { return '<th data-sk="' + k + '" class="' + (cls || "") + '"' + (tip ? ' title="' + esc(tip) + '"' : "") + ">" + l + (srt.k === k ? '<span class="ar">' + (srt.d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }
 function renderDash() {
   syncBar("dash");
@@ -1992,8 +1994,8 @@ function renderDash() {
   loadActivity();
 }
 /* Listing brokers. Measure (S.fmet): "n" listings, "usd" asking-price volume, "u" units. The outcome bars, On market /
-   Closed / Aged and the close rate all use the chosen measure. $ uses the asking price on every side (a closed listing's sale
-   price would be compared with aged listings that mostly have no ask); listings without an asking price drop out of it. */
+   Closed / Dead and the close rate all use the chosen measure. $ uses the asking price on every side (a closed listing's sale
+   price would be compared with dead listings that mostly have no ask); listings without an asking price drop out of it. */
 function fmetVal(o) {
   if (S.fmet === "u") return o.land ? 0 : o.units || 0;
   if (S.fmet === "usd") return o._ask || 0;
@@ -2013,7 +2015,7 @@ function renderFirms(listed, P) {
     if (o._sale) { if (o._sale.price && o._sale.units) r.sale.push(o._sale.price / o._sale.units); if (o._spread != null) r.spr.push(o._spread); if (o._dtc != null) r.dtc.push(o._dtc); }
   });
   var rows = Object.keys(fm).map(function (k) {
-    var r = fm[k], c = r.out.Closed || 0, a = r.out.Aged || 0;
+    var r = fm[k], c = r.out.Closed || 0, a = r.out.Dead || 0;
     r.tot = S.fmet === "u" ? r.u : S.fmet === "usd" ? r.usd : r.n;
     r.act = (r.out.Active || 0) + (r.out["Under Contract"] || 0); r.cl = c; r.ag = a; r.cr = c + a ? c / (c + a) : null;
     r.mAsk = median(r.ask); r.mSale = median(r.sale); r.mSpr = median(r.spr); r.mDtc = median(r.dtc); r.sts = Object.keys(r.st).sort().join(", ");
@@ -2024,19 +2026,19 @@ function renderFirms(listed, P) {
   var tot = {n: T("n"), u: T("u"), usd: T("usd"), sold: T("sold"), act: T("act"), cl: T("cl"), ag: T("ag")};
   $("dFirmS").textContent = rows.length + " firms · " + tot.n + " listings in the " + P + " · measured in " + fmetName() +
     (S.fmet === "usd" ? " (by asking price" + (noPrice ? "; " + noPrice + " of " + tot.n + " listings have no asking price and are left out" : "") + ")" : "") +
-    " · close rate = closed ÷ (closed + aged)";
+    " · close rate = closed ÷ (closed + dead)";
   $("dFirmLeg").innerHTML = DOUT.map(function (x) { return '<span><i style="background:' + x[1] + '"></i>' + x[0] + "</span>"; }).join("");
   var top = rows.slice().sort(function (a, b) { return b.tot - a.tot; }).slice(0, 12), mx = Math.max(1, Math.max.apply(null, top.map(function (r) { return r.tot; })));
   $("dFirmChart").innerHTML = top.map(function (r, i) {
     return '<div class="fo" data-firm="' + esc(r.k) + '" style="--i:' + i + '"><div class="nm" title="' + esc(r.k) + '">' + esc(r.k) + (r.k === "Greysteel" ? ' <span class="pill gsb">us</span>' : "") +
       '<small>' + fmetFmt(r.tot) + (S.fmet === "n" ? " listings" : S.fmet === "u" ? " units" : "") + '</small></div><div class="bar"><span style="width:' + (r.tot / mx * 100).toFixed(1) + '%">' +
       DOUT.map(function (x) { var v = r.out[x[0]] || 0; return v ? '<i style="flex:' + v + ';background:' + x[1] + '" data-tip="' + esc("<b>" + r.k + "</b><br>" + x[0] + ": " + fmetFmt(v) + " of " + fmetFmt(r.tot) + (S.fmet === "n" ? " listings" : S.fmet === "u" ? " units" : "")) + '"></i>' : ""; }).join("") + "</span></div>" +
-      '<div class="cr">' + (r.cr == null ? '<span class="muted">–</span>' : "<b>" + Math.round(r.cr * 100) + "%</b>") + "<small>" + fmetFmt(r.cl) + " closed · " + fmetFmt(r.ag) + " aged</small></div></div>";
+      '<div class="cr">' + (r.cr == null ? '<span class="muted">–</span>' : "<b>" + Math.round(r.cr * 100) + "%</b>") + "<small>" + fmetFmt(r.cl) + " closed · " + fmetFmt(r.ag) + " dead</small></div></div>";
   }).join("") || '<div class="muted small">No listings in this period.</div>';
   var S_ = S.fsort, sfx = S.fmet === "n" ? "" : S.fmet === "u" ? " (units)" : " ($)";
   $("dFirms").innerHTML = "<thead><tr>" + thS("k", "Firm", S_) + thS("n", "Listings", S_, "r") + thS("u", "Units", S_, "r") + thS("usd", "Asking $ vol.", S_, "r", "Sum of asking prices") + thS("sold", "Sold $ vol.", S_, "r", "Sum of CoStar sale prices of the listings that closed") +
-    thS("act", "On market now" + sfx, S_, "r", "Still Active or Under Contract today") + thS("cl", "Closed" + sfx, S_, "r") + thS("ag", "Aged" + sfx, S_, "r", "Past the shelf life with no closing found") +
-    thS("cr", "Close rate" + sfx, S_, "r", "Closed ÷ (closed + aged), in " + fmetName()) + thS("mAsk", "Med. ask $/unit", S_, "r") + thS("mSale", "Med. sale $/unit", S_, "r") +
+    thS("act", "On market now" + sfx, S_, "r", "Still Active or Under Contract today") + thS("cl", "Closed" + sfx, S_, "r") + thS("ag", "Dead" + sfx, S_, "r", "Past the shelf life with no closing found") +
+    thS("cr", "Close rate" + sfx, S_, "r", "Closed ÷ (closed + dead), in " + fmetName()) + thS("mAsk", "Med. ask $/unit", S_, "r") + thS("mSale", "Med. sale $/unit", S_, "r") +
     thS("mSpr", "Med. vs. ask", S_, "r") + thS("mDtc", "Med. days to close", S_, "r") + thS("sts", "States", S_) + "</tr></thead><tbody>" +
     rows.map(function (r) {
       return '<tr data-firm="' + esc(r.k) + '"><td>' + esc(r.k) + (r.k === "Greysteel" ? ' <span class="pill gsb">us</span>' : "") + '</td><td class="r num">' + r.n + '</td><td class="r num">' + n0(r.u) + '</td><td class="r num">' + mshort(r.usd) + '</td><td class="r num">' + mshort(r.sold) +
@@ -2416,7 +2418,7 @@ function propSecHtml(o) {
   if (S.det.err) return hd + '</div><div class="small muted">Property records could not load: ' + esc(S.det.err) + "</div></div>";
   var d = o._det;
   if (!d) return hd + '</div><div class="small muted">' + (o.gs ? "No Greysteel underwriting model found for this listing." : esc(DET_ST[o._detSt] || "This listing's OM hasn't been read yet.")) + "</div></div>";
-  var mix = d.kind === "gs" ? rrMix(d) : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var mix = d.kind === "gs" ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
   var tile = function (l, v, s) { return '<div><div class="l">' + l + '</div><div class="v num">' + (v || "–") + '</div><div class="s">' + (s || "") + "</div></div>"; };
   var h = hd + ' <span class="hs">from ' + detSrcName(d) + "</span></div>";
   h += '<div class="ptiles">' + tile("Occupancy", occTxt(d), d.kind === "gs" && d.rr ? "rent roll " + fmtDs(d.rr.asof) : d.occ != null ? "per the OM" : "not stated") +
@@ -2453,7 +2455,7 @@ function boxA(id, label, folder) { return id && /^\d+$/.test(String(id)) ? '<a h
 function renderRec(o, full, soft) {
   var d = full || o._det, ld = !full, isGs = d.kind === "gs";
   var st = ST[o._status], noi = d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
-  var mix = isGs ? rrMix(d) : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var mix = isGs ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
   var h = '<div class="rc-top"><button class="rc-back" onclick="closeRec()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back</button>' +
     '<div class="rc-tt"><div class="rc-n">' + esc(o.name) + '</div><div class="rc-a">' + esc(locLine(o)) + (d.county && String(d.county).toLowerCase() !== String(o.city || "").toLowerCase() ? " · " + esc(d.county) : "") + "</div></div>" +
     '<div class="rc-links">' + [boxA(d.om_box, "OM"), boxA(d.t12_box, "T-12"), boxA(d.folder, "Broker folder", 1), boxA(d.model_box, "Model"), boxA(d.prop_folder, "Property folder", 1)].filter(Boolean).join("") + "</div></div>";
@@ -2486,9 +2488,13 @@ function renderRec(o, full, soft) {
       '<div class="rc-note">From the rent roll in Greysteel\'s model (' + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units.</div>";
   } else if (mix) {
     var tn = sum(mix.map(function (r) { return r.n; })), mx = Math.max.apply(null, mix.map(function (r) { return r.n; }));
-    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Share</th><th class=r>Avg SF</th><th></th></tr></thead><tbody>' +
-      mix.map(function (r) { return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + Math.round(r.n / tn * 100) + '%</td><td class="r num">' + n0(r.sf) + '</td><td class="rc-barc"><i style="width:' + (r.n / mx * 100).toFixed(1) + '%"></i></td></tr>'; }).join("") +
-      '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(tn) + "</td><td></td><td></td><td></td></tr></tfoot></table>" + '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>";
+    var hasR = mix.some(function (r) { return r.rent; }), hasM = mix.some(function (r) { return r.mkt; });
+    var wav = function (f) { var w = 0, s = 0; mix.forEach(function (r) { if (r[f]) { w += r.n; s += r[f] * r.n; } }); return w ? s / w : null; };
+    h += '<table class="rc-tbl"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Share</th><th class=r>Avg SF</th>' + (hasR ? "<th class=r>In-place rent</th>" : "") + (hasM ? "<th class=r>Market rent</th>" : "") + "<th></th></tr></thead><tbody>" +
+      mix.map(function (r) { return "<tr><td><b>" + esc(r.t) + '</b></td><td class="r num">' + n0(r.n) + '</td><td class="r num">' + Math.round(r.n / tn * 100) + '%</td><td class="r num">' + n0(r.sf) + "</td>" +
+        (hasR ? '<td class="r num">' + money(r.rent) + "</td>" : "") + (hasM ? '<td class="r num">' + money(r.mkt) + "</td>" : "") + '<td class="rc-barc"><i style="width:' + (r.n / mx * 100).toFixed(1) + '%"></i></td></tr>'; }).join("") +
+      '</tbody><tfoot><tr><td>Total</td><td class="r num">' + n0(tn) + '</td><td></td><td class="r num">' + n0(wav("sf")) + "</td>" + (hasR ? '<td class="r num">' + money(wav("rent")) + "</td>" : "") + (hasM ? '<td class="r num">' + money(wav("mkt")) + "</td>" : "") + "<td></td></tr></tfoot></table>" +
+      (d.unit_mix ? '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>" : "");
   } else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated.</p>';
   if (full && full.rent_note) h += '<div class="rc-note">Average rent: ' + esc(full.rent_note) + "</div>";
   if (full && full.occ_q && !isGs) h += '<div class="rc-note">Occupancy source: “…' + esc(full.occ_q.replace(/","/g, " · ").replace(/[\[\]"]/g, "")) + '…”</div>';
