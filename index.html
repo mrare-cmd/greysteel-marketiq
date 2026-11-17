@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v24</span>
+    <span id="verBadge" title="Page version">v25</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1253,6 +1253,7 @@ function derive() {
     o._days = days(o.onMarket, t);
     o.land = !!(o.land || o.units === 0);   /* 0 units = land / development (Mason, 2026-11-16) */
     o._ppu = o.asking && o.units && !o.land ? o.asking / o.units : null;
+    o._noiE = o.noi || null; o._noiSrc = o.noi ? "listing" : null;
     o._capAsk = o.asking && o.noi ? o.noi / o.asking : null;
     o._sales = []; o._uc = null;
     return o;
@@ -1362,7 +1363,7 @@ function derive() {
     o._noSpr = o._remkt ? "Re-marketed by another firm" : o._condX ? "CoStar sale condition: " + o._condX : o._unitsOff ? "The sale covers " + n0(o._sale.units) + " of " + n0(o.units) + " units" : "";
     o._spread = o._sale && o._sale.price && o._ask && !o._noSpr ? o._sale.price / o._ask - 1 : null;
     o._dtc = o._sale ? days(o.onMarket, o._sale.date) : null;
-    o._capClose = o._sale && o._sale.price && o.noi ? o.noi / o._sale.price : null;
+    o._capClose = o._sale && o._sale.price && o.noi ? o.noi / o._sale.price : null;   /* detNoi() fills these from the record when o.noi is blank */
   });
   /* listed before: other listings of the same building */
   var bk = {};
@@ -1848,7 +1849,7 @@ function lTip(o) {
     (o.yearBuilt ? '<span class="pill gray">Built ' + o.yearBuilt + "</span>" : "") + (prev.length ? '<span class="pill purple">Listed ' + (prev.length + 1) + " times</span>" : "") + "</div>" +
     '<div class="tt-g">' +
     ttRow("Asking", o._ask ? "<b>" + mshort(o._ask) + "</b>" + (o._askSrc ? '<span class="cs">CS</span>' : "") + (o._ppu ? " \u00b7 " + mshort(o._ppu) + " / unit" : "") : "") +
-    ttRow("T-12 NOI", o.noi ? money(o.noi) : "") +
+    ttRow("T-12 NOI", o._noiE ? money(o._noiE) : "") +
     ttRow("Cap @ ask", o._capAsk ? "<b>" + pct(o._capAsk, 2) + "</b>" : "", "capk") +
     ttRow("Purchase price", o._sale ? "<b>" + mshort(o._sale.price) + "</b> \u00b7 " + fmtD(o._sale.date) + (o._spread != null ? " \u00b7 " + spr(o._spread) + " vs ask" : "") : "") +
     (o._sale ? ttRow("Cap @ close", o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "", "capk") : "") +
@@ -2148,7 +2149,7 @@ var TCOLS = [
   {k: "name", l: "Property"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "St"},
   {k: "units", l: "Units", r: 1}, {k: "yearBuilt", l: "Built", r: 1}, {k: "onMarket", l: "On market", f: fmtDs}, {k: "_days", l: "Days", r: 1, f: n0},
   {k: "_ask", l: "Asking", r: 1, f: mshort}, {k: "_ppu", l: "$/unit", r: 1, f: mshort},
-  {k: "noi", l: "T-12 NOI", r: 1, f: mshort, cap: 1}, {k: "_capAsk", l: "Cap @ ask", r: 1, cap: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
+  {k: "_noiE", l: "T-12 NOI", r: 1, f: mshort, cap: 1}, {k: "_capAsk", l: "Cap @ ask", r: 1, cap: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
   {k: "_status", l: "Status"}, {k: "_salePrice", l: "Closed at", r: 1, f: mshort}, {k: "_capClose", l: "Cap @ close", r: 1, cap: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
   {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days to close", r: 1, f: n0},
   {k: "broker", l: "Broker"}, {k: "firm", l: "Firm"}, {k: "clientContact", l: "Client"}, {k: "clientCo", l: "Client company"}, {k: "om", l: "OM"}
@@ -2217,11 +2218,11 @@ function sRows() {
   return S.sales.filter(function (s) { return pass(s, "s", "sales"); }).map(function (s) {
     var o = s._link || s._ucOf;
     s._tag = o ? 2 : s._how === "resale" ? 1 : 0;
-    if (s.pending) { s._ask2 = (o && o._ask) || s.csAsking || null; s._askCS = !(o && o._ask); s._dtc2 = s.daysOnMkt || null; s._dtcCS = true; s._spr2 = null; s._noi = o && o.noi ? o.noi : null; s._capA = s._noi && s._ask2 ? s._noi / s._ask2 : null; s._capC = null; return s; }
+    if (s.pending) { s._ask2 = (o && o._ask) || s.csAsking || null; s._askCS = !(o && o._ask); s._dtc2 = s.daysOnMkt || null; s._dtcCS = true; s._spr2 = null; s._noi = o && o._noiE ? o._noiE : null; s._capA = s._noi && s._ask2 ? s._noi / s._ask2 : null; s._capC = null; return s; }
     if (o) { s._ask2 = o._ask || null; s._askCS = !!o._askSrc; s._dtc2 = days(o.onMarket, s.date); s._dtcCS = false; }
     else { s._ask2 = s.csAsking || null; s._askCS = !!s.csAsking; s._dtc2 = s.daysOnMkt || null; s._dtcCS = !!s.daysOnMkt; }
     s._spr2 = s._ask2 && s.price && !s._remkt && !s._condX ? (o && o._sales.length > 1 ? o._spread : o && o._noSpr ? null : s.price / s._ask2 - 1) : null;
-    s._noi = o && o.noi ? o.noi : null;
+    s._noi = o && o._noiE ? o._noiE : null;
     s._capA = s._noi && s._ask2 ? s._noi / s._ask2 : null;
     s._capC = s._noi ? (o._sales.length > 1 ? o._capClose : s.price ? s._noi / s.price : null) : null;
     return s;
@@ -2302,6 +2303,7 @@ async function loadDetails() {
   try {
     var j = await apiGet("/marketiq/details");
     S.det = indexDetails(j); attachDetails();
+    if (S.view !== "map") render(true);   /* NOI / caps from the records show in the table, closings and dashboard */
   } catch (e) { S.det = {err: e.message}; }
   if (S.drawer && S.drawer.kind === "l" && !$("drB").querySelector("input:focus,textarea:focus,select:focus")) openListing(S.drawer.id, true);
 }
@@ -2337,7 +2339,7 @@ function attachDetails() {
   };
   S.L.forEach(function (o) {
     o._det = null; o._detSt = null; o._detHow = null;
-    if (D.byLid[o.id]) { o._det = D.byLid[o.id]; o._detHow = "link"; return; }
+    if (D.byLid[o.id]) { o._det = D.byLid[o.id]; o._detHow = "link"; return detNoi(o); }
     if (!o.gs) {
       boxIds(o.om).some(function (b) {
         var m = D.man[b];
@@ -2351,7 +2353,17 @@ function attachDetails() {
       if (c) { o._det = c.slice().sort(function (a, b) { return gap(o, a) - gap(o, b); })[0]; o._detHow = "folder"; }
       else { o._det = best(o, D.gs[o.state] || [], null); if (o._det) o._detHow = "match"; }
     }
+    detNoi(o);
   });
+}
+/* a listing with no T-12 NOI of its own takes the record's (Greysteel's report has no NOI column; many external rows lack it) */
+function detNoi(o) {
+  if (o.noi) return;
+  var d = o._det, n = d && (d.noi || d.printed_noi);
+  o._noiE = n > 0 ? n : null; o._noiSrc = o._noiE ? (d.kind === "gs" ? "model" : "om") : null;
+  var ask = o._ask || o.asking;
+  o._capAsk = ask && o._noiE ? o._noiE / ask : null;
+  o._capClose = o._sale && o._sale.price && o._noiE ? o._noiE / o._sale.price : null;
 }
 
 /* unit mix: the OM text ("107 1BR/1BA units (564 SF) and 149 2BR/1BA ...") as rows, kept only when the counts add up to the units */
@@ -2596,7 +2608,7 @@ function openListing(id, keep) {
     "<div><div class=l>Closed</div><div class=\"v num\">" + (o._sale ? mshort(o._sale.price) : "–") + '</div><div class="s">' + (o._sale ? fmtD(o._sale.date) + (o._sale.price && o.units ? " · " + mshort(o._sale.price / (o._sale.units || o.units)) + "/u" : "") : "no matched sale") + "</div></div>" +
     "<div><div class=l>vs. ask</div><div class=\"v num\">" + (spr(o._spread) || "–") + '</div><div class="s">' + (o._dtc != null ? o._dtc + " days to close" : "") + (o._capClose ? " · " + pct(o._capClose, 2) + " cap" : "") + "</div></div></div>" +
     (o._noSpr && o._sale ? '<div class="small muted" style="margin-top:6px">No vs. ask: ' + esc(o._noSpr) + ".</div>" : "") +
-    (o._capAsk || o._capClose ? '<div class="small muted" style="margin-top:6px">Caps use the T-12 NOI from the listing.</div>' : "") + "</div>";
+    (o._capAsk || o._capClose ? '<div class="small muted" style="margin-top:6px">Caps use the T-12 NOI ' + (o._noiSrc === "model" ? "from Greysteel's model" : o._noiSrc === "om" ? "from the OM" : "from the listing") + ".</div>" : "") + "</div>";
   /* matched sales: built here, shown last in the panel (Mason) */
   var hTop = h; h = "";
   h += '<div class="dr-sec"><div class="h">CoStar sale' + (o._sales.length > 1 ? "s" : "") + "</div>";
@@ -2613,7 +2625,7 @@ function openListing(id, keep) {
     LFIELDS.map(function (f) {
       var e = o._ed[f[0]];
       if ((f[0] === "dd" || f[0] === "pdf") && !o.gs && !o[f[0]]) return "";
-      return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + fmtField(f[0], o[f[0]]) +
+      return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + (f[0] === "noi" && !o.noi && o._noiE ? money(o._noiE) + ' <span class="small muted">' + (o._noiSrc === "model" ? "from Greysteel's model T-12" : "from the OM") + "</span>" : fmtField(f[0], o[f[0]])) +
         (e ? '<span class="was">edited by ' + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + (e.was != null && e.was !== "" ? " · was " + esc(f[0] === "asking" || f[0] === "noi" ? money(e.was) : e.was) : "") + "</span>" : "") + "</div>";
     }).join("") + "</div></div>";
   h += propSecHtml(o);
