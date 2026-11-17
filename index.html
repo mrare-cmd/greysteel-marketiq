@@ -624,6 +624,8 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .tbl tbody tr:hover td{background:#eef4ff}
 .tbl tbody tr.sel td{background:#dceaff!important}
 .tbl tbody tr.lk td:first-child{box-shadow:inset 3px 0 0 #34c759}
+.tbl tbody tr.lkg td:first-child{box-shadow:inset 3px 0 0 #1d1d1f}
+.tbl tbody tr.nw.lkg td:first-child{box-shadow:inset 3px 0 0 #1d1d1f,inset 6px 0 0 #ffcc00}
 .tbl th .ar{color:var(--blue)}
 .pager{background:transparent;border-top:1px solid var(--border2)}
 .spr.neg{color:#d70015}.spr.pos{color:#248a3d}
@@ -947,7 +949,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v42</span>
+    <span id="verBadge" title="Page version">v43</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1040,7 +1042,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <!-- ======================= CLOSINGS ======================= -->
   <section class="view" id="vSales"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
     <div class="fbar" id="fb_sales"></div>
-    <div class="subbar"><span id="sCount"></span><button class="nwbtn" id="sNewBtn" hidden></button><span class="small">Asking and days come from our external listing; <span class="cs">CS</span> = from CoStar. Green columns: cap rate from the listing's T-12 NOI.</span><button class="btn sm ml-auto" id="sImport" title="Add sales from a CoStar sale comps export (.xlsx or .csv)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CoStar sales</button></div>
+    <div class="subbar"><span id="sCount"></span><button class="nwbtn" id="sNewBtn" hidden></button><span class="small">Asking and days come from the listing; <span class="cs">CS</span> = from CoStar. Green columns: cap rate from the listing's T-12 NOI.</span><button class="btn sm ml-auto" id="sImport" title="Add sales from a CoStar sale comps export (.xlsx or .csv)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import CoStar sales</button></div>
     <div class="tblwrap" style="flex:1"><table class="tbl" id="stbl"></table></div>
     <div class="pager" id="sPager"></div>
   </div></section>
@@ -1597,7 +1599,7 @@ function buildBar(view) {
   if (kind === "l") h += '<select class="inp" data-f="type"><option value="">All types</option><option value="mf">Multifamily</option><option value="land">Land / development</option></select>';
   if (kind === "l") h += '<select class="inp" data-f="src" title="Greysteel\'s own listings or other brokers\' (external)"><option value="">All listings</option><option value="gs">Greysteel listings</option><option value="ext">External listings</option></select>';
   h += cbHtml("firm", "Listing broker firm - type to search; lists only firms left by the other filters") + cbHtml("broker", "Listing broker - type to search; lists only brokers left by the other filters");
-  if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">External listing</option><option value="no">No listing</option><option value="uc">Under contract (CoStar)</option></select>';
+  if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">Tied to a listing</option><option value="no">No listing</option><option value="uc">Under contract (CoStar)</option></select>';
   h += '<button class="clearall" data-clear>Clear</button>';
   el.innerHTML = h;
 }
@@ -2362,10 +2364,10 @@ function wireTable() {
    and days to close come from that listing (bold); for other sales CoStar's own asking price and days
    on market are shown in grey with "CS". */
 var SCOLS = [
-  {k: "_tag", l: "Listing", t: "External listing = this sale closed one of our tracked listings"}, {k: "date", l: "Sold"}, {k: "address", l: "Address"}, {k: "units", l: "Units", r: 1},
+  {k: "_tag", l: "Listing", t: "External listing / Greysteel listing = this sale closed one of our tracked listings (another broker's, or Greysteel's own)"}, {k: "date", l: "Sold"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "State"}, {k: "units", l: "Units", r: 1},
   {k: "price", l: "Price", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Our listing's asking price; CS = CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
   {k: "_dtc2", l: "Days to close", r: 1, t: "Our listing's date on market to the sale; CS = CoStar days on market"},
-  {k: "_noi", l: "T-12 NOI", r: 1, cap: 1, t: "T-12 NOI from our external listing"}, {k: "_capA", l: "Cap @ ask", r: 1, cap: 1, t: "T-12 NOI / asking price"}, {k: "_capC", l: "Cap @ close", r: 1, cap: 1, t: "T-12 NOI / sale price"},
+  {k: "_noi", l: "T-12 NOI", r: 1, cap: 1, t: "T-12 NOI from the listing"}, {k: "_capA", l: "Cap @ ask", r: 1, cap: 1, t: "T-12 NOI / asking price"}, {k: "_capC", l: "Cap @ close", r: 1, cap: 1, t: "T-12 NOI / sale price"},
   {k: "_ppu", l: "$/unit", r: 1},
   {k: "name", l: "Property"}, {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
 ];
@@ -2393,14 +2395,14 @@ function renderSales() {
   var rows = sRows(), k = S.ssort.k, d = S.ssort.d;
   sortRows(rows, S.ssort);
   var PG = 200; if (S.sp * PG >= rows.length) S.sp = 0;
-  var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link || s._ucOf; }).length;
-  $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> " + (S.F.link === "uc" ? "deals" : "sales") + " · " + (S.F.link === "uc" ? "" : mshort(sum(rows.map(function (s) { return s.price; }))) + " · ") + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to an external listing" + (S.F.link === "uc" ? " · CoStar shows these under contract" : "");
+  var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link || s._ucOf; }).length, ng = rows.filter(function (s) { var o = s._link || s._ucOf; return o && o.gs; }).length;
+  $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> " + (S.F.link === "uc" ? "deals" : "sales") + " · " + (S.F.link === "uc" ? "" : mshort(sum(rows.map(function (s) { return s.price; }))) + " · ") + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to a listing" + (ng ? " (" + ng + " Greysteel)" : "") + (S.F.link === "uc" ? " · CoStar shows these under contract" : "");
   $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.t ? ' title="' + esc(c.t) + '"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (s) {
       var o = s._link || s._ucOf;
-      return '<tr data-id="' + s.id + '" class="' + (o ? "lk" : "") + (s._new ? " nw" : "") + (S.drawer && S.drawer.id === s.id ? " sel" : "") + '">' + SCOLS.map(function (c) {
+      return '<tr data-id="' + s.id + '" class="' + (o ? "lk" : "") + (o && o.gs ? " lkg" : "") + (s._new ? " nw" : "") + (S.drawer && S.drawer.id === s.id ? " sel" : "") + '">' + SCOLS.map(function (c) {
         var v = s[c.k], h;
-        if (c.k === "_tag") h = o ? '<span class="pill xl" title="' + esc(o.name + " · on market " + fmtD(o.onMarket) + " · " + (o.firm || o.brokerCo || "")) + '">External listing</span>' + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "")
+        if (c.k === "_tag") h = o ? '<span class="pill ' + (o.gs ? "gsb" : "xl") + '" title="' + esc(o.name + " · on market " + fmtD(o.onMarket) + " · " + (o.firm || o.brokerCo || "")) + '">' + (o.gs ? "Greysteel listing" : "External listing") + "</span>" + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "")
           : s._how === "resale" ? '<span class="pill gray" title="Later resale of ' + esc(s._resaleOf.name) + '">Resale</span>' : s._how === "none" ? '<span class="muted small">not a match</span>' : '<span class="muted">—</span>';
         else if (c.k === "date") h = (s.pending ? '<span class="pill blue" title="CoStar: ' + esc(s.pendingStatus || "Under Contract") + '">Under contract</span>' : fmtDs(v)) + newPill(s);
         else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "") + (s._condX ? ' <span class="pill orange" title="CoStar sale condition: ' + esc(s.cond) + '">' + esc(String(s.cond).split(",").filter(function (x) { return COND_X.test(x); })[0].trim()) + "</span>" : "");
@@ -2423,7 +2425,7 @@ function renderSales() {
 function wireSales() {
   $("sNewBtn").onclick = function () { S.newOnly = !S.newOnly; S.sp = 0; renderSales(); };
   $("vSales").addEventListener("click", function (e) {
-    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; S.ssort = {k: k, d: S.ssort.k === k ? -S.ssort.d : (/^(address|name|buyer|seller|brokerCo)$/.test(k) ? 1 : -1)}; return renderSales(); }
+    var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; S.ssort = {k: k, d: S.ssort.k === k ? -S.ssort.d : (/^(address|city|state|name|buyer|seller|brokerCo)$/.test(k) ? 1 : -1)}; return renderSales(); }
     var p = e.target.closest(".pager [data-p]"); if (p) { S.sp += +p.dataset.p; return renderSales(); }
     var tr = e.target.closest("tbody tr[data-id]"); if (tr) openSale(tr.dataset.id);
   });
@@ -2533,10 +2535,16 @@ function detPost(o) {
   detNoi(o);
 }
 /* a listing with no T-12 NOI of its own takes the record's (Greysteel's report has no NOI column; many external rows lack it) */
+/* a record that covers many more units than the listing (a portfolio OM or model) has a portfolio NOI: never the
+   listing's T-12 (1303 N Calvert, 9 units, borrowed the 30-unit Mt Vernon Portfolio's $240,621). A NOI typed into the
+   record in MarketIQ is trusted. */
+function detPort(o, d) { return !!(d && d.units && o.units && !o.land && d.units > o.units * 1.25 && d.units - o.units >= 3 && !(d._red && d._red.noi)); }
 function detNoi(o) {
+  o._noiPort = null;
   if (o.noi) return;
   /* Greysteel records: the NOI our OM states (d.om_noi, read from the OM in Box) wins over the model's raw T-12 */
   var d = o._det, n = d && ((d.kind === "gs" && d.om_noi) || d.noi || d.printed_noi);
+  if (n && detPort(o, d)) { o._noiPort = {noi: n, units: d.units}; n = null; }
   o._noiE = n ? n : null; o._noiSrc = o._noiE ? (d.kind === "gs" ? (d.om_noi ? "om" : "model") : "om") : null;   /* a negative T-12 NOI shows; caps only from a positive one */
   var ask = o._ask || o.asking, pos = o._noiE > 0;
   o._capAsk = pos && ask ? o._noiE / ask : null;
@@ -2632,7 +2640,7 @@ function propSecHtml(o) {
   else if (d.unit_mix) h += '<div class="k">Unit mix</div><div class="v">' + esc(d.unit_mix) + "</div>";
   if (d.amenities) h += '<div class="k">Amenities</div><div class="v clamp2">' + esc(d.amenities) + "</div>";
   if (ut.own.length || ut.res.length) h += '<div class="k">Utilities</div><div class="v">' + (ut.own.length ? "Owner pays " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "Residents pay " + ut.res.join(", ") : "") + "</div>";
-  if (d.egi || d.noi || d.printed_noi) h += '<div class="k">' + esc(d.kind === "gs" ? "Underwritten T-12" : "T-12") + '</div><div class="v">' + [d.egi ? "EGI " + mshort(d.egi) : "", d.total_pu ? "OpEx " + money(d.total_pu) + "/unit" : "", (d.noi || d.printed_noi) ? "NOI " + mshort(d.noi || d.printed_noi) : ""].filter(Boolean).join(" · ") +
+  if (d.egi || d.noi || d.printed_noi) h += '<div class="k">' + esc((d.kind === "gs" ? "Underwritten T-12" : "T-12") + (detPort(o, d) ? " (whole " + n0(d.units) + "-unit portfolio)" : "")) + '</div><div class="v">' + [d.egi ? "EGI " + mshort(d.egi) : "", d.total_pu ? "OpEx " + money(d.total_pu) + "/unit" : "", (d.noi || d.printed_noi) ? "NOI " + mshort(d.noi || d.printed_noi) : ""].filter(Boolean).join(" · ") +
     (d.period ? '<div class="small muted">' + esc(d.period) + "</div>" : "") + "</div>";
   if (d.kind === "gs" && d.om_noi) h += '<div class="k">NOI per our OM</div><div class="v">' + money(d.om_noi) + (d.om_pf_noi ? " in place · Year 1 pro forma " + money(d.om_pf_noi) : "") + '<div class="small muted">after reserves</div></div>';
   if (d.no_data && !(d.egi || d.noi || d.printed_noi)) h += '<div class="k">T-12</div><div class="v small muted">None found for this listing</div>';
@@ -2880,8 +2888,8 @@ function mountRecSat(o) {
 function renderRec(o, full, soft) {
   var d = full ? recApply(o, full) : o._det, ld = !full, isGs = d.kind === "gs", man = !!d.manual, red = recEd(o) || {};
   S._recD = d;
-  var st = ST[o._status], stNoi = d.noi || d.printed_noi, recNoi = (isGs && d.om_noi) || stNoi, noi = o.noi || recNoi, ask = o._ask;
-  var units = o._ed.units ? o.units : d.units || o.units, yb = o._ed.yearBuilt ? o.yearBuilt : d.yb || o.yearBuilt;
+  var port = detPort(o, d), st = ST[o._status], stNoi = d.noi || d.printed_noi, recNoi = (isGs && d.om_noi) || stNoi, noi = o.noi || (port ? null : recNoi), ask = o._ask;
+  var units = o._ed.units || port ? o.units : d.units || o.units, yb = o._ed.yearBuilt ? o.yearBuilt : d.yb || o.yearBuilt;
   S._recNoi = recNoi;
   var mix = recMix(d), ut = utilSplit(d.util), E = function (ef, inner, ph) { return rceH(o, ef, inner, ph); }, edN = Object.keys(red).length;
   var h = '<div class="rc-top"><button class="rc-back" onclick="closeRec()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back</button>' +
@@ -2902,7 +2910,7 @@ function renderRec(o, full, soft) {
     recTile("Units", E("l:units", units ? n0(units) : o.land ? "Land" : ""), mix ? mix.length + " unit types" : "") +
     recTile("Year built", E("l:yearBuilt", yb || ""), "renovated " + E("r:yr", d.yr || "")) +
     recTile("Asking", E("l:asking", ask ? mshort(ask) : ""), ask && units ? mshort(ask / units) + " / unit" : "no asking price") +
-    recTile("T-12 NOI", E("l:noi", noi ? mshort(noi) : ""), noi > 0 && ask ? pct(noi / ask, 2) + " cap at asking" : noi && units ? money(noi / units) + " / unit" : "") + "</div>";
+    recTile("T-12 NOI", E("l:noi", noi ? mshort(noi) : ""), noi > 0 && ask ? pct(noi / ask, 2) + " cap at asking" : noi && units ? money(noi / units) + " / unit" : port && recNoi ? "portfolio NOI " + mshort(recNoi) + " (" + n0(d.units) + " units)" : "") + "</div>";
   h += '<div class="rc-grid">';
   h += '<div class="rc-col">';
   /* unit mix */
@@ -2946,6 +2954,7 @@ function renderRec(o, full, soft) {
   /* operating statement */
   var egi = d.egi || d.printed_egi, hasSt = egi || d.total || stNoi || d.cats;
   h += '<section class="rc-card rc-wide"><h3>Operating statement <span class="hs">' + E("r:period", esc(d.period || ""), "add the period") + "</span></h3>";
+  if (port) h += '<div class="rc-note" style="margin:0 0 10px"><b>Whole-portfolio statement: ' + n0(d.units) + " units</b>, against " + n0(o.units) + " for this listing. It isn't used as this listing's T-12 NOI or for its cap rates. To use a figure for this building, type it into T-12 NOI above.</div>";
   h += '<div class="rc-mini">' + recTile("Effective gross income", E("r:egi", egi ? money(egi) : ""), units && egi ? money(egi / units) + " / unit" : "") +
     recTile("Operating expenses", E("r:total", d.total ? money(d.total) : ""), d.total_pu ? money(d.total_pu) + " / unit" : "") +
     recTile("Net operating income", E("r:noi", stNoi ? money(stNoi) : ""), stNoi && units ? money(stNoi / units) + " / unit" : "") +
@@ -3030,7 +3039,7 @@ function openListing(id, keep) {
     LFIELDS.map(function (f) {
       var e = o._ed[f[0]];
       if ((f[0] === "dd" || f[0] === "pdf") && !o.gs && !o[f[0]]) return "";
-      return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + (f[0] === "noi" && !o.noi && o._noiE ? money(o._noiE) + ' <span class="small muted">' + (o._noiSrc === "model" ? "from Greysteel's model T-12" : "from the OM") + "</span>" : fmtField(f[0], o[f[0]])) +
+      return '<div class="k">' + f[1] + '</div><div class="v ed" data-f="' + f[0] + '">' + (f[0] === "noi" && !o.noi && o._noiE ? money(o._noiE) + ' <span class="small muted">' + (o._noiSrc === "model" ? "from Greysteel's model T-12" : "from the OM") + "</span>" : f[0] === "noi" && !o.noi && o._noiPort ? '<span class="muted">–</span> <span class="small muted">the ' + (o._det && o._det.kind === "gs" ? "model" : "OM") + " shows " + money(o._noiPort.noi) + " for a " + n0(o._noiPort.units) + "-unit portfolio, not this building</span>" : fmtField(f[0], o[f[0]])) +
         (e ? '<span class="was">edited by ' + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + (e.was != null && e.was !== "" ? " · was " + esc(f[0] === "asking" || f[0] === "noi" ? money(e.was) : e.was) : "") + "</span>" : "") + "</div>";
     }).join("") + "</div></div>";
   h += propSecHtml(o);
