@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v25</span>
+    <span id="verBadge" title="Page version">v27</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1118,6 +1118,9 @@ function overlapSide(a, b) {
   }); });
 }
 function partsMatch(pa, pb) { return pa.some(function (x) { return pb.some(function (y) { return sameStreet(x.sk, y.sk) && x.hn.length && y.hn.length && overlapSide(x.hn, y.hn); }); }); }
+/* days after the listing a sale may close and still be its outcome (tools/match.py win()): 4 years when CoStar names the
+   listing's firm, 3 when CoStar has no broker and the units agree within 10%, else 2. DC TOPA deals often run past two years. */
+function linkWin(o, s) { return firmSame(o, s) ? 1460 : !String(s.brokerCo || "").trim() && unitsClose(o.units, s.units, 0.1) ? 1095 : 730; }
 function unitsClose(a, b, tol) { return !!(a && b && Math.abs(a - b) <= (tol || 0.1) * Math.max(a, b)); }
 /* CoStar's listing broker is our listing's firm */
 function firmSame(o, s) { var lf = String(o.firm || o.brokerCo || "").toLowerCase().trim().split(/[\s&,]+/)[0], sb = String(s.brokerCo || "").toLowerCase(); return !!(lf && sb && sb.indexOf(lf) > -1); }
@@ -1251,6 +1254,8 @@ function derive() {
     o._sk = streetKey(o.address); o._hn = houseNums(o.address); o._nk = nameKey(o.name); o._parts = addrParts(o.address);
     o._q = normAddr([o.name, o.address, o.city, o.state, o.broker, o.brokerCo, o.firm, o.clientContact, o.clientCo, o.notes].join(" "));
     o._days = days(o.onMarket, t);
+    /* a row with 0 / no units whose property record shows units is not land (Greysteel's report has many 0-unit rows) */
+    if (!o.units && S.recUnits && S.recUnits[o.id]) { o.units = S.recUnits[o.id]; o._unitsRec = true; o.land = false; }
     o.land = !!(o.land || o.units === 0);   /* 0 units = land / development (Mason, 2026-11-16) */
     o._ppu = o.asking && o.units && !o.land ? o.asking / o.units : null;
     o._noiE = o.noi || null; o._noiSrc = o.noi ? "listing" : null;
@@ -1314,7 +1319,7 @@ function derive() {
     else if (s.link === "none") { s._how = "none"; }
     else if (s.link && S.byId[s.link]) { s._link = S.byId[s.link]; s._how = "manual"; }
     else if (!s.nonArms) {
-      var cands = findCands().filter(function (c) { var d = days(c.o.onMarket, s.date); return d != null && ((d >= 0 && d <= 730) || (d >= -30 && d < 0 && firmSame(c.o, s))); });
+      var cands = findCands().filter(function (c) { var d = days(c.o.onMarket, s.date); return d != null && ((d >= 0 && d <= linkWin(c.o, s)) || (d >= -30 && d < 0 && firmSame(c.o, s))); });
       if (cands.length) {
         var onb = cands.filter(function (c) { return days(c.o.onMarket, s.date) >= 0; });
         var b = latest(onb.length ? onb : cands);
@@ -1854,7 +1859,7 @@ function lTip(o) {
     ttRow("Purchase price", o._sale ? "<b>" + mshort(o._sale.price) + "</b> \u00b7 " + fmtD(o._sale.date) + (o._spread != null ? " \u00b7 " + spr(o._spread) + " vs ask" : "") : "") +
     (o._sale ? ttRow("Cap @ close", o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "", "capk") : "") +
     ttRow("Listing broker", esc([o.broker, o.firm || o.brokerCo].filter(Boolean).join(" \u00b7 "))) +
-    ttRow("On market", fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " \u00b7 " + n0(o._days) + " days" : "")) +
+    ttRow(o._status === "Dead" ? "Last on market" : "On market", fmtD(o.onMarket) + (o._status !== "Dead" && o._days != null && o._days >= 0 ? " \u00b7 " + n0(o._days) + " days" : "")) +
     (prev.length ? ttRow("Other listings", prev.slice(0, 3).map(function (x) { return fmtDs(x.onMarket) + (x.firm || x.brokerCo ? " (" + esc(x.firm || x.brokerCo) + ")" : ""); }).join(", ") + (prev.length > 3 ? " +" + (prev.length - 3) : "")) : "") +
     "</div></div>";
 }
@@ -2297,7 +2302,7 @@ OPX.forEach(function (x) { OPX_L[x[0]] = x[1]; });
 var DET_ST = {"Queued": "Its OM is in Box and queued to be read.", "No Box files yet": "No OM in Box yet.", "Link needs review": "The OM link needs review before it can be read.",
   "Reviewed and skipped": "Reviewed and skipped (nothing usable in the OM).", "Superseded by a newer listing": "A newer listing of this building carries the record."};
 var BOXF = "https://greysteel.app.box.com/file/", BOXD = "https://greysteel.app.box.com/folder/";
-S.det = null; S.detFull = {};
+S.det = null; S.detFull = {}; S.recUnits = {};
 
 async function loadDetails() {
   try {
@@ -2339,7 +2344,7 @@ function attachDetails() {
   };
   S.L.forEach(function (o) {
     o._det = null; o._detSt = null; o._detHow = null;
-    if (D.byLid[o.id]) { o._det = D.byLid[o.id]; o._detHow = "link"; return detNoi(o); }
+    if (D.byLid[o.id]) { o._det = D.byLid[o.id]; o._detHow = "link"; return detPost(o); }
     if (!o.gs) {
       boxIds(o.om).some(function (b) {
         var m = D.man[b];
@@ -2353,8 +2358,18 @@ function attachDetails() {
       if (c) { o._det = c.slice().sort(function (a, b) { return gap(o, a) - gap(o, b); })[0]; o._detHow = "folder"; }
       else { o._det = best(o, D.gs[o.state] || [], null); if (o._det) o._detHow = "match"; }
     }
-    detNoi(o);
+    detPost(o);
   });
+  if (S._recNew) { S._recNew = false; derive(); }   /* units learned from records: rebuild once (land flags, $/unit, matching) */
+}
+function detPost(o) {
+  var d = o._det;
+  if (d && !o.units && !S.recUnits[o.id]) {
+    var u = d.units || (d.rr && d.rr.n) || sum((d.um || []).map(function (x) { return x.n || 0; }));
+    var operating = d.rr || d.rent || d.occ != null || (d.um || []).some(function (x) { return x.ip; });   /* not proposed units on a development site */
+    if (u > 0 && operating) { S.recUnits[o.id] = u; S._recNew = true; }
+  }
+  detNoi(o);
 }
 /* a listing with no T-12 NOI of its own takes the record's (Greysteel's report has no NOI column; many external rows lack it) */
 function detNoi(o) {
@@ -2599,7 +2614,7 @@ function openListing(id, keep) {
   S.drawer = {kind: "l", id: id};
   var s = ST[o._status];
   $("drH").innerHTML = '<button class="dr-x" onclick="closeDrawer()">&times;</button><div class="dr-t">' + esc(o.name) + '</div><div class="dr-s">' + esc(locLine(o)) + "</div>" +
-    '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">On market ' + fmtD(o.onMarket) + (o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
+    '<div class="dr-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : "") + '<span class="pill ' + s.pill + '">' + o._status + (o.status ? " · set by hand" : "") + "</span>" + (o.land ? '<span class="pill orange">Land / development</span>' : o.units ? '<span class="pill gray">' + n0(o.units) + " units</span>" : "") + '<span class="pill gray">' + (o._status === "Dead" ? "Last on market " : "On market ") + fmtD(o.onMarket) + (o._status !== "Dead" && o._days != null && o._days >= 0 ? " · " + o._days + " days" : "") + "</span>" +
     (o._prev.length ? '<span class="pill purple">Listed ' + (o._prev.length + 1) + " times</span>" : "") + (o.hidden ? '<span class="pill red">Hidden</span>' : "") + "</div>";
   var h = recBtnHtml(o);
   /* pricing */
