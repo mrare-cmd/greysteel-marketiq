@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v23</span>
+    <span id="verBadge" title="Page version">v24</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2306,9 +2306,10 @@ async function loadDetails() {
   if (S.drawer && S.drawer.kind === "l" && !$("drB").querySelector("input:focus,textarea:focus,select:focus")) openListing(S.drawer.id, true);
 }
 function indexDetails(j) {
-  var D = {loaded: j.loaded_at, byId: {}, byBox: {}, man: {}, gsFolder: {}, ext: {}, gs: {}};
+  var D = {loaded: j.loaded_at, byId: {}, byBox: {}, byLid: {}, man: {}, gsFolder: {}, ext: {}, gs: {}};
   (j.deals || []).forEach(function (d) {
     D.byId[d.id] = d;
+    if (d.lid) D.byLid[d.lid] = d;   /* records read from a non-Box link (broker page, flipbook) name their listing */
     if (d.lat != null && d.lng != null) d.geo = [d.lat, d.lng];
     if (d.kind === "ext") { (D.ext[d.state] = D.ext[d.state] || []).push(d); [d.om_box, d.t12_box, d.folder].forEach(function (b) { if (b && !D.byBox[b]) D.byBox[b] = d; }); }
     else { (D.gs[d.state] = D.gs[d.state] || []).push(d); if (d.prop_folder) (D.gsFolder[d.prop_folder] = D.gsFolder[d.prop_folder] || []).push(d); }
@@ -2336,6 +2337,7 @@ function attachDetails() {
   };
   S.L.forEach(function (o) {
     o._det = null; o._detSt = null; o._detHow = null;
+    if (D.byLid[o.id]) { o._det = D.byLid[o.id]; o._detHow = "link"; return; }
     if (!o.gs) {
       boxIds(o.om).some(function (b) {
         var m = D.man[b];
