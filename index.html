@@ -279,9 +279,14 @@ select.inp{padding-right:4px}
 .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
 .form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)}
 .form label.full{grid-column:1/-1}
+.form .flabel{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2);font-weight:500}
 .form input,.form select{height:36px;border:1px solid var(--border);border-radius:8px;padding:0 10px;outline:none;font-size:13.5px;color:var(--text)}
 .form input:focus,.form select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.12)}
 .form .req::after{content:" *";color:var(--red)}
+.stseg{display:flex;gap:6px;flex-wrap:wrap}
+.stseg button{height:34px;min-width:52px;padding:0 12px;border:none;border-radius:10px;background:var(--fill);color:var(--text);font-weight:600;font-size:13px;cursor:pointer;transition:background .15s,color .15s,transform .25s}
+.stseg button:hover{background:rgba(0,113,227,.1)}
+.stseg button.on{background:#0071e3;color:#fff}
 .warn{background:var(--yellow-light);border:1px solid #fde293;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-top:12px}
 .ptable{width:100%;border-collapse:collapse;font-size:12px}
 .ptable th,.ptable td{padding:5px 8px;border-bottom:1px solid var(--border2);text-align:left;white-space:nowrap}
@@ -860,7 +865,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v35</span>
+    <span id="verBadge" title="Page version">v36</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2796,18 +2801,37 @@ function openModal(html) { $("mbox").innerHTML = html; $("modal").classList.add(
 function closeModal() { $("modal").classList.remove("open"); }
 $("modal").addEventListener("mousedown", function (e) { if (e.target.id === "modal") closeModal(); });
 var FORM = [
-  ["name", "Engagement name", "", 1], ["address", "Address", "", 1], ["city", "City", "", 1], ["state", "State", "select", 1], ["units", "Units (0 = land / development)", "num"], ["yearBuilt", "Year built", "num"],
-  ["onMarket", "Date on market", "date", 1], ["asking", "Asking price (high / whisper)", "num"], ["broker", "Listing broker"], ["brokerCo", "Listing broker company", "firm"],
-  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["noi", "T-12 NOI", "num"]
+  ["name", "Engagement name", "", 1], ["address", "Address", "", 1], ["city", "City", "", 1], ["state", "State", "states", 1], ["units", "Units (0 = land / development)", "num"], ["yearBuilt", "Year built", "num"],
+  ["onMarket", "Date on market", "mdate", 1], ["asking", "Asking price (high / whisper)", "money"], ["broker", "Listing broker", "broker"], ["brokerCo", "Listing broker company", "firm"],
+  ["clientContact", "Client contact"], ["clientCo", "Client company"], ["om", "Link to OM", "url"], ["noi", "T-12 NOI", "money"]
 ];
+/* "11/7/2026", "11/7/26", "11-7-26" or ISO -> "2026-11-07"; null when it isn't a real date */
+function parseMDate(s) {
+  s = String(s || "").trim();
+  var m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s), y, mo, d;
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else { m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2}|\d{4})$/.exec(s); if (!m) return null; mo = +m[1]; d = +m[2]; y = +m[3]; if (y < 100) y += 2000; }
+  var dt = new Date(Date.UTC(y, mo - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  return dt.toISOString().slice(0, 10);
+}
+function mdy(iso) { var p = String(iso || "").split("-"); return p.length === 3 ? +p[1] + "/" + +p[2] + "/" + p[0] : ""; }
 function openAdd() {
   var firms = Object.keys(S.firms).sort();
+  /* listing brokers seen so far, most used first, with the firm each one usually works for */
+  var bc = {}, bf = {};
+  S.L.forEach(function (o) { var b = String(o.broker || "").trim(); if (!b) return; bc[b] = (bc[b] || 0) + 1; var f = o.firm || o.brokerCo; if (f) { bf[b] = bf[b] || {}; bf[b][f] = (bf[b][f] || 0) + 1; } });
+  var brokers = Object.keys(bc).sort(function (a, b) { return bc[b] - bc[a] || (a < b ? -1 : 1); });
+  var firmOf = function (b) { var m = bf[b]; return m ? Object.keys(m).sort(function (x, y) { return m[y] - m[x]; })[0] : ""; };
   openModal('<div class="mh"><div><div class="t">Add a listing</div><div class="s">The same fields as the Salesforce External Listings report. Everyone sees it as soon as you save.</div></div><button class="dr-x" style="position:static;margin-left:auto" onclick="closeModal()">&times;</button></div>' +
     '<div class="mb"><div class="form">' + FORM.map(function (f) {
-      var inp = f[2] === "select" ? '<select id="af_' + f[0] + '">' + STATES.map(function (s) { return "<option>" + s + "</option>"; }).join("") + "</select>"
-        : '<input id="af_' + f[0] + '"' + (f[2] === "date" ? ' type="date" value="' + today() + '"' : "") + (f[2] === "num" ? ' inputmode="decimal"' : "") + (f[2] === "firm" ? ' list="af_firms"' : "") + (f[2] === "url" ? ' placeholder="https://greysteel.app.box.com/..."' : "") + ">";
-      return '<label class="' + (f[0] === "om" ? "full" : "") + '"><span class="' + (f[3] ? "req" : "") + '">' + f[1] + "</span>" + inp + "</label>";
-    }).join("") + '</div><datalist id="af_firms">' + firms.map(function (f) { return '<option value="' + esc(f) + '">'; }).join("") + '</datalist><div id="afWarn"></div></div>' +
+      var inp = f[2] === "states" ? '<input type="hidden" id="af_state" value=""><div class="stseg" id="af_states">' + STATES.map(function (s) { return '<button type="button" data-st="' + s + '">' + s + "</button>"; }).join("") + "</div>"
+        : '<input id="af_' + f[0] + '"' + (f[2] === "mdate" ? ' value="' + mdy(today()) + '" placeholder="11/7/2026" autocomplete="off"' : "") + (f[2] === "num" || f[2] === "money" ? ' inputmode="decimal"' : "") +
+          (f[2] === "money" ? ' placeholder="$0"' : "") + (f[2] === "firm" ? ' list="af_firms"' : "") + (f[2] === "broker" ? ' list="af_brokers" autocomplete="off"' : "") + (f[2] === "url" ? ' placeholder="https://greysteel.app.box.com/..."' : "") + ">";
+      var tag = f[2] === "states" ? "div" : "label";   /* a label around buttons would click the first one */
+      return "<" + tag + ' class="' + (f[0] === "om" ? "full" : "") + (tag === "div" ? " flabel" : "") + '"><span class="' + (f[3] ? "req" : "") + '">' + f[1] + "</span>" + inp + "</" + tag + ">";
+    }).join("") + '</div><datalist id="af_firms">' + firms.map(function (f) { return '<option value="' + esc(f) + '">'; }).join("") + '</datalist><datalist id="af_brokers">' +
+    brokers.map(function (b) { return '<option value="' + esc(b) + '">' + esc(firmOf(b)) + "</option>"; }).join("") + '</datalist><div id="afWarn"></div></div>' +
     '<div class="mf"><span class="small muted">Address is placed on the map automatically.</span><span class="ml-auto"></span><button class="btn sm" onclick="closeModal()">Cancel</button><button class="btn sm primary" id="afSave">Save listing</button></div>');
   var chk = function () {
     var a = $("af_address").value, st = $("af_state").value, d = $("af_onMarket").value;
@@ -2816,13 +2840,31 @@ function openAdd() {
     var dup = S.L.filter(function (o) { return sameBldg(probe, o); }).sort(function (x, y) { return x.onMarket < y.onMarket ? 1 : -1; });
     $("afWarn").innerHTML = dup.length ? '<div class="warn">This building is already listed ' + dup.length + " time" + (dup.length > 1 ? "s" : "") + ": " + dup.slice(0, 3).map(function (o) { return "<b>" + esc(o.name) + "</b> (" + fmtD(o.onMarket) + ", " + esc(o.firm || o.brokerCo || "") + ")"; }).join("; ") + ". Save anyway if this is a new marketing round.</div>" : "";
   };
-  $("af_address").oninput = chk; $("af_state").onchange = chk;
+  $("af_address").oninput = chk;
+  /* state: one click; DC fills Washington as the city (and takes it back if the state changes) */
+  var cityAuto = false;
+  $("af_states").onclick = function (e) {
+    var b = e.target.closest("[data-st]"); if (!b) return;
+    var st = b.dataset.st; $("af_state").value = st;
+    this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    var c = $("af_city");
+    if (st === "DC" && (!c.value.trim() || cityAuto)) { c.value = "Washington"; cityAuto = true; }
+    else if (st !== "DC" && cityAuto) { c.value = ""; cityAuto = false; }
+    chk();
+  };
+  $("af_city").oninput = function () { cityAuto = false; };
+  /* money fields read "2.5m", "750k", "1200000" and show $1,200,000 when you leave them */
+  ["asking", "noi"].forEach(function (k) { $("af_" + k).onblur = function () { var n = amt(this.value); if (n == null) n = parseNum(this.value); if (n != null) this.value = money(n); }; });
+  $("af_onMarket").onblur = function () { var d = parseMDate(this.value); if (d) this.value = mdy(d); else if (this.value.trim()) toast("Type the date like 11/7/2026 or 11/7/26", true); };
+  $("af_broker").onchange = function () { var f = firmOf(this.value.trim()); if (f && !$("af_brokerCo").value.trim()) $("af_brokerCo").value = f; };
   $("afSave").onclick = async function () {
     var v = {};
     for (var i = 0; i < FORM.length; i++) {
       var f = FORM[i], x = $("af_" + f[0]).value.trim();
-      if (f[3] && !x) { toast(f[1] + " is required", true); $("af_" + f[0]).focus(); return; }
+      if (f[3] && !x) { toast(f[1] + " is required", true); if (f[2] !== "states") $("af_" + f[0]).focus(); return; }
       if (f[2] === "num" && x) { var n = parseNum(x); if (n == null) { toast(f[1] + " must be a number", true); return; } x = n; }
+      if (f[2] === "money" && x) { var mn = amt(x); if (mn == null) mn = parseNum(x); if (mn == null) { toast(f[1] + " must be an amount like $1,000,000", true); return; } x = mn; }
+      if (f[2] === "mdate" && x) { var dd = parseMDate(x); if (!dd) { toast("Type the date on market like 11/7/2026 or 11/7/26", true); $("af_onMarket").focus(); return; } x = dd; }
       if (f[2] === "url" && x && !/^https?:\/\//i.test(x)) { toast("The OM link must start with https://", true); return; }
       if (x !== "") v[f[0]] = x;
     }
