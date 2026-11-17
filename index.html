@@ -726,6 +726,9 @@ select.inp,.form select{appearance:none;-webkit-appearance:none;padding-right:26
 .drawctl button{display:flex!important;align-items:center;justify-content:center;color:#3a3a3c}
 .drawctl button svg{width:19px;height:19px}
 .drawctl button.on{background:#0071e3!important;color:#fff}
+.satctl{display:flex;flex-direction:column}
+.satctl button{width:auto!important;min-width:29px;padding:0 9px!important;font-size:11.5px;font-weight:600;color:#3a3a3c;display:flex!important;align-items:center;justify-content:center}
+.satctl button.on{background:#0071e3!important;color:#fff}
 .maplibregl-ctrl-attrib{background:rgba(255,255,255,.62)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:10px!important;font-size:10.5px}
 .maplibregl-ctrl-bottom-right{right:200px}
 .maplibregl-popup.gpop{z-index:5}
@@ -841,6 +844,42 @@ body.rec-open #drawer,body.rec-open header,body.rec-open .mv-side{visibility:hid
 .rc-tbl th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:0 8px 7px;border-bottom:1px solid var(--border2)}
 .rc-tbl td{padding:7px 8px;border-bottom:1px solid rgba(0,0,0,.045)}
 .rc-tbl .r{text-align:right}
+/* editable record values (v40) */
+.rce{cursor:text;border-radius:7px;padding:0 3px;margin:0 -3px;transition:background .15s,box-shadow .15s;position:relative}
+.rce:hover{background:rgba(0,113,227,.09);box-shadow:0 0 0 2px rgba(0,113,227,.09)}
+.rce.emp{color:var(--text3);font-weight:inherit}
+.rce.edd::after{content:"";position:absolute;top:-1px;right:-5px;width:6px;height:6px;border-radius:50%;background:#0a84ff;box-shadow:0 0 0 1.5px #fff}
+.rce.saving{opacity:.5}
+.rce.editing{background:none;box-shadow:none;padding:0;margin:0;display:block}
+.rce-in{width:100%;min-width:90px;font:inherit;color:inherit;letter-spacing:inherit;border:none;background:#fff;border-radius:8px;padding:2px 7px;box-shadow:0 0 0 2px #0071e3,0 4px 14px rgba(0,113,227,.14);outline:none}
+textarea.rce-in{font-size:13.5px;line-height:1.5;font-weight:400;resize:vertical;white-space:pre-wrap}
+.rt-t .v .rce-in{font-size:22px}
+.rc-mini .rt-t .v .rce-in{font-size:17px}
+.rc-tbl td.r .rce-in{text-align:right}
+.rc-notes{white-space:pre-wrap}
+.rc-hint{margin-left:auto;font-size:11.5px;color:var(--text3);align-self:center}
+.rc-edb{margin-left:10px;border:none;background:rgba(0,113,227,.1);color:#0060c0;font-size:12px;font-weight:600;font-family:inherit;padding:4px 11px;border-radius:999px;cursor:pointer;vertical-align:2px;transition:background .15s;letter-spacing:0}
+.rc-edb:hover{background:rgba(0,113,227,.18)}
+.rc-mixed input{width:100%;font:inherit;border:none;background:var(--fill2);border-radius:8px;padding:6px 8px;outline:none;min-width:0}
+.rc-mixed input:focus{background:#fff;box-shadow:0 0 0 2px #0071e3}
+.rc-mixed input.r{text-align:right}
+.rc-mixed td{padding:4px 4px}
+.rc-mixed td:first-child input{font-weight:600}
+.rc-mixed .mxdel{border:none;background:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 6px;border-radius:6px}
+.rc-mixed .mxdel:hover{color:var(--red);background:rgba(255,59,48,.08)}
+.mx-bar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.rc-tags{display:flex;gap:6px;flex-wrap:wrap}
+.rc-tag{border:none;background:var(--fill);color:var(--text2);font-size:12px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;position:relative;transition:background .15s,color .15s}
+.rc-tag:hover{background:rgba(0,113,227,.1)}
+.rc-tag.on{background:#0071e3;color:#fff}
+.rc-tag.edd::after{content:"";position:absolute;top:0;right:1px;width:6px;height:6px;border-radius:50%;background:#0a84ff;box-shadow:0 0 0 1.5px #fff}
+.rc-opx tr.dim td:first-child{color:var(--text3)}
+.rc-catd{margin-top:4px}
+.rc-satc h3{display:flex;align-items:center;gap:8px}
+.rc-satl{margin-left:auto;display:flex;gap:12px;font-size:12.5px;font-weight:500;letter-spacing:0}
+.rc-satl a{color:#0071e3;text-decoration:none}
+.rc-sat{height:300px;border-radius:16px;overflow:hidden;background:#1c1c1e}
+.recbtn.new .ri{background:#34c759;box-shadow:0 4px 12px rgba(52,199,89,.3)}
 .rc-tbl tbody tr:hover td{background:rgba(0,113,227,.04)}
 .rc-tbl tfoot td{font-weight:650;border-bottom:none;border-top:1px solid var(--border2)}
 .rc-barc{width:22%}
@@ -896,7 +935,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v39</span>
+    <span id="verBadge" title="Page version">v40</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1779,6 +1818,46 @@ DrawCtl.prototype.onAdd = function () {
   this._el = d; return d;
 };
 DrawCtl.prototype.onRemove = function () { this._el.remove(); };
+/* Map / Satellite (Esri World Imagery under the labels; labels turn white on the imagery) */
+var _sat = !!lsGet("miq_sat", 0), _labPaint = null;
+function SatCtl() {}
+SatCtl.prototype.onAdd = function () {
+  var d = document.createElement("div");
+  d.className = "maplibregl-ctrl maplibregl-ctrl-group satctl";
+  d.innerHTML = '<button type="button" data-m="map" title="Map">Map</button><button type="button" data-m="sat" title="Satellite imagery">Satellite</button>';
+  d.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) setSat(b.dataset.m === "sat"); });
+  this._el = d; setTimeout(function () { setSat(_sat, true); }, 0); return d;
+};
+SatCtl.prototype.onRemove = function () { this._el.remove(); };
+function setSat(on, quiet) {
+  _sat = !!on; if (!quiet) lsSet("miq_sat", _sat ? 1 : 0);
+  document.querySelectorAll(".satctl button").forEach(function (b) { b.classList.toggle("on", (b.dataset.m === "sat") === _sat); });
+  document.body.classList.toggle("map-sat", _sat);
+  if (!_mapReady) return;
+  try {
+    var layers = _map.getStyle().layers || [];
+    if (!_map.getSource("sat")) {
+      if (!_sat) return;
+      _map.addSource("sat", {type: "raster", tiles: [SAT_TILES], tileSize: 256, maxzoom: 19, attribution: SAT_ATTR});
+      var sym0 = layers.find(function (l) { return l.type === "symbol"; });
+      _map.addLayer({id: "sat", type: "raster", source: "sat", paint: {"raster-fade-duration": 0}}, _map.getLayer("state-casing") ? "state-casing" : sym0 && sym0.id);
+    }
+    _map.setLayoutProperty("sat", "visibility", _sat ? "visible" : "none");
+    if (_map.getLayer("building-3d")) _map.setLayoutProperty("building-3d", "visibility", _sat ? "none" : "visible");
+    if (!_labPaint) {
+      _labPaint = {};
+      layers.forEach(function (l) { if (l.type === "symbol") _labPaint[l.id] = [_map.getPaintProperty(l.id, "text-color"), _map.getPaintProperty(l.id, "text-halo-color"), _map.getPaintProperty(l.id, "text-halo-width")]; });
+    }
+    Object.keys(_labPaint).forEach(function (id) {
+      var p = _labPaint[id];
+      _map.setPaintProperty(id, "text-color", _sat ? "#ffffff" : p[0]);
+      _map.setPaintProperty(id, "text-halo-color", _sat ? "rgba(0,0,0,.72)" : p[1]);
+      _map.setPaintProperty(id, "text-halo-width", _sat ? 1.3 : p[2]);
+    });
+    if (_map.getLayer("state-lines")) _map.setPaintProperty("state-lines", "line-color", _sat ? "#ffffff" : "#7f78a6");
+    if (_map.getLayer("state-casing")) _map.setPaintProperty("state-casing", "line-color", _sat ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.9)");
+  } catch (e) { console.warn("satellite", e); }
+}
 function drawHint(txt) { var h = $("drawHint"); if (!h) return; h.textContent = txt || ""; h.classList.toggle("on", !!txt); }
 function startDraw(t) {
   if (_draw && _draw.t === t) return endDraw();
@@ -1844,6 +1923,7 @@ function initMap() {
   _map.scrollZoom.setWheelZoomRate(1 / 300);
   _map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), "top-right");
   _map.addControl(new DrawCtl(), "top-right");
+  _map.addControl(new SatCtl(), "top-right");
   _map.on("load", function () {
     styleMap();
     _map.addSource("draw", {type: "geojson", data: EMPTY_FC});
@@ -1886,6 +1966,7 @@ function initMap() {
     });
     _map.on("dblclick", function (e) { var d = _draw; if (d && d.t === "poly") { e.preventDefault(); var p = d.pts.slice(0, -1); if (p.length >= 3) endDraw({t: "poly", p: p}); } });
     _mapReady = true;
+    if (_sat) setSat(true, true);
     renderMap(false);
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && _draw) { e.stopPropagation(); endDraw(); } }, true);
@@ -2413,6 +2494,8 @@ function attachDetails() {
   if (S._recNew) { S._recNew = false; derive(); }   /* units learned from records: rebuild once (land flags, $/unit, matching) */
 }
 function detPost(o) {
+  if (!o._det && recEd(o)) { o._det = recBlank(o); o._detHow = "manual"; }
+  if (o._det) o._det = recApply(o, o._det);
   var d = o._det;
   if (d && !o.units && !S.recUnits[o.id]) {
     var u = d.units || (d.rr && d.rr.n) || sum((d.um || []).map(function (x) { return x.n || 0; }));
@@ -2499,9 +2582,10 @@ function detSrcName(d) { return d.kind === "gs" ? "Greysteel underwriting" : "th
 
 /* drawer: the button under the pills and the short property section under Details */
 function recBtnHtml(o) {
-  if (!o._det) return "";
+  if (!o._det) return S.det && S.det.byId ? '<button class="recbtn new" id="recBtn"><span class="ri"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></span>' +
+    '<span class="rt"><b>Start a property record</b><small>No OM or model read yet: enter unit mix, rents, T-12 and notes by hand</small></span><span class="rc">›</span></button>' : "";
   return '<button class="recbtn" id="recBtn"><span class="ri"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 9h8M8 12.5h8M8 16h5"/></svg></span>' +
-    '<span class="rt"><b>Open detailed property record</b><small>' + (o._det.kind === "gs" ? "Rent roll, unit mix, T-12 from Greysteel's underwriting" : "Unit mix, rents, amenities, T-12 and notes from the OM") + '</small></span><span class="rc">›</span></button>';
+    '<span class="rt"><b>Open detailed property record</b><small>' + (o._det.manual ? "Entered by hand in MarketIQ · every value editable" : o._det.kind === "gs" ? "Rent roll, unit mix, T-12 from Greysteel's underwriting" : "Unit mix, rents, amenities, T-12 and notes from the OM") + '</small></span><span class="rc">›</span></button>';
 }
 function propSecHtml(o) {
   var hd = '<div class="dr-sec"><div class="h">Property';
@@ -2509,9 +2593,9 @@ function propSecHtml(o) {
   if (S.det.err) return hd + '</div><div class="small muted">Property records could not load: ' + esc(S.det.err) + "</div></div>";
   var d = o._det;
   if (!d) return hd + '</div><div class="small muted">' + (o.gs ? "No Greysteel underwriting model found for this listing." : esc(DET_ST[o._detSt] || "This listing's OM hasn't been read yet.")) + "</div></div>";
-  var mix = d.kind === "gs" ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var mix = recMix(d), ut = utilSplit(d.util);
   var tile = function (l, v, s) { return '<div><div class="l">' + l + '</div><div class="v num">' + (v || "–") + '</div><div class="s">' + (s || "") + "</div></div>"; };
-  var h = hd + ' <span class="hs">from ' + detSrcName(d) + "</span></div>";
+  var h = hd + ' <span class="hs">' + (d.manual ? "entered by hand" : "from " + detSrcName(d)) + (d._red ? " · edited" : "") + "</span></div>";
   h += '<div class="ptiles">' + tile("Occupancy", occTxt(d), d.kind === "gs" && d.rr ? "rent roll " + fmtDs(d.rr.asof) : d.occ != null ? "per the OM" : "not stated") +
     tile("Avg rent", d.rent ? money(d.rent) : "", d.ach ? "market " + money(d.ach) : d.rent ? "in place / month" : "") + tile("Class", d.cls ? esc(d.cls) : "", d.aff ? esc(d.aff_type || "Affordable") : "") +
     tile("Built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") + "</div>";
@@ -2547,18 +2631,20 @@ function normRec(d) {
   return d;
 }
 function openRec(id) {
-  var o = S.byId[id]; if (!o || !o._det) return;
+  var o = S.byId[id]; if (!o) return;
+  if (!o._det) { if (!S.det || !S.det.byId) return; o._det = recApply(o, recBlank(o)); o._detHow = "manual"; }   /* no record yet: start one by hand */
   var el = $("rec"); el.hidden = false; document.body.classList.add("rec-open");
   requestAnimationFrame(function () { el.classList.add("open"); });
-  el.dataset.id = id; el.scrollTop = 0;
+  el.dataset.id = id; el.scrollTop = 0; S._mixEdit = null;
+  if (!o._det.id) return renderRec(o, recBlank(o));
   renderRec(o, S.detFull[o._det.id]);
   if (!S.detFull[o._det.id]) apiGet("/marketiq/details/" + encodeURIComponent(o._det.id)).then(function (j) {
-    S.detFull[o._det.id] = normRec(j.deal); if ($("rec").dataset.id === id && !$("rec").hidden) renderRec(o, j.deal, true);
+    S.detFull[o._det.id] = normRec(j.deal); if ($("rec").dataset.id === id && !$("rec").hidden) recRefresh();
   }).catch(function (e) { toast("Could not load the full record: " + e.message, true); });
 }
 function closeRec() {
   var el = $("rec"); el.classList.remove("open"); document.body.classList.remove("rec-open");
-  setTimeout(function () { if (!el.classList.contains("open")) el.hidden = true; }, 260);
+  setTimeout(function () { if (!el.classList.contains("open")) { el.hidden = true; if (_recMap) { _recMap.remove(); _recMap = null; _recMapKey = null; } } }, 260);
 }
 function recTile(l, v, s, cls) { return '<div class="rt-t' + (cls ? " " + cls : "") + '"><div class="l">' + l + '</div><div class="v num">' + (v == null || v === "" ? "–" : v) + '</div><div class="s">' + (s || "") + "</div></div>"; }
 function boxA(id, label, folder) { return id && /^\d+$/.test(String(id)) ? '<a href="' + (folder ? BOXD : BOXF) + id + '" target="_blank" rel="noopener">' + esc(label) + " ↗</a>" : ""; }
@@ -2585,99 +2671,295 @@ function mixTable(mix, isGs, d) {
   } else if (d.unit_mix) h += '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>";
   return h;
 }
+/* ---- record edits (v40, Mason: "everything in dashboard view should be editable"). Record fields save to overlay
+   "r/<listing id>" (kept apart from the source record, which stays in D1); listing fields shown in the record (name,
+   address, units, year built, asking, T-12 NOI, broker, date on market) save to "l/<id>" like the side panel, and the
+   closed price to the sale's "s/<id>". Cap rates, $/unit, vs. ask and the expense ratio are worked out from the values. */
+var RF = {occ: ["Occupancy", "pct"], rent: ["Avg in-place rent", "money"], ach: ["Market rent", "money"], cls: ["Class", "text"], yr: ["Year renovated", "num"],
+  construction: ["Construction", "text"], amenities: ["Amenities", "long"], util_own: ["Owner pays", "text"], util_res: ["Residents pay", "text"],
+  aff: ["Affordability", "text"], owner: ["Owner", "text"], mgr: ["Management", "text"], notes: ["Analyst notes", "long"], period: ["Statement period", "text"],
+  egi: ["Effective gross income", "money"], total: ["Operating expenses", "money"], noi: ["Statement NOI", "money"], units_note: ["Units note", "text"]};
+var RTAGS = [["lease_up", "Lease-up"], ["student", "Student"], ["senior", "Senior"], ["tax_abated", "Tax abated"], ["mixed_use", "Mixed use"]];
+var LTYPE = {name: "text", address: "text", units: "num", yearBuilt: "num", onMarket: "date", asking: "money", noi: "money", broker: "text", brokerCo: "text"};
+function recEd(o) { return ((S.raw.overlay || {}).edits || {})["r/" + o.id] || null; }
+function recBlank(o) { return {id: "", kind: o.gs ? "gs" : "ext", manual: 1, name: o.name, address: o.address, city: o.city, state: o.state}; }
+function rfType(f) { return /^cat_/.test(f) ? "money" : RF[f] ? RF[f][1] : RTAGS.some(function (t) { return t[0] === f; }) ? "bool" : f === "mix" ? "mix" : "text"; }
+function rGet(d, f) {
+  if (!d) return null;
+  if (f === "util_own" || f === "util_res") { var u = utilSplit(d.util)[f === "util_own" ? "own" : "res"]; return u.length ? u.join(", ") : null; }
+  if (f === "aff") return d.aff ? d.aff_type || "Affordable" : null;
+  if (f === "owner") return d.owner_full || d.owner || null;
+  if (f === "egi") return d.egi || d.printed_egi || null;
+  if (f === "noi") return d.noi || d.printed_noi || null;
+  if (/^cat_/.test(f)) return d.cats ? d.cats[f.slice(4)] || null : null;
+  if (rfType(f) === "bool") return d[f] ? 1 : 0;
+  return d[f] == null || d[f] === "" ? null : d[f];
+}
+function recApply(o, d) {
+  var e = recEd(o); if (!e || !d) return d;
+  var x = Object.assign({}, d), units = d.units || o.units, ce = false, delta = 0, ut = utilSplit(d.util);
+  x._base = d; x._red = e;
+  Object.keys(e).forEach(function (f) {
+    var v = e[f].v, t = rfType(f);
+    if (f === "mix") { try { x.mix_ed = JSON.parse(v); } catch (er) {} return; }
+    if (/^cat_/.test(f)) {
+      var k = f.slice(4), nv = v === "" || v == null ? 0 : +v;
+      if (!ce) { x.cats = Object.assign({}, d.cats || {}); x.pu = Object.assign({}, d.pu || {}); ce = true; }
+      delta += nv - ((d.cats || {})[k] || 0); x.cats[k] = nv || null; x.pu[k] = nv && units ? nv / units : null; return;
+    }
+    if (f === "util_own" || f === "util_res") { ut[f === "util_own" ? "own" : "res"] = String(v || "").split(/\s*,\s*/).filter(Boolean); x._utEd = 1; return; }
+    if (f === "aff") { x.aff = v && !/^(none|no|n\/a)$/i.test(v) ? 1 : 0; x.aff_type = x.aff ? v : null; return; }
+    if (f === "owner") { x.owner = x.owner_full = v || null; return; }
+    if (f === "egi") x.printed_egi = null;
+    if (f === "noi") x.printed_noi = null;
+    if (t === "bool") { x[f] = String(v) === "1" ? 1 : 0; return; }
+    if (t === "money" || t === "num" || t === "pct") { x[f] = v === "" || v == null ? null : +v; return; }
+    x[f] = v || null;
+  });
+  if (x._utEd) { x.util = {}; ut.own.forEach(function (k) { x.util[k] = "owner"; }); ut.res.forEach(function (k) { x.util[k] = "resident"; }); }
+  if (ce && !e.total) x.total = (d.total || 0) + delta || null;
+  if (ce || e.total) x.total_pu = x.total && units ? x.total / units : null;
+  var egi = x.egi || x.printed_egi;
+  if ((ce || e.total || e.egi) && !e.noi && egi && x.total != null) { x.noi = egi - x.total; x.printed_noi = null; }
+  if (ce || e.total || e.egi) x.opex_ratio = egi && x.total ? x.total / egi : null;
+  return x;
+}
+function recMix(d) { return d.mix_ed && d.mix_ed.length ? d.mix_ed : d.kind === "gs" ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units); }
+/* an editable value: ef = "r:occ" | "l:asking" | "s:price" */
+function rceH(o, ef, inner, ph) {
+  var k = ef.charAt(0), f = ef.slice(2), e = k === "r" ? (recEd(o) || {})[f] : k === "l" ? o._ed[f] : o._sale && o._sale._ed ? o._sale._ed[f] : null;
+  var empty = inner == null || inner === "";
+  return '<span class="rce' + (e ? " edd" : "") + (empty ? " emp" : "") + '" data-ef="' + ef + '" title="' + (e ? "Edited by " + esc(String(e.by).split("@")[0]) + " " + fmtDs(String(e.at).slice(0, 10)) + " · click to change" : "Click to edit · shared with the team") + '">' + (empty ? (ph || "–") : inner) + "</span>";
+}
+function recEditStart(el) {
+  if (el.querySelector("input,textarea")) return;
+  var o = S.byId[$("rec").dataset.id], d = S._recD; if (!o || !d) return;
+  var ef = el.dataset.ef, k = ef.charAt(0), f = ef.slice(2), t, cur;
+  if (k === "r") { t = rfType(f); cur = rGet(d, f); }
+  else if (k === "l") {
+    t = LTYPE[f] || "text"; cur = o[f];
+    if (cur == null || cur === "") cur = {noi: S._recNoi, yearBuilt: d.yb, asking: o._ask, units: d.units, broker: d.broker}[f];   /* start from the value on screen */
+    if (t === "date") cur = mdy(cur);
+  } else { t = "money"; cur = o._sale ? o._sale[f] : null; }
+  if (t === "pct" && cur != null) cur = +(+cur).toFixed(2);
+  var init = cur == null || cur === "" ? "" : t === "money" ? Math.round(+cur).toLocaleString("en-US") : String(cur);
+  var inp = document.createElement(t === "long" ? "textarea" : "input");
+  inp.className = "rce-in"; inp.value = init;
+  if (t === "money" || t === "num" || t === "pct") inp.inputMode = "decimal";
+  inp.placeholder = {date: "11/7/2026", pct: "93.5%", money: "$0"}[t] || (RF[f] ? RF[f][0] : "");
+  if (t === "long") inp.rows = Math.min(10, Math.max(3, Math.ceil(init.length / 70)));
+  el.innerHTML = ""; el.appendChild(inp); el.classList.add("editing"); inp.focus(); if (inp.select) inp.select();
+  var done = false;
+  var finish = function (save) {
+    if (done) return; done = true;
+    var raw = inp.value.trim(), v = raw;
+    if (!save || raw === init) return recRefresh();
+    if (raw !== "") {
+      if (t === "money") { v = amt(raw); if (v == null) v = parseNum(raw); }
+      else if (t === "num") v = parseNum(raw);
+      else if (t === "pct") { var p = parseFloat(raw.replace(/[%\s,]/g, "")); v = isFinite(p) ? Math.round((p <= 1 && /\./.test(raw) && !/%/.test(raw) ? p * 100 : p) * 100) / 100 : null; }
+      else if (t === "date") v = parseMDate(raw);
+      if (v == null) { toast(t === "date" ? "Type the date like 11/7/2026 or 11/7/26" : "That isn't a number", true); return recRefresh(); }
+    }
+    var same = function (a, b) { return String(a == null ? "" : a) === String(b == null ? "" : b); };
+    el.textContent = raw || "–"; el.classList.remove("editing"); el.classList.add("saving");
+    if (k === "r") saveOps([{t: "set", k: "r/" + o.id, f: f, v: same(v, rGet(d._base || d, f)) ? null : v}], "edit " + f);
+    else if (k === "l") { var rl = S.raw.listings.find(function (r) { return r.id === o.id; }) || {}; saveOps([{t: "set", k: "l/" + o.id, f: f, v: same(v, rl[f]) ? null : v}], "edit " + f); }
+    else { var rs = S.raw.sales.find(function (r) { return r.id === o._sale.id; }) || {}; saveOps([{t: "set", k: "s/" + o._sale.id, f: f, v: same(v, rs[f]) ? null : v}], "edit sale " + f); }
+  };
+  inp.onkeydown = function (e) {
+    if (e.key === "Enter" && (t !== "long" || e.metaKey || e.ctrlKey)) { e.preventDefault(); finish(true); }
+    else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+  };
+  inp.onblur = function () { finish(true); };
+}
+function recRefresh() {
+  var el = $("rec"); if (el.hidden) return;
+  var o = S.byId[el.dataset.id]; if (!o) return closeRec();
+  if (!o._det) { o._det = recApply(o, recBlank(o)); o._detHow = "manual"; }
+  renderRec(o, o._det.id ? S.detFull[o._det.id] : recBlank(o), true);
+}
+/* unit mix editor */
+function mixRowH(r) {
+  r = r || {};
+  return '<tr><td><input data-k="t" value="' + esc(r.t || "") + '" placeholder="1BR/1BA"></td>' + ["n", "sf", "rent", "mkt"].map(function (k) {
+    return '<td><input data-k="' + k + '" inputmode="decimal" class="r" value="' + (r[k] != null && r[k] !== "" ? esc(String(Math.round(r[k]))) : "") + '"></td>';
+  }).join("") + '<td><button type="button" class="mxdel" title="Remove this row">&times;</button></td></tr>';
+}
+function mixEditor(d, mix) {
+  var rows = (mix || []).map(function (r) { return {t: r.t, n: r.n, sf: r.sf, rent: r.rent != null ? r.rent : r.ctr, mkt: r.mkt}; });
+  if (!rows.length) rows = [{}];
+  return '<table class="rc-tbl rc-mixed"><thead><tr><th>Type</th><th class=r>Units</th><th class=r>Avg SF</th><th class=r>In-place rent</th><th class=r>Market rent</th><th></th></tr></thead><tbody>' + rows.map(mixRowH).join("") + "</tbody></table>" +
+    '<div class="mx-bar"><button type="button" class="btn sm" data-mx="add">+ Add row</button><span style="flex:1"></span>' + (d.mix_ed ? '<button type="button" class="btn sm" data-mx="reset">Back to the source mix</button>' : "") +
+    '<button type="button" class="btn sm" data-mx="cancel">Cancel</button><button type="button" class="btn primary sm" data-mx="save">Save unit mix</button></div>';
+}
+function mixSave(o) {
+  var rows = [].map.call($("rec").querySelectorAll(".rc-mixed tbody tr"), function (tr) {
+    var r = {}; tr.querySelectorAll("input").forEach(function (i) { var k = i.dataset.k, v = i.value.trim(); if (k === "t") r.t = v; else { var n = amt(v); if (n == null) n = parseNum(v); if (n != null) r[k] = n; } });
+    return r;
+  }).filter(function (r) { return r.t && r.n > 0; });
+  if (!rows.length) { toast("Add at least one row with a unit type and a count", true); return; }
+  S._mixEdit = null;
+  saveOps([{t: "set", k: "r/" + o.id, f: "mix", v: JSON.stringify(rows)}], "edit unit mix");
+}
+document.addEventListener("click", function (e) {
+  var t = e.target; if (!t.closest || !t.closest("#rec")) return;
+  var o = S.byId[$("rec").dataset.id]; if (!o) return;
+  var el = t.closest(".rce");
+  if (el && !t.closest("a")) return recEditStart(el);
+  var tg = t.closest("[data-tag]");
+  if (tg) { var f = tg.dataset.tag, d = S._recD, on = !rGet(d, f), base = !!rGet(d._base || d, f); return saveOps([{t: "set", k: "r/" + o.id, f: f, v: on === base ? null : on ? "1" : "0"}], "edit " + f); }
+  if (t.closest("[data-mxe]")) { S._mixEdit = o.id; recRefresh(); var i = $("rec").querySelector(".rc-mixed input"); if (i) i.focus(); return; }
+  var mx = t.closest("[data-mx]");
+  if (mx) {
+    var a = mx.dataset.mx;
+    if (a === "add") { $("rec").querySelector(".rc-mixed tbody").insertAdjacentHTML("beforeend", mixRowH()); var ins = $("rec").querySelectorAll(".rc-mixed tbody tr:last-child input"); if (ins[0]) ins[0].focus(); }
+    else if (a === "cancel") { S._mixEdit = null; recRefresh(); }
+    else if (a === "reset") { S._mixEdit = null; saveOps([{t: "set", k: "r/" + o.id, f: "mix", v: null}], "unit mix back to source"); }
+    else if (a === "save") mixSave(o);
+    return;
+  }
+  if (t.closest(".mxdel")) { var tr = t.closest("tr"), tb = tr.parentNode; tr.remove(); if (!tb.children.length) tb.insertAdjacentHTML("beforeend", mixRowH()); }
+});
+
+/* satellite: Esri World Imagery (free with attribution, no key) */
+var SAT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+var SAT_ATTR = 'Imagery &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics';
+var _recMap = null, _recMapKey = null;
+function recSatHtml(o) {
+  var h = '<section class="rc-card rc-satc"><h3>Satellite';
+  if (!o.geo) return h + '</h3><p class="rc-p muted">Not on the map yet. Set a pin under Map location in the side panel and the satellite view shows here.</p></section>';
+  var ll = o.geo[0].toFixed(6) + "," + o.geo[1].toFixed(6);
+  return h + '<span class="rc-satl"><a href="https://www.google.com/maps/@?api=1&map_action=map&center=' + ll + '&zoom=19&basemap=satellite" target="_blank" rel="noopener">Google Maps ↗</a>' +
+    '<a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + ll + '" target="_blank" rel="noopener">Street View ↗</a></span></h3><div class="rc-sat" id="rcSat"></div></section>';
+}
+function mountRecSat(o) {
+  var ph = $("rcSat"); if (!ph || !o.geo || !window.maplibregl) return;
+  var key = o.id + "|" + o.geo.join(",");
+  if (_recMap && _recMapKey === key) { ph.replaceWith(_recMap.getContainer()); _recMap.resize(); return; }
+  if (_recMap) { _recMap.remove(); _recMap = null; }
+  var c = [o.geo[1], o.geo[0]];
+  try {
+    _recMap = new maplibregl.Map({container: ph, center: c, zoom: 17.6, minZoom: 3, maxZoom: 19.4, attributionControl: {compact: true}, cooperativeGestures: true, fadeDuration: 0,
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 2), dragRotate: false,
+      style: {version: 8, sources: {sat: {type: "raster", tiles: [SAT_TILES], tileSize: 256, maxzoom: 19, attribution: SAT_ATTR}}, layers: [{id: "sat", type: "raster", source: "sat"}]}});
+    _recMap.addControl(new maplibregl.NavigationControl({showCompass: false}), "top-right");
+    new maplibregl.Marker({color: "#0071e3"}).setLngLat(c).addTo(_recMap);
+    _recMapKey = key;
+  } catch (e) { _recMap = null; ph.innerHTML = '<p class="rc-p muted">The satellite view could not load.</p>'; }
+}
+
 function renderRec(o, full, soft) {
-  var d = full || o._det, ld = !full, isGs = d.kind === "gs";
-  var st = ST[o._status], noi = (isGs && d.om_noi) || d.noi || d.printed_noi, ask = o._ask, units = d.units || o.units;
-  var mix = isGs ? rrMix(d) : d.mix && d.mix.length ? d.mix : parseMix(d.unit_mix, d.units), ut = utilSplit(d.util);
+  var d = full ? recApply(o, full) : o._det, ld = !full, isGs = d.kind === "gs", man = !!d.manual, red = recEd(o) || {};
+  S._recD = d;
+  var st = ST[o._status], stNoi = d.noi || d.printed_noi, recNoi = (isGs && d.om_noi) || stNoi, noi = o.noi || recNoi, ask = o._ask;
+  var units = o._ed.units ? o.units : d.units || o.units, yb = o._ed.yearBuilt ? o.yearBuilt : d.yb || o.yearBuilt;
+  S._recNoi = recNoi;
+  var mix = recMix(d), ut = utilSplit(d.util), E = function (ef, inner, ph) { return rceH(o, ef, inner, ph); }, edN = Object.keys(red).length;
   var h = '<div class="rc-top"><button class="rc-back" onclick="closeRec()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Back</button>' +
-    '<div class="rc-tt"><div class="rc-n">' + esc(o.name) + '</div><div class="rc-a">' + esc(locLine(o)) + (d.county && String(d.county).toLowerCase() !== String(o.city || "").toLowerCase() ? " · " + esc(d.county) : "") + "</div></div>" +
+    '<div class="rc-tt"><div class="rc-n">' + E("l:name", esc(o.name)) + '</div><div class="rc-a">' + E("l:address", esc(o.address || ""), "Add an address") + (o.city || o.state ? ", " + esc([o.city, o.state].filter(Boolean).join(", ")) : "") +
+    (d.county && String(d.county).toLowerCase() !== String(o.city || "").toLowerCase() ? " · " + esc(d.county) : "") + "</div></div>" +
     '<div class="rc-links">' + [boxA(d.om_box, "OM"), boxA(d.t12_box, "T-12"), boxA(d.folder, "Broker folder", 1), boxA(d.model_box, "Model"), boxA(d.prop_folder, "Property folder", 1)].filter(Boolean).join("") + "</div></div>";
   h += '<div class="rc-body">';
   h += '<div class="rc-pills">' + (o.gs ? '<span class="pill gsb">Greysteel listing</span>' : '<span class="pill gray">External listing</span>') + '<span class="pill ' + st.pill + '">' + o._status + "</span>" +
     (d.cls ? '<span class="pill blue">Class ' + esc(d.cls) + "</span>" : "") + (d.aff ? '<span class="pill purple">' + esc(d.aff_type || "Affordable") + "</span>" : "") +
-    (d.lease_up ? '<span class="pill orange">Lease-up</span>' : "") + (d.student ? '<span class="pill orange">Student</span>' : "") + (d.senior ? '<span class="pill orange">Senior</span>' : "") +
-    (d.tax_abated ? '<span class="pill green">Tax abated</span>' : "") + (d.mixed_use ? '<span class="pill gray">Mixed use</span>' : "") +
-    (d.level_label ? '<span class="pill gray" title="' + esc(d.data_type || "") + '">' + esc(d.level_label) + "</span>" : "") + "</div>";
+    RTAGS.map(function (x) { return d[x[0]] ? '<span class="pill ' + (x[0] === "tax_abated" ? "green" : x[0] === "mixed_use" ? "gray" : "orange") + '">' + x[1] + "</span>" : ""; }).join("") +
+    (d.level_label ? '<span class="pill gray" title="' + esc(d.data_type || "") + '">' + esc(d.level_label) + "</span>" : "") + (man ? '<span class="pill blue">Entered by hand</span>' : "") +
+    (edN ? '<span class="pill blue" title="Values changed in MarketIQ show a blue dot">' + edN + " edited value" + (edN > 1 ? "s" : "") + "</span>" : "") +
+    '<span class="rc-hint">Click any value to edit · shared with the team</span></div>';
   /* headline numbers */
   h += '<div class="rc-tiles">' +
-    recTile("Occupancy", occTxt(d), isGs && d.rr ? "rent roll " + fmtDs(d.rr.asof) + " · " + d.rr.occ + " of " + (d.rr.n - (d.rr.nr || 0)) : d.occ != null ? "per the OM" : "not stated in the OM", "hero") +
-    recTile("Avg in-place rent", d.rent ? money(d.rent) : "", d.ach ? "market " + money(d.ach) + " (model)" : d.rent ? "per unit / month" : "") +
-    recTile("Units", units ? n0(units) : o.land ? "Land" : "", mix ? mix.length + " unit types" : "") +
-    recTile("Year built", d.yb || o.yearBuilt || "", d.yr ? "renovated " + d.yr : "") +
-    recTile("Asking", ask ? mshort(ask) : "", ask && units ? mshort(ask / units) + " / unit" : "no asking price") +
-    recTile("T-12 NOI", noi ? mshort(noi) : "", noi > 0 && ask ? pct(noi / ask, 2) + " cap at asking" : noi && units ? money(noi / units) + " / unit" : "") + "</div>";
+    recTile("Occupancy", E("r:occ", occTxt(d)), red.occ ? "entered in MarketIQ" : isGs && d.rr ? "rent roll " + fmtDs(d.rr.asof) + " · " + d.rr.occ + " of " + (d.rr.n - (d.rr.nr || 0)) : d.occ != null ? "per the OM" : "not stated", "hero") +
+    recTile("Avg in-place rent", E("r:rent", d.rent ? money(d.rent) : ""), "market " + E("r:ach", d.ach ? money(d.ach) : "") + (d.ach && isGs && !red.ach ? " (model)" : "")) +
+    recTile("Units", E("l:units", units ? n0(units) : o.land ? "Land" : ""), mix ? mix.length + " unit types" : "") +
+    recTile("Year built", E("l:yearBuilt", yb || ""), "renovated " + E("r:yr", d.yr || "")) +
+    recTile("Asking", E("l:asking", ask ? mshort(ask) : ""), ask && units ? mshort(ask / units) + " / unit" : "no asking price") +
+    recTile("T-12 NOI", E("l:noi", noi ? mshort(noi) : ""), noi > 0 && ask ? pct(noi / ask, 2) + " cap at asking" : noi && units ? money(noi / units) + " / unit" : "") + "</div>";
   h += '<div class="rc-grid">';
   h += '<div class="rc-col">';
   /* unit mix */
-  h += '<section class="rc-card"><h3>Unit mix</h3>';
-  if (mix) h += mixTable(mix, isGs, d);
-  else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated.</p>';
-  if (full && full.rent_note) h += '<div class="rc-note">Average rent: ' + esc(full.rent_note) + "</div>";
-  if (full && full.occ_q && !isGs) h += '<div class="rc-note">Occupancy source: “…' + esc(full.occ_q.replace(/","/g, " · ").replace(/[\[\]"]/g, "")) + '…”</div>';
+  var mxEd = S._mixEdit === o.id;
+  h += '<section class="rc-card"><h3>Unit mix' + (d.mix_ed ? ' <span class="hs">edited in MarketIQ</span>' : "") + (mxEd ? "" : '<button type="button" class="rc-edb" data-mxe="1">' + (mix ? "Edit" : "Add") + "</button>") + "</h3>";
+  if (mxEd) h += mixEditor(d, mix);
+  else if (mix) h += mixTable(mix, isGs && !d.mix_ed, d.mix_ed ? {} : d) + (d.mix_ed && red.mix ? '<div class="rc-note">Unit mix entered by ' + esc(String(red.mix.by).split("@")[0]) + " " + fmtDs(String(red.mix.at).slice(0, 10)) + ".</div>" : "");
+  else h += d.unit_mix ? '<p class="rc-p">' + esc(d.unit_mix) + "</p>" : '<p class="rc-p muted">Not stated. Use Add to enter it.</p>';
+  if (!mxEd && d.rent_note) h += '<div class="rc-note">Average rent: ' + esc(d.rent_note) + "</div>";
+  if (!mxEd && d.occ_q && !isGs && !red.occ) h += '<div class="rc-note">Occupancy source: “…' + esc(String(d.occ_q).replace(/","/g, " · ").replace(/[\[\]"]/g, "")) + '…”</div>';
   h += "</section>";
-  /* pricing from MarketIQ */
+  /* pricing */
   h += '<section class="rc-card"><h3>Pricing</h3><div class="rc-mini">' +
-    recTile("Asking", ask ? mshort(ask) : "", ask && units ? mshort(ask / units) + " / unit" : "") +
+    recTile("Asking", E("l:asking", ask ? mshort(ask) : ""), ask && units ? mshort(ask / units) + " / unit" : "") +
     recTile("Cap at asking", o._capAsk ? pct(o._capAsk, 2) : noi > 0 && ask ? pct(noi / ask, 2) : "", "T-12 NOI ÷ asking") +
-    recTile("Closed", o._sale ? mshort(o._sale.price) : "", o._sale ? fmtD(o._sale.date) : "no matched CoStar sale") +
+    recTile("Closed", o._sale ? E("s:price", mshort(o._sale.price)) : "", o._sale ? fmtD(o._sale.date) : "no matched CoStar sale") +
     recTile("vs. ask", spr(o._spread) || "", o._dtc != null ? o._dtc + " days to close" : "") + "</div>" +
-    (d.sf_noi ? '<div class="rc-note">Salesforce T-12 NOI ' + money(d.sf_noi) + (full && full.sf_noi_note ? ": " + esc(full.sf_noi_note) : "") + "</div>" : "") +
+    (d.sf_noi ? '<div class="rc-note">Salesforce T-12 NOI ' + money(d.sf_noi) + (d.sf_noi_note ? ": " + esc(d.sf_noi_note) : "") + "</div>" : "") +
     (isGs && d.om_noi ? '<div class="rc-note"><b>NOI from our OM: ' + money(d.om_noi) + "</b>" + (d.om_noi_label ? " (" + esc(d.om_noi_label) + ")" : "") + (d.om_pf_noi ? " · pro forma " + money(d.om_pf_noi) : "") +
-      (d.noi || d.printed_noi ? " · the model's raw T-12 NOI is " + money(d.noi || d.printed_noi) : "") + (d.om_box ? ' · <a href="' + BOXF + esc(d.om_box) + '" target="_blank" rel="noopener">OM ↗</a>' : "") + (d.om_note ? '<div class="rc-sub">' + esc(d.om_note) + "</div>" : "") + "</div>" : "") + "</section>";
+      (stNoi ? " · the model's raw T-12 NOI is " + money(stNoi) : "") + (d.om_box ? ' · <a href="' + BOXF + esc(d.om_box) + '" target="_blank" rel="noopener">OM ↗</a>' : "") + (d.om_note ? '<div class="rc-sub">' + esc(d.om_note) + "</div>" : "") + "</div>" : "") +
+    (o.noi && recNoi && Math.abs(o.noi - recNoi) > 1 ? '<div class="rc-note">T-12 NOI above is the listing\'s (' + money(o.noi) + "); the " + (isGs ? "model / OM" : "OM") + " shows " + money(recNoi) + ".</div>" : "") + "</section>";
   h += "</div>";
-  /* property profile */
-  var kv = function (k, v) { return v ? '<div class="k">' + k + '</div><div class="v">' + v + "</div>" : ""; };
+  /* satellite + property profile */
+  var kv = function (k, v) { return '<div class="k">' + k + '</div><div class="v">' + v + "</div>"; }, sub = function (s) { return s ? '<div class="rc-sub">' + esc(s) + "</div>" : ""; };
+  h += '<div class="rc-col">' + recSatHtml(o);
   h += '<section class="rc-card"><h3>Property</h3><div class="kv rc-kv">' +
-    kv("Construction", full && full.construction ? esc(full.construction) : ld && !isGs ? '<span class="muted">Loading…</span>' : "") +
-    kv("Class", d.cls ? "<b>" + esc(d.cls) + "</b>" + (full && full.cls_basis ? '<div class="rc-sub">' + esc(full.cls_basis.replace(/^[A-C][+-]?:\s*/, "")) + "</div>" : "") : "") +
-    kv("Amenities", esc(d.amenities || "")) +
-    kv("Utilities", (ut.own.length ? "<b>Owner pays</b> " + ut.own.join(", ") : "") + (ut.own.length && ut.res.length ? "<br>" : "") + (ut.res.length ? "<b>Residents pay</b> " + ut.res.join(", ") : "") + (full && full.util_note ? '<div class="rc-sub">' + esc(full.util_note) + "</div>" : "")) +
-    kv("Affordability", d.aff ? "<b>" + esc(d.aff_type || "Affordable") + "</b>" + (full && full.aff_detail ? '<div class="rc-sub">' + esc(full.aff_detail) + "</div>" : "") : !isGs ? "None stated" : "") +
-    kv("Owner", esc((full && full.owner_full) || d.owner || "")) + kv("Management", esc(d.mgr || "") + (full && full.mgr_web ? ' · <a href="' + esc(/^https?:/.test(full.mgr_web) ? full.mgr_web : "https://" + full.mgr_web) + '" target="_blank" rel="noopener">site ↗</a>' : "")) +
-    kv("Listing broker", esc([d.broker || o.broker, d.firm || o.firm || o.brokerCo].filter(Boolean).join(" · "))) + kv("Date on market", fmtD(o.onMarket)) +
-    kv("Units", full && full.units_note ? n0(units) + '<div class="rc-sub">' + esc(full.units_note) + "</div>" : "") +
-    (full && full.portfolio && full.portfolio.length ? kv("Portfolio", full.portfolio.map(function (p) { return esc(typeof p === "string" ? p : [p.name, p.address, p.units ? p.units + " units" : ""].filter(Boolean).join(" · ")); }).join("<br>")) : "") +
-    "</div></section>";
+    kv("Construction", ld && !isGs && !d.construction ? '<span class="muted">Loading…</span>' : E("r:construction", esc(d.construction || ""))) +
+    kv("Class", E("r:cls", d.cls ? "<b>" + esc(d.cls) + "</b>" : "") + (d.cls_basis && !red.cls ? sub(String(d.cls_basis).replace(/^[A-C][+-]?:\s*/, "")) : "")) +
+    kv("Amenities", E("r:amenities", esc(d.amenities || ""))) +
+    kv("Owner pays", E("r:util_own", esc(ut.own.join(", ")))) +
+    kv("Residents pay", E("r:util_res", esc(ut.res.join(", "))) + (d.util_note ? sub(d.util_note) : "")) +
+    kv("Affordability", E("r:aff", d.aff ? "<b>" + esc(d.aff_type || "Affordable") + "</b>" : "", isGs ? "–" : "None stated") + (d.aff && d.aff_detail && !red.aff ? sub(d.aff_detail) : "")) +
+    kv("Owner", E("r:owner", esc(d.owner_full || d.owner || ""))) +
+    kv("Management", E("r:mgr", esc(d.mgr || "")) + (d.mgr_web ? ' · <a href="' + esc(/^https?:/.test(d.mgr_web) ? d.mgr_web : "https://" + d.mgr_web) + '" target="_blank" rel="noopener">site ↗</a>' : "")) +
+    kv("Listing broker", E("l:broker", esc(o.broker || d.broker || ""))) + kv("Broker company", E("l:brokerCo", esc(o.brokerCo || o.firm || d.firm || ""))) +
+    kv("Date on market", E("l:onMarket", fmtD(o.onMarket))) +
+    kv("Units note", E("r:units_note", esc(d.units_note || ""))) +
+    kv("Tags", '<div class="rc-tags">' + RTAGS.map(function (x) { return '<button type="button" class="rc-tag' + (d[x[0]] ? " on" : "") + (red[x[0]] ? " edd" : "") + '" data-tag="' + x[0] + '">' + x[1] + "</button>"; }).join("") + "</div>") +
+    (d.portfolio && d.portfolio.length ? kv("Portfolio", d.portfolio.map(function (p) { return esc(typeof p === "string" ? p : [p.name, p.address, p.units ? p.units + " units" : ""].filter(Boolean).join(" · ")); }).join("<br>")) : "") +
+    "</div></section></div>";
   /* operating statement */
-  h += '<section class="rc-card rc-wide"><h3>Operating statement <span class="hs">' + esc(d.period || "") + "</span></h3>";
-  if (d.egi || d.total || noi) {
-    h += '<div class="rc-mini">' + recTile("Effective gross income", d.egi ? money(d.egi) : d.printed_egi ? money(d.printed_egi) : "", units && (d.egi || d.printed_egi) ? money((d.egi || d.printed_egi) / units) + " / unit" : "") +
-      recTile("Operating expenses", d.total ? money(d.total) : "", d.total_pu ? money(d.total_pu) + " / unit" : "") + recTile("Net operating income", noi ? money(noi) : "", noi && units ? money(noi / units) + " / unit" : "") +
-      recTile("Expense ratio", d.opex_ratio != null ? pct(d.opex_ratio, 1) : "", "OpEx ÷ EGI") + "</div>";
-    if (full && full.cats) {
-      var egi = d.egi || d.printed_egi, cm = Math.max.apply(null, OPX.map(function (x) { return full.cats[x[0]] || 0; }).concat([1]));
-      h += '<table class="rc-tbl rc-opx"><thead><tr><th>Expense</th><th class=r>Annual</th><th class=r>Per unit</th><th class=r>% of EGI</th><th></th></tr></thead><tbody>' +
-        OPX.filter(function (x) { return full.cats[x[0]]; }).map(function (x) {
-          var v = full.cats[x[0]], pu = full.pu && full.pu[x[0]];
-          return "<tr><td>" + x[1] + '</td><td class="r num">' + money(v) + '</td><td class="r num">' + money(pu) + '</td><td class="r num">' + (egi ? pct(v / egi, 1) : "") + '</td><td class="rc-barc"><i style="width:' + (v / cm * 100).toFixed(1) + '%"></i></td></tr>';
-        }).join("") + '</tbody><tfoot><tr><td>Total operating expenses</td><td class="r num">' + money(d.total) + '</td><td class="r num">' + money(d.total_pu) + '</td><td class="r num">' + (egi && d.total ? pct(d.total / egi, 1) : "") + "</td><td></td></tr></tfoot></table>";
-      var ex = Object.keys(full.excl || {}).filter(function (k) { return full.excl[k]; });
-      if (ex.length) h += '<div class="rc-note">Left out of operating expenses: ' + ex.map(function (k) { return esc(OPX_L[k] || k) + " " + money(full.excl[k]); }).join(" · ") + "</div>";
-    } else if (ld) h += '<div class="rc-note">Loading the expense detail…</div>';
-    if (full && full.lines && full.lines.length) {
-      h += '<details class="rc-lines"><summary>All ' + full.lines.length + " line items from the statement</summary><table class=\"rc-tbl\"><thead><tr><th>Line</th><th>Category</th><th class=r>Amount</th></tr></thead><tbody>" +
-        full.lines.map(function (x) { return "<tr><td>" + esc(x.l) + '</td><td class="muted">' + esc(OPX_L[x.c] || x.c || "") + '</td><td class="r num">' + money(x.a) + "</td></tr>"; }).join("") + "</tbody></table></details>";
-    }
-    if (full && full.om_x) h += '<div class="rc-note">Checked against the OM: ' + esc(full.om_x) + "</div>";
-  } else h += '<p class="rc-p muted">No historical operating statement was found for this listing.</p>' + (d.no_data ? '<details class="rc-lines"><summary>Why</summary><p class="rc-p muted" style="font-size:12.5px">' + esc(String(d.no_data).length > 700 ? String(d.no_data).slice(0, 700) + "…" : d.no_data) + "</p></details>" : "");
+  var egi = d.egi || d.printed_egi, hasSt = egi || d.total || stNoi || d.cats;
+  h += '<section class="rc-card rc-wide"><h3>Operating statement <span class="hs">' + E("r:period", esc(d.period || ""), "add the period") + "</span></h3>";
+  h += '<div class="rc-mini">' + recTile("Effective gross income", E("r:egi", egi ? money(egi) : ""), units && egi ? money(egi / units) + " / unit" : "") +
+    recTile("Operating expenses", E("r:total", d.total ? money(d.total) : ""), d.total_pu ? money(d.total_pu) + " / unit" : "") +
+    recTile("Net operating income", E("r:noi", stNoi ? money(stNoi) : ""), stNoi && units ? money(stNoi / units) + " / unit" : "") +
+    recTile("Expense ratio", d.opex_ratio != null ? pct(d.opex_ratio, 1) : egi && d.total ? pct(d.total / egi, 1) : "", "OpEx ÷ EGI") + "</div>";
+  if (!hasSt && !man) h += '<p class="rc-p muted" style="margin:0 0 10px">No historical operating statement was found for this listing. Click any figure to enter it.</p>' + (d.no_data ? '<details class="rc-lines"><summary>Why</summary><p class="rc-p muted" style="font-size:12.5px">' + esc(String(d.no_data).length > 700 ? String(d.no_data).slice(0, 700) + "…" : d.no_data) + "</p></details>" : "");
+  if (d.cats || !ld) {
+    var cats = d.cats || {}, cm = Math.max.apply(null, OPX.map(function (x) { return cats[x[0]] || 0; }).concat([1]));
+    h += '<details class="rc-lines rc-catd"' + (d.cats ? " open" : "") + "><summary>Expenses by category" + (d.cats ? "" : " (none on file: open to enter them)") + '</summary><table class="rc-tbl rc-opx"><thead><tr><th>Expense</th><th class=r>Annual</th><th class=r>Per unit</th><th class=r>% of EGI</th><th></th></tr></thead><tbody>' +
+      OPX.map(function (x) {
+        var v = cats[x[0]], pu = d.pu && d.pu[x[0]] || (v && units ? v / units : null);
+        return '<tr class="' + (v ? "" : "dim") + '"><td>' + x[1] + '</td><td class="r num">' + E("r:cat_" + x[0], v ? money(v) : "") + '</td><td class="r num">' + (v ? money(pu) : "") + '</td><td class="r num">' + (v && egi ? pct(v / egi, 1) : "") + '</td><td class="rc-barc">' + (v ? '<i style="width:' + (v / cm * 100).toFixed(1) + '%"></i>' : "") + "</td></tr>";
+      }).join("") + '</tbody><tfoot><tr><td>Total operating expenses</td><td class="r num">' + money(d.total) + '</td><td class="r num">' + money(d.total_pu) + '</td><td class="r num">' + (egi && d.total ? pct(d.total / egi, 1) : "") + "</td><td></td></tr></tfoot></table>" +
+      (Object.keys(red).some(function (k) { return /^cat_/.test(k); }) ? '<div class="rc-note">Changing a category moves total operating expenses (and NOI, unless NOI was typed in) by the same amount.</div>' : "") + "</details>";
+    var ex = Object.keys(d.excl || {}).filter(function (k) { return d.excl[k]; });
+    if (ex.length) h += '<div class="rc-note">Left out of operating expenses: ' + ex.map(function (k) { return esc(OPX_L[k] || k) + " " + money(d.excl[k]); }).join(" · ") + "</div>";
+  } else if (ld && hasSt) h += '<div class="rc-note">Loading the expense detail…</div>';
+  if (d.lines && d.lines.length) {
+    h += '<details class="rc-lines"><summary>All ' + d.lines.length + " line items from the statement</summary><table class=\"rc-tbl\"><thead><tr><th>Line</th><th>Category</th><th class=r>Amount</th></tr></thead><tbody>" +
+      d.lines.map(function (x) { return "<tr><td>" + esc(x.l) + '</td><td class="muted">' + esc(OPX_L[x.c] || x.c || "") + '</td><td class="r num">' + money(x.a) + "</td></tr>"; }).join("") + "</tbody></table></details>";
+  }
+  if (d.om_x) h += '<div class="rc-note">Checked against the OM: ' + esc(d.om_x) + "</div>";
   h += "</section>";
   /* notes */
-  if (full && (full.notes || (full.flags && full.flags.length))) {
-    h += '<section class="rc-card rc-wide"><h3>Analyst notes</h3>' + (full.notes ? '<p class="rc-p">' + esc(full.notes) + "</p>" : "") +
-      (full.flags && full.flags.length ? '<details class="rc-lines"' + (full.notes ? "" : " open") + "><summary>" + full.flags.length + " flags from the read</summary><ul class=\"rc-flags\">" + full.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></details>" : "") + "</section>";
-  }
+  h += '<section class="rc-card rc-wide"><h3>Analyst notes</h3><div class="rc-p rc-notes">' + (ld && !d.notes && !man ? '<span class="muted">Loading…</span>' : E("r:notes", d.notes ? esc(d.notes) : "", "Add a note for the team")) + "</div>" +
+    (d.flags && d.flags.length ? '<details class="rc-lines"><summary>' + d.flags.length + " flags from the read</summary><ul class=\"rc-flags\">" + d.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></details>" : "") + "</section>";
   h += "</div>";
-  h += '<div class="rc-foot">' + (isGs ? "Greysteel underwriting model and rent roll" : "AI read of the OM and T-12") + ", from Harrison Wallman's OpEx database (copied " + fmtDs(String(S.det.loaded || "").slice(0, 10)) + "). " +
+  h += '<div class="rc-foot">' + (man ? "Entered by hand in MarketIQ: no OM or underwriting model has been read for this listing. " :
+    (isGs ? "Greysteel underwriting model and rent roll" : "AI read of the OM and T-12") + ", from Harrison Wallman's OpEx database (copied " + fmtDs(String(S.det.loaded || "").slice(0, 10)) + "). " +
     (o._detHow === "match" ? "Matched to this listing by name / address. " : "") +
-    (isGs && d.modified && Math.abs(days(o.onMarket, d.modified.slice(0, 10)) || 0) > 365 ? "This is Greysteel's latest model of the property (saved " + fmtD(d.modified.slice(0, 10)) + "), not one from this listing's time. " : "") + "Check the source before relying on a figure." + (full && full.facts ? '<div class="rc-sub">OM pages used: ' + esc(full.facts) + "</div>" : "") + "</div>";
+    (isGs && d.modified && Math.abs(days(o.onMarket, d.modified.slice(0, 10)) || 0) > 365 ? "This is Greysteel's latest model of the property (saved " + fmtD(d.modified.slice(0, 10)) + "), not one from this listing's time. " : "")) +
+    "Values with a blue dot were changed in MarketIQ (hover for who and when); the source record is kept as it was. Check the source before relying on a figure." + (d.facts ? '<div class="rc-sub">OM pages used: ' + esc(d.facts) + "</div>" : "") + "</div>";
   h += "</div>";
+  if (_recMap) { var mc = _recMap.getContainer(); if (mc.parentNode) mc.parentNode.removeChild(mc); }
   $("rec").innerHTML = '<div class="rc-sheet' + (soft ? " soft" : "") + '">' + h + "</div>";
+  mountRecSat(o);
 }
 /* derive() rebuilds S.L: re-attach the records each time */
 var _derive0 = derive;
 derive = function () { _derive0(); if (S.det && S.det.byId) attachDetails(); };
 document.addEventListener("keydown", function (e) {
   if ($("rec").hidden) return;
+  if (e.key === "Escape" && /^(INPUT|TEXTAREA)$/.test((e.target || {}).tagName || "")) return;   /* the field's own handler cancels the edit */
   if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); closeRec(); }
   else if (!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || "")) e.stopPropagation();   /* no tab shortcuts behind the record */
 }, true);
@@ -2798,9 +3080,9 @@ async function saveOps(ops, what) {
   try {
     var j = await apiPost("/marketiq/edit", {ops: ops});
     S.raw.overlay = j.overlay; if (j.sha) S.manifest["overlay.json"] = j.sha;
-    $("syncDot").className = ""; derive(); render(true);
+    $("syncDot").className = ""; derive(); render(true); recRefresh();
     toast("Saved");
-  } catch (e) { $("syncDot").className = "err"; toast("Could not save: " + e.message, true); if (S.drawer) render(true); }
+  } catch (e) { $("syncDot").className = "err"; toast("Could not save: " + e.message, true); if (S.drawer) render(true); recRefresh(); }
 }
 function openSale(id, keep) {
   var s = S.saleById[id]; if (!s) return;
