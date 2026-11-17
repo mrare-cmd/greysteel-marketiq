@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v21</span>
+    <span id="verBadge" title="Page version">v22</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2391,11 +2391,15 @@ function parseMix(t, units) {
   if (!out.length || (units && Math.abs(tot - units) > Math.max(2, units * 0.1))) return null;
   return out;
 }
-function rrMix(d) {   /* Greysteel rent roll summary by bed / bath */
-  if (!d.rr || !d.rr.mix) return null;
+/* Greysteel rent roll summary by bed / bath. Market rent: the rent roll's when it has one, else the model's Input tab
+   "Rent Assumptions" (d.um, pulled from the .xlsm in Box) for the same bedroom count; with no rent roll, the Input tab rows */
+function rrMix(d) {
+  var um = (d.um || []).filter(function (u) { return u.n; });
+  var umMkt = function (bd) { var w = 0, s = 0; um.forEach(function (u) { if (u.bd === bd && u.mkt) { w += u.n; s += u.mkt * u.n; } }); return w ? Math.round(s / w) : null; };
+  if (!d.rr || !d.rr.mix) return um.length ? um.map(function (u) { return {t: u.t, n: u.n, occ: u.occ || 0, sf: null, mkt: u.mkt, ctr: u.ip, src: "um"}; }) : null;
   return d.rr.mix.map(function (x) {
     var t = x.bd == null ? "Unknown" : x.bd === 0 ? "Studio" : x.bd + "BR" + (x.ba ? "/" + (+x.ba) + "BA" : "");
-    return {t: t, n: x.n, occ: x.occ, sf: x.sf, mkt: x.mkt, ctr: x.ctr};
+    return {t: t, n: x.n, occ: x.occ, sf: x.sf, mkt: x.mkt || umMkt(x.bd), ctr: x.ctr, umk: !x.mkt && umMkt(x.bd) != null};
   });
 }
 function utilSplit(u) {
@@ -2470,7 +2474,8 @@ function mixTable(mix, isGs, d) {
     "</tbody><tfoot><tr><td>Total</td>" + cols.map(function (c) { return '<td class="r num">' + c[2] + "</td>"; }).join("") + "</tr></tfoot></table>";
   if (isGs) {
     if (!has("mkt") && d.ach) h += '<div class="rc-note"><b>Underwritten market rent ' + money(d.ach) + "</b> average (the model's achievable rent; its rent roll has no market rents by unit type).</div>";
-    h += '<div class="rc-note">From the rent roll in Greysteel\'s model (' + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units.</div>";
+    if (mix.some(function (r) { return r.umk; })) h += '<div class="rc-note">Market rents from the model\'s Input tab (rent assumptions); the rent roll has none.</div>';
+    h += '<div class="rc-note">' + (d.rr ? "From the rent roll in Greysteel's model (" + esc(d.model || "") + "), " + fmtDs(d.rr.asof) + ". In-place rent averages occupied units." : "From the Input tab of Greysteel's model (" + esc(d.model || "") + ").") + "</div>";
   } else if (d.unit_mix) h += '<div class="rc-note">From the OM: ' + esc(d.unit_mix) + "</div>";
   return h;
 }
