@@ -857,7 +857,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v22</span>
+    <span id="verBadge" title="Page version">v23</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2394,12 +2394,19 @@ function parseMix(t, units) {
 /* Greysteel rent roll summary by bed / bath. Market rent: the rent roll's when it has one, else the model's Input tab
    "Rent Assumptions" (d.um, pulled from the .xlsm in Box) for the same bedroom count; with no rent roll, the Input tab rows */
 function rrMix(d) {
-  var um = (d.um || []).filter(function (u) { return u.n; });
-  var umMkt = function (bd) { var w = 0, s = 0; um.forEach(function (u) { if (u.bd === bd && u.mkt) { w += u.n; s += u.mkt * u.n; } }); return w ? Math.round(s / w) : null; };
+  /* residential rows only, and a market rent that is believable next to the in-place rent (some models put a
+     whole-property figure or a commercial / storage line in the table) */
+  var um = (d.um || []).filter(function (u) { return u.n && u.n < 5000 && !/commercial|retail|storage|parking|office|garage/i.test(u.t || "") && !(u.mkt && (u.mkt > 15000 || (u.ip && u.mkt > 3 * u.ip))); });
+  var umMkt = function (bd, ctr) {
+    var w = 0, s = 0; um.forEach(function (u) { if (u.bd === bd && u.mkt) { w += u.n; s += u.mkt * u.n; } });
+    var m = w ? Math.round(s / w) : null;
+    return m && (!ctr || (m < 3 * ctr && m > ctr / 3)) ? m : null;
+  };
   if (!d.rr || !d.rr.mix) return um.length ? um.map(function (u) { return {t: u.t, n: u.n, occ: u.occ || 0, sf: null, mkt: u.mkt, ctr: u.ip, src: "um"}; }) : null;
   return d.rr.mix.map(function (x) {
     var t = x.bd == null ? "Unknown" : x.bd === 0 ? "Studio" : x.bd + "BR" + (x.ba ? "/" + (+x.ba) + "BA" : "");
-    return {t: t, n: x.n, occ: x.occ, sf: x.sf, mkt: x.mkt || umMkt(x.bd), ctr: x.ctr, umk: !x.mkt && umMkt(x.bd) != null};
+    var um2 = x.mkt ? null : umMkt(x.bd, x.ctr);
+    return {t: t, n: x.n, occ: x.occ, sf: x.sf, mkt: x.mkt || um2, ctr: x.ctr, umk: um2 != null};
   });
 }
 function utilSplit(u) {
