@@ -958,7 +958,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v46</span>
+    <span id="verBadge" title="Page version">v47</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2418,12 +2418,11 @@ function wireTable() {
    and days to close come from that listing (bold); for other sales CoStar's own asking price and days
    on market are shown in grey with "CS". */
 var SCOLS = [
-  {k: "_tag", l: "Listing", t: "External listing / Greysteel listing = this sale closed one of our tracked listings (another broker's, or Greysteel's own)"}, {k: "date", l: "Sold"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "State"}, {k: "units", l: "Units", r: 1},
-  {k: "price", l: "Price", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Our listing's asking price; CS = CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
+  {k: "_tag", l: "Listing", t: "External listing / Greysteel listing = this sale closed one of our tracked listings (another broker's, or Greysteel's own)"}, {k: "date", l: "Sold"}, {k: "name", l: "Property", t: "CoStar's property name; grey = the name on our matched listing when CoStar has none"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "State"}, {k: "units", l: "Units", r: 1},
+  {k: "price", l: "Price", r: 1}, {k: "_ppu", l: "$/unit", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Our listing's asking price; CS = CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
   {k: "_dtc2", l: "Days to close", r: 1, t: "Our listing's date on market to the sale; CS = CoStar days on market"},
   {k: "_noi", l: "T-12 NOI", r: 1, cap: 1, t: "T-12 NOI from the listing"}, {k: "_capA", l: "Cap @ ask", r: 1, cap: 1, t: "T-12 NOI / asking price"}, {k: "_capC", l: "Cap @ close", r: 1, cap: 1, t: "T-12 NOI / sale price"},
-  {k: "_ppu", l: "$/unit", r: 1},
-  {k: "name", l: "Property"}, {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
+  {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
 ];
 function newImpTxt() {
   var x = S.newImp; if (!x) return "";
@@ -2459,7 +2458,8 @@ function renderSales() {
         if (c.k === "_tag") h = o ? '<span class="pill ' + (o.gs ? "gsb" : "xl") + '" title="' + esc(o.name + " · on market " + fmtD(o.onMarket) + " · " + (o.firm || o.brokerCo || "")) + '">' + (o.gs ? "Greysteel listing" : "External listing") + "</span>" + (s._how === "manual" ? ' <span class="pill blue" title="Linked by hand">manual</span>' : "") + (s._remkt ? ' <span class="pill orange" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-marketed</span>' : "")
           : s._how === "resale" ? '<span class="pill gray" title="Later resale of ' + esc(s._resaleOf.name) + '">Resale</span>' : s._how === "none" ? '<span class="muted small">not a match</span>' : '<span class="muted">—</span>';
         else if (c.k === "date") h = (s.pending ? '<span class="pill blue" title="CoStar: ' + esc(s.pendingStatus || "Under Contract") + '">Under contract</span>' : fmtDs(v)) + newPill(s);
-        else if (c.k === "address") h = esc(v) + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "") + (s._condX ? ' <span class="pill orange" title="CoStar sale condition: ' + esc(s.cond) + '">' + esc(String(s.cond).split(",").filter(function (x) { return COND_X.test(x); })[0].trim()) + "</span>" : "");
+        else if (c.k === "address") h = esc(v) + (s.nonArms ? ' <span class="pill orange" title="Not a market sale: ' + esc(s.nonArms) + '">non-market</span>' : "") + (s.portfolio || s.multiN ? ' <span class="pill purple" title="' + esc(s.portfolio || "Part of a " + s.multiN + "-property sale") + '">portfolio</span>' : "") + (s._condX ? ' <span class="pill orange" title="CoStar sale condition: ' + esc(s.cond) + '">' + esc(String(s.cond).split(",").filter(function (x) { return COND_X.test(x); })[0].trim()) + "</span>" : "");
+        else if (c.k === "name") { var nm = v && String(v).trim() !== String(s.address || "").trim() && !/^multi-property sale$/i.test(v) ? v : ""; h = nm ? esc(nm) : o && o.name && o.name !== o.address ? '<span class="muted" title="Name on our matched listing">' + esc(o.name) + "</span>" : ""; }
         else if (c.k === "units") h = n0(v);
         else if (c.k === "price" || c.k === "_ppu") h = mshort(v);
         else if (c.k === "_ask2") h = v == null ? "" : mshort(v) + (s._askCS ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "");
@@ -3192,7 +3192,8 @@ function openSale(id, keep) {
   if (s._remkt) h += '<div class="warn">Re-marketed: CoStar shows ' + esc(s.brokerCo) + " marketing it for " + s.daysOnMkt + " days before the sale, well after this listing went out. Left out of asked-vs-closed figures.</div>";
   if (s.note) h += '<div class="warn">' + esc(s.note) + "</div>";
   h += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' + (o || s._how === "none" ? "" : "") +
-    (s._how === "auto" || s._how === "resale" ? '<button class="btn sm danger" id="slNone">Not a match</button>' : "") + (s._how === "manual" || s._how === "none" ? '<button class="btn sm" id="slAuto">Back to automatic</button>' : "") + "</div>" +
+    (s._how === "auto" || s._how === "resale" ? '<button class="btn sm danger" id="slNone">Not a match</button>' : "") + (s._how === "manual" || s._how === "none" ? '<button class="btn sm" id="slAuto">Back to automatic</button>' : "") +
+    (s.pending ? "" : s.nonArms ? '<span class="pill orange" style="align-self:center" title="' + esc(s.nonArms) + '">Not a market sale</span><button class="btn sm" id="slMkt">It is a market sale</button>' : '<button class="btn sm" id="slNA" title="Transfer of interest, related parties, merger, refinance into a new entity...: it will not close a listing or count in asked-vs-closed">Not a market sale</button>') + "</div>" +
     '<input class="inp" id="slQ" placeholder="Find a ' + s.state + ' listing to link: name or address" style="width:100%;margin-top:8px"><div class="srch-res" id="slRes"></div></div>';
   h += '<div class="dr-sec"><div class="h">Details</div><div class="kv">' +
     [["Buyer", s.buyer], ["Seller", s.seller], ["Listing broker", [s.brokerCo, s.brokerAgent].filter(Boolean).join(" · ")], ["Buyer's broker", s.buyerBroker], ["CoStar asking", money(s.csAsking)], ["Sale type", s.saleType], ["Sale condition", s.cond], ["Non-arms-length", s.nonArms], ["Market", s.market], ["Building SF", n0(s.sf)], ["Year built", s.yearBuilt], ["Class", s.bldgClass], ["Affordable", s.affordable], ["CoStar comp", s.compId], ["Source", s.src === "topa" ? "TOPA Tracker comps" : s.src === "loanid" ? "LoanID CoStar export" : /^costar:/.test(s.src || "") ? "CoStar sale comps export (" + s.src.slice(7) + ")" : s.src]]
@@ -3203,6 +3204,9 @@ function openSale(id, keep) {
   if (!keep && S.view === "sales") renderSales();
   if ($("slNone")) $("slNone").onclick = function () { saveOps([{t: "set", k: "s/" + s.id, f: "link", v: "none"}], "unlink"); };
   if ($("slAuto")) $("slAuto").onclick = function () { saveOps([{t: "set", k: "s/" + s.id, f: "link", v: null}], "auto"); };
+  /* not a market sale (Mason: The Highline was a transfer of interest): nonArms keeps it from closing a listing */
+  if ($("slNA")) $("slNA").onclick = function () { var why = prompt("Why isn't this a market sale?", "Transfer of interest"); if (why == null) return; saveOps([{t: "set", k: "s/" + s.id, f: "nonArms", v: (why.trim() || "Not a market sale") + " (marked in MarketIQ)"}], "not a market sale"); };
+  if ($("slMkt")) $("slMkt").onclick = function () { var raw = S.raw.sales.find(function (r) { return r.id === s.id; }) || {}; saveOps([{t: "set", k: "s/" + s.id, f: "nonArms", v: raw.nonArms ? "" : null}], "market sale"); };
   $("slQ").oninput = function () {
     var q = normAddr(this.value);
     if (q.length < 3) { $("slRes").innerHTML = ""; return; }
