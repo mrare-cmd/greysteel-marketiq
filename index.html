@@ -943,6 +943,8 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
 .tbl td .pill.purple,.tbl td .pill.orange{color:#6e6e73;font-weight:550}
 .pill.nwp,.tbl td .pill.nwp{background:#0071e3;color:#fff;letter-spacing:.03em}
 .cs{color:#6e6e73;background:#eef0f4}
+.cs.csl{margin-left:0;margin-right:5px}
+.tbl th.gl,.tbl td.gl{border-left:1px solid rgba(60,60,67,.12)}
 .tbl th.cap{background:inherit;color:inherit}
 .tbl tbody tr td.cap{background:#fff}
 .tbl tbody tr:nth-child(even) td.cap{background:#f7f8fa}
@@ -980,7 +982,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v48</span>
+    <span id="verBadge" title="Page version">v49</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -2286,7 +2288,7 @@ function renderAvc(closed, P) {
     thS("_sp", "Closed", A, "r") + thS("_spread", "vs. ask", A, "r") + thS("_capAsk", "Cap @ ask", A, "r cap", "T-12 NOI ÷ asking") + thS("_capClose", "Cap @ close", A, "r cap", "T-12 NOI ÷ sale price") + thS("firm", "Firm", A) + "</tr></thead><tbody>" +
     rows.map(function (o) {
       return '<tr data-id="' + o.id + '"><td title="' + esc(o.address) + '">' + esc(o.name) + gsBadge(o) + '<div class="small muted">' + esc([o.city, o.state].filter(Boolean).join(", ")) + '</div></td><td class="r num">' + (o.land ? "Land" : n0(o.units)) +
-        "</td><td>" + fmtDs(o.onMarket) + "</td><td>" + fmtDs(o._sale.date) + '</td><td class="r num">' + n0(o._dtc) + '</td><td class="r num">' + (o._ask ? mshort(o._ask) + (o._askSrc ? '<span class="cs">CS</span>' : "") : "") +
+        "</td><td>" + fmtDs(o.onMarket) + "</td><td>" + fmtDs(o._sale.date) + '</td><td class="r num">' + n0(o._dtc) + '</td><td class="r num">' + (o._ask ? (o._askSrc ? '<span class="cs csl">CS</span>' : "") + mshort(o._ask) : "") +
         '</td><td class="r num">' + mshort(o._sale.price) + '</td><td class="r num">' + (spr(o._spread) || (o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : "")) +
         '</td><td class="r num cap">' + (o._capAsk ? pct(o._capAsk, 2) : "") + '</td><td class="r num cap">' + (o._capClose ? "<b>" + pct(o._capClose, 2) + "</b>" : "") + "</td><td>" + esc(o.firm || o.brokerCo || "") + "</td></tr>";
     }).join("") + "</tbody>";
@@ -2408,7 +2410,7 @@ function renderTable() {
         else if (c.k === "state") h = '<span class="dot" style="background:' + (ST_COLOR[v] || "#999") + '"></span>' + esc(v);
         else if (c.k === "name") h = esc(v) + gsBadge(o);
         else if (c.k === "units") h = o.land ? '<span class="pill orange" title="0 units: land / development">Land</span>' : n0(v);
-        else if (c.k === "_ask" && o._askSrc) h = mshort(v) + '<span class="cs" title="Asking price from CoStar">CS</span>';
+        else if (c.k === "_ask" && o._askSrc) h = '<span class="cs csl" title="Asking price from CoStar">CS</span>' + mshort(v);
         else if (c.h) h = c.h(v);
         else h = esc(c.f ? c.f(v) : v == null ? "" : v);
         return '<td class="' + (c.r ? "r num" : "") + (c.cap ? " cap" : "") + '"' + (c.k === "name" || c.k === "address" ? ' title="' + esc(v) + '"' : "") + ">" + h + "</td>";
@@ -2441,10 +2443,10 @@ function wireTable() {
    on market are shown in grey with "CS". */
 var SCOLS = [
   {k: "_tag", l: "Listing", t: "External listing / Greysteel listing = this sale closed one of our tracked listings (another broker's, or Greysteel's own)"}, {k: "date", l: "Sold"}, {k: "name", l: "Property", t: "CoStar's property name; grey = the name on our matched listing when CoStar has none"}, {k: "address", l: "Address"}, {k: "city", l: "City"}, {k: "state", l: "State"}, {k: "units", l: "Units", r: 1},
-  {k: "price", l: "Price", r: 1}, {k: "_ppu", l: "$/unit", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Our listing's asking price; CS = CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
+  {k: "price", l: "Price", r: 1, g: 1}, {k: "_ppu", l: "$/unit", r: 1}, {k: "_ask2", l: "Asking", r: 1, t: "Our listing's asking price; CS = CoStar's asking price"}, {k: "_spr2", l: "vs. ask", r: 1},
   {k: "_dtc2", l: "Days to close", r: 1, t: "Our listing's date on market to the sale; CS = CoStar days on market"},
-  {k: "_noi", l: "T-12 NOI", r: 1, cap: 1, t: "T-12 NOI from the listing"}, {k: "_capA", l: "Cap @ ask", r: 1, cap: 1, t: "T-12 NOI / asking price"}, {k: "_capC", l: "Cap @ close", r: 1, cap: 1, t: "T-12 NOI / sale price"},
-  {k: "buyer", l: "Buyer"}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
+  {k: "_noi", l: "T-12 NOI", r: 1, cap: 1, g: 1, t: "T-12 NOI from the listing"}, {k: "_capA", l: "Cap @ ask", r: 1, cap: 1, t: "T-12 NOI / asking price"}, {k: "_capC", l: "Cap @ close", r: 1, cap: 1, t: "T-12 NOI / sale price"},
+  {k: "buyer", l: "Buyer", g: 1}, {k: "seller", l: "Seller"}, {k: "brokerCo", l: "Listing broker (CoStar)"}
 ];
 function newImpTxt() {
   var x = S.newImp; if (!x) return "";
@@ -2472,7 +2474,7 @@ function renderSales() {
   var PG = 200; if (S.sp * PG >= rows.length) S.sp = 0;
   var pr = rows.slice(S.sp * PG, S.sp * PG + PG), nl = rows.filter(function (s) { return s._link || s._ucOf; }).length, ng = rows.filter(function (s) { var o = s._link || s._ucOf; return o && o.gs; }).length;
   $("sCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> " + (S.F.link === "uc" ? "deals" : "sales") + " · " + (S.F.link === "uc" ? "" : mshort(sum(rows.map(function (s) { return s.price; }))) + " · ") + n0(sum(rows.map(function (s) { return s.units; }))) + " units · <b>" + nl + "</b> tied to a listing" + (ng ? " (" + ng + " Greysteel)" : "") + (S.F.link === "uc" ? " · CoStar shows these under contract" : "");
-  $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.t ? ' title="' + esc(c.t) + '"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+  $("stbl").innerHTML = "<thead><tr>" + SCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + (c.g ? " gl" : "") + '"' + (c.t ? ' title="' + esc(c.t) + '"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (s) {
       var o = s._link || s._ucOf;
       return '<tr data-id="' + s.id + '" class="' + (o ? "lk" : "") + (o && o.gs ? " lkg" : "") + (s._new ? " nw" : "") + (S.drawer && S.drawer.id === s.id ? " sel" : "") + '">' + SCOLS.map(function (c) {
@@ -2484,13 +2486,13 @@ function renderSales() {
         else if (c.k === "name") { var nm = v && String(v).trim() !== String(s.address || "").trim() && !/^multi-property sale$/i.test(v) ? v : ""; h = nm ? esc(nm) : o && o.name && o.name !== o.address ? '<span class="muted" title="Name on our matched listing">' + esc(o.name) + "</span>" : ""; }
         else if (c.k === "units") h = n0(v);
         else if (c.k === "price" || c.k === "_ppu") h = mshort(v);
-        else if (c.k === "_ask2") h = v == null ? "" : mshort(v) + (s._askCS ? '<span class="cs" title="Asking price from CoStar">CS</span>' : "");
+        else if (c.k === "_ask2") h = v == null ? "" : (s._askCS ? '<span class="cs csl" title="Asking price from CoStar">CS</span>' : "") + mshort(v);
         else if (c.k === "_spr2") h = spr(v) || (s._remkt ? '<span class="muted small" title="Re-marketed by another firm; left out of asked-vs-closed figures">re-mkt</span>' : s._condX ? '<span class="muted small" title="' + esc(s.cond) + '; left out of asked-vs-closed figures">' + esc(String(s.cond).split(",")[0].replace(/ Sale$/, "")) + "</span>" : o && o._noSpr ? '<span class="muted small" title="' + esc(o._noSpr) + '">n/a</span>' : "");
-        else if (c.k === "_dtc2") h = v == null ? "" : n0(v) + (s._dtcCS ? '<span class="cs" title="CoStar days on market">CS</span>' : "");
+        else if (c.k === "_dtc2") h = v == null ? "" : (s._dtcCS ? '<span class="cs csl" title="CoStar days on market">CS</span>' : "") + n0(v);
         else if (c.k === "_noi") h = v ? mshort(v) : "";
         else if (c.k === "_capA" || c.k === "_capC") h = v == null ? "" : "<b>" + pct(v, 2) + "</b>";
         else h = esc(v == null ? "" : v);
-        return '<td class="' + (c.r ? "r num" : "") + (c.cap ? " cap" : "") + '">' + h + "</td>";
+        return '<td class="' + (c.r ? "r num" : "") + (c.cap ? " cap" : "") + (c.g ? " gl" : "") + '">' + h + "</td>";
       }).join("") + "</tr>";
     }).join("") + "</tbody>";
   $("sPager").innerHTML = pagerHtml(rows.length, S.sp);
