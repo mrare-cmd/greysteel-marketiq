@@ -982,7 +982,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v50</span>
+    <span id="verBadge" title="Page version">v51</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1587,7 +1587,7 @@ function fctx(kind, view) {   /* the filter values, parsed once per render inste
   var F = S.F, st = S.st[view] || {};
   return {F: F, kind: kind, view: view, states: Object.keys(F.states).filter(function (k) { return F.states[k]; }),
     stat: kind === "l" ? Object.keys(st).filter(function (k) { return st[k]; }) : [], w: view !== "new" ? parseNum(F.within) : null, t: today(),
-    umin: parseNum(F.umin), umax: parseNum(F.umax), pmin: amt(F.pmin), pmax: amt(F.pmax), qmin: amt(F.ppumin), qmax: amt(F.ppumax), ymin: parseNum(F.ymin), ymax: parseNum(F.ymax), q: F.q ? normAddr(F.q) : ""};
+    umin: parseNum(F.umin), umax: parseNum(F.umax), pmin: amt(F.pmin), pmax: amt(F.pmax), qmin: amt(F.ppumin), qmax: amt(F.ppumax), ymin: parseNum(F.ymin), ymax: parseNum(F.ymax), buyer: applies("buyer", view) ? F.buyer : "", q: F.q ? normAddr(F.q) : ""};
 }
 function failMask(r, c) {
   var F = c.F, kind = c.kind, v = fv(r, kind), m = 0;
@@ -1596,7 +1596,7 @@ function failMask(r, c) {
   if (c.stat.length && c.stat.indexOf(v.status) < 0) m |= 2;
   if (F.firm && v.firm !== F.firm) m |= 4;
   if (F.broker && v.broker !== F.broker) m |= 8;
-  if (F.buyer && v.buyer.indexOf(F.buyer) < 0) m |= 32;
+  if (c.buyer && v.buyer.indexOf(c.buyer) < 0) m |= 32;
   if (c.w != null) { var d = days(v.date, c.t); if (d == null || d > c.w) return m | 16; }
   if (!inRange(v.units, c.umin, c.umax) || !inRange(v.price, c.pmin, c.pmax) || !inRange(v.ppu, c.qmin, c.qmax) || !inRange(v.yb, c.ymin, c.ymax)) return m | 16;
   if (kind === "l" && ((F.type === "land" && !v.land) || (F.type === "mf" && v.land) || (F.src === "gs" && !r.gs) || (F.src === "ext" && r.gs))) return m | 16;
@@ -1614,6 +1614,7 @@ function applies(f, view) {
   if (f === "within") return view !== "new" && view !== "dash";
   if (f === "type" || f === "src") return kind === "l";
   if (f === "link") return kind === "s";
+  if (f === "buyer") return kind === "s" || view === "table";   /* the map, dashboard and new listings are mostly unsold listings: no buyer */
   return true;
 }
 function activeCount(view) {
@@ -1649,7 +1650,7 @@ function buildBar(view) {
   if (kind === "l") h += '<select class="inp" data-f="type"><option value="">All types</option><option value="mf">Multifamily</option><option value="land">Land / development</option></select>';
   if (kind === "l") h += '<select class="inp" data-f="src" title="Greysteel\'s own listings or other brokers\' (external)"><option value="">All listings</option><option value="gs">Greysteel listings</option><option value="ext">External listings</option></select>';
   h += cbHtml("firm", "Listing broker firm - type to search; lists only firms left by the other filters") + cbHtml("broker", "Listing broker - type to search; lists only brokers left by the other filters") +
-    cbHtml("buyer", kind === "s" ? "Buyer - type to search; lists only buyers left by the other filters" : "Buyer of the listing's CoStar closing - type to search");
+    (applies("buyer", view) ? cbHtml("buyer", kind === "s" ? "Buyer - type to search; lists only buyers left by the other filters" : "Buyer of the listing's CoStar closing - type to search") : "");
   if (kind === "s") h += '<select class="inp" data-f="link"><option value="">All sales</option><option value="yes">Tied to a listing</option><option value="no">No listing</option><option value="uc">Under contract (CoStar)</option></select>';
   h += '<button class="clearall" data-clear>Clear</button>';
   el.innerHTML = h;
@@ -1712,7 +1713,8 @@ function syncBar(view) {
     var c = {};
     rows.forEach(function (r, i) { if (ok(i, k)) { [].concat(fv(r, kind)[k] || []).forEach(function (x) { if (x) c[x] = (c[x] || 0) + 1; }); } });
     el._cb[k] = c;
-    var box = el.querySelector('[data-cb="' + k + '"]'), inp = box.querySelector(".cbi");
+    var box = el.querySelector('[data-cb="' + k + '"]'); if (!box) return;
+    var inp = box.querySelector(".cbi");
     if (document.activeElement !== inp) inp.value = F[k] || "";
     inp.placeholder = "Any " + cbLabel(k) + " (" + Object.keys(c).length + ")";
     box.classList.toggle("on", !!F[k]);
