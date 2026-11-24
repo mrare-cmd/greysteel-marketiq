@@ -982,7 +982,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v51</span>
+    <span id="verBadge" title="Page version">v52</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -1067,7 +1067,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <!-- ======================= LISTINGS TABLE ======================= -->
   <section class="view" id="vTable"><div style="position:absolute;inset:0;display:flex;flex-direction:column">
     <div class="fbar" id="fb_table"></div>
-    <div class="subbar"><span id="tCount"></span><button class="nwbtn" id="tNewBtn" hidden></button><label class="ml-auto"><input type="checkbox" id="tHid"> Show hidden</label><button class="btn sm" id="tCsv">Export CSV</button></div>
+    <div class="subbar"><span id="tCount"></span><button class="nwbtn" id="tNewBtn" hidden></button><label class="ml-auto" title="Hide Closed at, Cap @ close, vs. ask and Days to close"><input type="checkbox" id="tHideClose"> Hide closing columns</label><label><input type="checkbox" id="tHid"> Show hidden</label><button class="btn sm" id="tCsv">Export CSV</button></div>
     <div class="tblwrap" style="flex:1"><table class="tbl" id="tbl"></table></div>
     <div class="pager" id="tPager"></div>
   </div></section>
@@ -2386,9 +2386,9 @@ var TCOLS = [
   {k: "units", l: "Units", r: 1}, {k: "yearBuilt", l: "Built", r: 1}, {k: "onMarket", l: "On market", f: fmtDs}, {k: "_days", l: "Days", r: 1, f: n0},
   {k: "_ask", l: "Asking", r: 1, f: mshort}, {k: "_ppu", l: "$/unit", r: 1, f: mshort},
   {k: "_noiE", l: "T-12 NOI", r: 1, f: mshort, cap: 1}, {k: "_capAsk", l: "Cap @ ask", r: 1, cap: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
-  {k: "_status", l: "Status"}, {k: "_salePrice", l: "Closed at", r: 1, f: mshort}, {k: "_capClose", l: "Cap @ close", r: 1, cap: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
-  {k: "_spread", l: "vs. ask", r: 1, h: spr}, {k: "_dtc", l: "Days to close", r: 1, f: n0},
-  {k: "broker", l: "Broker"}, {k: "firm", l: "Firm"}, {k: "clientContact", l: "Client"}, {k: "clientCo", l: "Client company"}, {k: "om", l: "OM"}
+  {k: "_status", l: "Status"}, {k: "_salePrice", l: "Closed at", r: 1, f: mshort, cl: 1}, {k: "_capClose", l: "Cap @ close", r: 1, cap: 1, cl: 1, h: function (v) { return v == null ? "" : "<b>" + pct(v, 2) + "</b>"; }},
+  {k: "_spread", l: "vs. ask", r: 1, h: spr, cl: 1}, {k: "_dtc", l: "Days to close", r: 1, f: n0, cl: 1},
+  {k: "broker", l: "Broker"}, {k: "firm", l: "Firm"}, {k: "om", l: "OM"}, {k: "clientContact", l: "Client"}, {k: "clientCo", l: "Client company"}
 ];
 function newLTxt() { return "New in the " + fmtDs(S.newB) + " weekly update (dates on market " + fmtDs(shift(S.newB, -6)) + " to " + fmtDs(S.newB) + ", plus anything added since). Stays until the next update."; }
 function newLPill(o) { return o && o._newL ? ' <span class="pill nwp" title="' + esc(newLTxt()) + '">NEW</span>' : ""; }
@@ -2407,10 +2407,11 @@ function renderTable() {
   sortRows(rows, S.tsort);
   var PG = 200; if (S.tp * PG >= rows.length) S.tp = 0;
   var pr = rows.slice(S.tp * PG, S.tp * PG + PG);
+  var TC = TCOLS.filter(function (c) { return !(S.hideClose && c.cl); });   /* Hide closing columns (Mason): Closed at, Cap @ close, vs. ask, Days to close */
   $("tCount").innerHTML = "<b>" + rows.length.toLocaleString() + "</b> listings · " + n0(sum(rows.map(function (o) { return o.land ? 0 : o.units; }))) + " units";
-  $("tbl").innerHTML = "<thead><tr>" + TCOLS.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.cap ? ' title="Cap rate from the T-12 NOI on the listing"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+  $("tbl").innerHTML = "<thead><tr>" + TC.map(function (c) { return '<th data-k="' + c.k + '" class="' + (c.r ? "r" : "") + (c.cap ? " cap" : "") + '"' + (c.cap ? ' title="Cap rate from the T-12 NOI on the listing"' : "") + ">" + c.l + (k === c.k ? '<span class="ar">' + (d > 0 ? "▲" : "▼") + "</span>" : "") + "</th>"; }).join("") + "</tr></thead><tbody>" +
     pr.map(function (o) {
-      return '<tr data-id="' + o.id + '" class="' + (o._newL ? "nw" : "") + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TCOLS.map(function (c) {
+      return '<tr data-id="' + o.id + '" class="' + (o._newL ? "nw" : "") + (S.drawer && S.drawer.id === o.id ? " sel" : "") + '"' + (o.hidden ? ' style="opacity:.5"' : "") + ">" + TC.map(function (c) {
         var v = o[c.k], h;
         if (c.k === "onMarket") h = esc(fmtDs(v)) + newLPill(o); else
         if (c.k === "_status") h = '<span class="pill ' + ST[v].pill + '">' + v + "</span>";
@@ -2432,6 +2433,8 @@ function renderTable() {
 function wireTable() {
   $("tNewBtn").onclick = function () { S.tNewOnly = !S.tNewOnly; S.tp = 0; renderTable(); };
   $("tHid").onchange = function () { S.showHidden = this.checked; S.tp = 0; renderTable(); };
+  S.hideClose = !!lsGet("miq_hideclose", 0); $("tHideClose").checked = S.hideClose;
+  $("tHideClose").onchange = function () { S.hideClose = this.checked; lsSet("miq_hideclose", S.hideClose ? 1 : 0); renderTable(); };
   $("vTable").addEventListener("click", function (e) {
     var th = e.target.closest("th[data-k]"); if (th) { var k = th.dataset.k; S.tsort = {k: k, d: S.tsort.k === k ? -S.tsort.d : (/^(name|address|city|state|broker|firm|client|_status|om)/.test(k) ? 1 : -1)}; return renderTable(); }
     var p = e.target.closest(".pager [data-p]"); if (p) { S.tp += +p.dataset.p; return renderTable(); }
