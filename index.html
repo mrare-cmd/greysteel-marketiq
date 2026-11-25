@@ -982,7 +982,7 @@ body.map-moving #vMap .fbar,body.map-moving .mv-side,body.map-moving header,body
   <div class="brand">
     <div class="glyph" title="Greysteel MarketIQ"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="gqh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ac8fa"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient></defs><rect width="32" height="32" fill="url(#gqh)"/><rect x="8" y="17.5" width="4" height="7.5" rx="2" fill="#fff" opacity=".7"/><rect x="14" y="12.5" width="4" height="12.5" rx="2" fill="#fff" opacity=".88"/><rect x="20" y="7" width="4" height="18" rx="2" fill="#fff"/></svg></div>
     <span class="brand-page" data-brand>MarketIQ</span>
-    <span id="verBadge" title="Page version">v52</span>
+    <span id="verBadge" title="Page version">v53</span>
   </div>
   <nav class="tabs segnav"><span class="seg-ind" id="segInd"></span>
     <button class="tab active" data-view="map" title="Shortcut: 1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg><span class="tl">Map</span></button>
@@ -3502,7 +3502,7 @@ var COSTAR_COLS = {
   name: ["property name", "building name"], date: ["sale date", "close date", "sold date", "closing date"],
   price: ["sale price", "sold price", "price", "total sale price"], units: ["number of units", "# of units", "no of units", "units", "total units", "unit count"],
   status: ["sale status", "status"], compId: ["comp id", "comp #", "sale comp id", "compid"], propId: ["propertyid", "property id", "costar property id"],
-  city: ["property city", "city"], state: ["property state", "state"], zip: ["property zip code", "zip code", "zip", "postal code"],
+  city: ["property city", "city", "portfolio city"], state: ["property state", "state", "portfolio state"], zip: ["property zip code", "zip code", "zip", "postal code", "portfolio zip"],
   sf: ["building sf", "rba", "bldg sf", "gross sf", "sf"], yearBuilt: ["year built", "yr built"], bldgClass: ["building class", "class"],
   cap: ["actual cap rate", "cap rate"], buyer: ["buyer (true) company", "buyer true company", "true buyer company", "buyer company", "buyer (recorded) company", "recorded buyer", "buyer"],
   seller: ["seller (true) company", "seller true company", "true seller company", "seller company", "seller (recorded) company", "recorded seller", "seller"],
@@ -3542,7 +3542,7 @@ function parseCostar(aoa) {
     if (sold && !date) { st.nodate++; return; }
     if (!sold && !pending) { st.nodate++; return; }
     var price = sold ? parseNum(get("price")) : null, cap = parseNum(get("cap")), lat = parseNum(get("lat")), lng = parseNum(get("lng")), notes = txt("notes");
-    var c = {compId: txt("compId").split(".")[0], propId: txt("propId").split(".")[0], name: txt("name"), address: addr, city: txt("city"), state: (txt("state") || "DC").toUpperCase().slice(0, 2), zip: txt("zip"),
+    var c = {compId: txt("compId").split(".")[0], propId: txt("propId").split(".")[0], name: txt("name"), address: addr, city: txt("city"), state: (txt("state") || (/,\s*([A-Z]{2})$/.exec(txt("market")) || [])[1] || "DC").toUpperCase().slice(0, 2), zip: txt("zip"),
       date: sold ? date : "", price: price, units: Math.round(units), ppu: price ? Math.round(price / units) : null, sf: parseNum(get("sf")), yearBuilt: parseNum(String(get("yearBuilt")).split(".")[0]),
       bldgClass: txt("bldgClass"), buyer: txt("buyer"), seller: txt("seller"), brokerCo: txt("brokerCo"), brokerAgent: [txt("agentFirst"), txt("agentLast")].filter(Boolean).join(" "),
       buyerBroker: txt("buyerBroker"), csAsking: parseNum(get("csAsking")), daysOnMkt: parseNum(get("daysOnMkt")), cap: cap != null && cap < 1 ? Math.round(cap * 10000) / 100 : cap,
@@ -3565,7 +3565,7 @@ async function costarPlan(P) {
     seen[k] = 1; uniq.push(x);
   });
   var full = function (x) { return (x.price ? 1 : 0) + (x.brokerCo ? 1 : 0) + (x.buyer ? 1 : 0) + (x.notes || "").length / 1e4; }, byProp = {}, drop = new Set();
-  uniq.forEach(function (x) { if (!x.pending && x.propId) (byProp[x.propId] = byProp[x.propId] || []).push(x); });
+  uniq.forEach(function (x) { if (x.pending) return; var k = x.propId || x.address.toLowerCase() + "|" + x.state; (byProp[k] = byProp[k] || []).push(x); });  /* no PropertyID column: same address + state */
   Object.keys(byProp).forEach(function (k) {
     var g = byProp[k].sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     for (var i = 1; i < g.length; i++) { var a = g[i - 1], b = g[i]; if (drop.has(a) || drop.has(b)) continue;
